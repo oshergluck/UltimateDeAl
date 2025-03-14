@@ -1,0 +1,383 @@
+@import url("https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.linear-gradient {
+  background: linear-gradient(
+    140deg,
+    #000000 -35%,
+    #494949 87.01%
+  );
+}
+
+.linear-gradient1 {
+  background: linear-gradient(
+    300deg,
+    #000000 -35%,
+    #4c4c4c 87.01%
+  );
+}
+.poker-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.community-cards, .player-cards {
+  display: flex;
+  gap: 10px;
+  margin: 20px;
+}
+
+.card-wrapper {
+  transition: transform 0.3s;
+}
+
+.card-wrapper:hover {
+  transform: translateY(-10px);
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.custom-button {
+  background-color: blue;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+
+.linear-gradient-special-offer {
+  background: linear-gradient(
+    270deg,
+    #a1ffd1 -35%,
+    #00ffff 87.01%
+  );
+}
+
+.linear-gradient-new {
+  background: linear-gradient(
+    -180deg,
+    rgba(32, 18, 63, 0) -7.14%,
+    #a3ebff 95.01%
+  );
+}
+
+.linear-gradient-gold {
+  background: linear-gradient(
+    -180deg,
+    #ffee9b 94%,
+    #FFD700 95.01%
+  );
+}
+
+.linear-gradient-gold-up {
+  background: linear-gradient(
+    0deg,
+    #ffee9b 94%,
+    #FFD700 95.01%
+  );
+}
+
+.linear-gradient3 {
+  background: linear-gradient(
+    -180deg,
+    rgba(32, 18, 63, 0) -7.14%,
+    #03c0ff 87.01%
+  );
+}
+
+
+.linear-gradient2 {
+  background: linear-gradient(
+    360deg,
+    rgba(81, 0, 255, 0) -200%,
+    #ffffff 100%
+  );
+}
+
+.linear-gradient-silver {
+  background: linear-gradient(
+    50deg,
+    #767676 30%,
+    #FFFFFF 80%
+  );
+  overflow: hidden;
+}
+
+.linear-gradient-silver::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 75%,
+    rgba(255, 255, 255, 0.8) 90%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  transition: transform 0.5s ease-out;
+}
+
+.linear-gradient-silver:hover::before {
+  transform: rotate(30deg) translate(0, 50%);
+}
+
+.linear-gradient-silver-upside {
+  background: linear-gradient(
+    0deg,
+    rgba(81, 0, 255, 0) 80%,
+    #8f8f8f 100%,
+    #C0C0C0 60%,
+    #8f8f8f 100%
+  );
+}
+
+@keyframes coin-circle {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateX(100px) rotate(360deg); opacity: 0; }
+}
+
+.falling-block {
+  perspective: 1000px;
+}
+
+@keyframes fallAndSpin {
+  0% {
+    transform: translateY(0) rotateY(0deg);
+  }
+  100% {
+    transform: translateY(100vh) rotateY(360deg);
+  }
+}
+
+.block1 {
+  animation: fallAndSpin 5s linear infinite;
+  position: absolute;
+  transform-origin: center;
+  transform-style: preserve-3d;
+}
+
+.block1::before,
+.block1::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.block1::before {
+  transform: translateZ(2.5px);
+}
+
+.block1::after {
+  transform: translateZ(-2.5px);
+}
+
+
+.animate-coin-circle {
+  animation: coin-circle 1s ease-out;
+}
+
+.silver-color {
+  background: linear-gradient(to right, #C0C0C0, #D8D8D8, #C0C0C0);
+}
+
+.linear-gradient-featured {
+  background: linear-gradient(
+    0deg,
+    rgb(99, 99, 99) 3%,
+    #dddddd 75%
+  );
+}
+
+body {
+  transition: font-size 0.3s ease, filter 0.3s ease; /* Smooth transitions for font size and color mode */
+}
+
+.icon-name {
+  position: absolute;
+  bottom: -20px;  /* Adjust this value as needed */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;  /* Adjust font size as needed */
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.8);
+}
+
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.textcolor {
+  color: #7d7d7d;
+}
+
+.arrow-left {
+  width: 0; 
+  height: 0; 
+  border-top: 50px solid transparent;
+  border-bottom: 50px solid transparent;
+  
+  border-right: 60px solid rgba(255, 128, 0, 0);
+}
+
+.star-rating {
+  font-size: 24px; /* Adjust the font size as needed */
+}
+
+.star-rating-main {
+  font-size: 32px; /* Adjust the font size as needed */
+}
+
+.filled-star {
+  color: gold; /* Color of filled stars */
+}
+
+.empty-star {
+  color: lightgray; /* Color of empty stars */
+}
+
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: #000000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.header-spacer {
+  height: 90px; /* Adjust this height based on the height of your header */
+}
+
+
+.star {
+  font-size: 2rem; /* Adjust font size for desired star size */
+  cursor: pointer;
+  margin: 0 2px; /* Add spacing between stars */
+  transition: color 0.8s ease; /* Add ease transition for smooth color change */
+}
+
+.star.filled,
+.star.hover {
+  color: gold; /* Color for filled and hovered stars */
+}
+
+.star.empty {
+  color: #ccc; /* Color for empty stars */
+}
+
+.star.hover:not(.filled) {
+  /* Apply ease effect only on hover for unfilled stars */
+  color: #ffd700; /* Temporary hover color before transition */
+}
+
+.door-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1000px;
+  border-radius: 150px;
+  overflow: hidden;
+}
+
+.door {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  transition: transform 0.5s;
+  top: 0;
+}
+
+.left-door {
+  left: 0;
+  background: linear-gradient(to right, #FFD700, #FFA500);
+  transform-origin: left;
+}
+
+.right-door {
+  right: 0;
+  background: linear-gradient(to left, #C0C0C0, #E8E8E8);
+  transform-origin: right;
+}
+
+.door-container.open .left-door {
+  transform: rotateY(-90deg);
+}
+
+.door-container.open .right-door {
+  transform: rotateY(90deg);
+}
+
+.logo-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.rcorners1 {
+  border-radius: 15px;
+}
+
+.door-container.open .logo-container {
+  opacity: 1;
+}
+
+.product-box {
+  background: linear-gradient(to right, #ffffff, #ffffff);
+  overflow: hidden;
+}
+
+.product-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(to right, #22d3ee, #0ea5e9);
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.product-box:hover::before {
+  opacity: 1;
+}
+
+.product-image {
+  border-radius: 15;
+}
+
+.svg-style { enable-background: new 0 0 770 148.6; }
+    .st0 { fill-rule:evenodd; clip-rule:evenodd; fill:#d1b000; }
+    .st1 { fill:#fff; }
+    .st2 { fill:#d1b000; }
+
+.product-box > * {
+  position: relative;
+  z-index: 1;
+}

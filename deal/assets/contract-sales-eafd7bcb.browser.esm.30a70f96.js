@@ -1,0 +1,1 @@
+import{aD as r,a7 as t,aa as e}from"./index.a890a1de.js";class i{featureName=r.name;constructor(a){this.contractWrapper=a}async getRecipient(){return await this.contractWrapper.read("primarySaleRecipient",[])}setRecipient=t(async a=>e.fromContractWrapper({contractWrapper:this.contractWrapper,method:"setPrimarySaleRecipient",args:[a]}))}export{i as C};

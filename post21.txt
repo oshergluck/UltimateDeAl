@@ -1,0 +1,63 @@
+^$How to Launch Your Ultimate Shop$^
+
+$From zero to hero: How to open your blockchain USDC Shop$
+
+*Getting Started with Your Blockchain Shop*
+
+You have a service or product you want to sell and get paid in USDC? You're at the right place! Here's your step-by-step guide to success.
+
+*Prerequisites:*
+• Ensure you have ETH for gas fees on the ~Base Network~
+• You'll need ETH for each product creation and smart contract deployment
+• Remember to transfer ETH specifically to the Base chain in your wallet
+
+*Smart Contract Deployment Steps:*
+
+1. Deploy ERCUltra ESHCoin
+~https://thirdweb.com/ultimatedeal.eth/ESH~
+(Gas fees + 3.5% to platform)
+
+2. Deploy Invoice Minter (Service Key)
+~https://thirdweb.com/ultimatedeal.eth/ESHInvoicesMinter~
+(Gas fees only)
+
+3. Deploy ERCUltraStore
+Choose your shop type:
+• *For Rental Of Services:*
+~https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals~
+• *For Sales Of Unlimited Time Services:*
+~https://thirdweb.com/ultimatedeal.eth/ESHStoreSales~
+(Gas fees + 5% to platform)
+
+4. Deploy VotingSystem
+~https://thirdweb.com/ultimatedeal.eth/ESHVoting~
+(Gas fees only)
+
+*Post-Deployment Steps:*
+1. Verify each smart contract through the Thirdweb dashboard
+2. Save all smart contract addresses for future reference
+3. Configure the Minter smart contract using setStore function
+4. Set up the ESHCoin using setStore function
+5. Deposit ESHCoin to your shop:
+   • Approve the amount in ESHCoin contract (add 18 zeros)
+   • Use depositToRewardPool in Shop contract (without 18 zeros)
+
+*Setting Up Your Store Presence*
+
+1. Visit ~https://ultimatedeal.net/store/Fire/products/LISTESH~
+2. Purchase your preferred listing package duration
+3. Access the listing form via the "Click Here" button
+   (Alternative: visit ~https://ultimatedeal.net/register-new-store~)
+
+*Adding Your Store Assets:*
+1. Create a Pinata Cloud account
+2. Upload your logo and copy the CID
+3. Complete the registration form with accurate details
+4. Submit and confirm the gas fee
+
+^Congratulations!^ You now have:
+• Your own subdomain with a blockchain shop
+• Access to the dashboard (login with shop address)
+• Ability to add products (minimum two media files per product)
+
+$*Welcome to the future of digital commerce!*$

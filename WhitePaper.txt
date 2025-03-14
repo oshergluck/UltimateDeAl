@@ -1,0 +1,47 @@
+White Paper for the Token ~ESH~
+And E-commerce Platform (UltimateDeal)
+
+Here you can try our fundraising mechanism and reward with XTST tokens and NFT of your investment
+*It works with any ERC20 or ERCUltra tokens you want to reward your customers with*
+Intended to use for presale of shares for our stores
+
+$~Introduction~$
+Our token and the advanced crypto platform are intended for entrepreneurs, startups and businesses who wish to sell their products and raise initial capital through the sale of a unique token.
+The platform provides a variety of features and tools for business management and marketing, and enables the creation of a community that runs independently through a unique digital token.
+
+$~Advantages and main features~$
+~1.~ *Unique store token* - each store on the platform receives a unique token of their own that allows holders to receive dividends from the store's profits.
+~2.~ *Data encryption* - an advanced data encryption system to secure users' sensitive information.
+~3.~ *Automatic emails* - option to send automatic emails to customers and employees according to different conditions.
+~4.~ *Investor recruitment campaign* - the possibility of opening campaigns to recruit investors and marketing them through various advertising channels.
+~5.~ *Unique stock token* - The whole site works in an ecosystem with a unique stock protocol named ERCUltra
+~6.~ *Fundraising in ESH* - the platform is intended for selling products and raising funds.
+~7.~ *Advertising system* - there is a news section feature that is also used as business advertising on the website to achieve optimal exposure.
+~8.~ *Business verification* - in order to prevent fraud every business will go through an approval process by the project team.
+~9.~ *Dividends* - Everytime a store owner’s withdraw his profits from the store, He chooses how much percentages to give to his ERCUltra holders.
+
+~*$Description of the platform$*~
+^(problems and features as advantages)^
+The token intended for use in the ecosystem of anyone who wants to leave the banks and fiat behind and move forward to a community that runs on its own without dependence on any other currency of any kind and of course with minimal fees.
+~Problem:~ Today there is no orderly trading in the blockchain that allows you to establish an orderly business with delivery invoices and correct financial management independent of the party that decides from above.
+~*The solution:*~ an ecosystem of encrypted online stores that are run in an orderly manner.
+~Problem:~ fundraising for entrepreneurs
+~*The solution:*~ today there is no fundraising system that gives investors a return.
+The ecosystem is built in such a technological way that allows the distribution of incomes of the stores to the holders of a unique token that belongs to each store, thus it is possible to raise funds and guarantee a return for investors.
+
+~$technology$~
+The unique token has a delay after all those wallets that hold it in real time, therefore with a special function we built, every time when you want to withdraw the profits of the store, the token distributes to all the holders the profits according to the percentages they hold.
+Algorithmicallyת the token follows an index once and a wallet address once, and thus can perform an inhibitor without requiring high gas.
+
+$*~Any store can offer shares for sale~*$
+
+~*$Summary$*~
+The token and the platform are designed to create a community that runs independently through a unique digital currency. The platform provides advanced tools for business management and e-commerce, and is an advanced and cost-effective solution for entrepreneurs, startups and businesses.
+
+Any business can use a wide variety of tools and options built specifically for their project to promote their business.
+
+The use of a customer management system and the automation of emails can be a powerful tool for improving marketing processes and communication with customers.
+
+The sale of shares and their issuance on crypto exchanges can be another tool for financing the business and its development.
+
+Disclaimer: *Be aware that after the campaign reaches the goal it cannot give rewards of XTST anymore!*

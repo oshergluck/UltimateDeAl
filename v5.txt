@@ -1,0 +1,2 @@
+        clientId = {import.meta.env.VITE_THIRDWEB_CLIENT}
+        activeChain = {8453} 
