@@ -77,11 +77,11 @@ export default function App() {
         
         </div>
         {Total ? (isMobile ? (<>
-        <h3 className='text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>UltimateDeAl RAISED</h3>
+        <h3 className='text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>UltraShop RAISED</h3>
         <h3 className='text-center font-bold sm:text-5xl text-2xl !text-[#4287f5]'>{Total}</h3>
         <img src={usdcoinusdclogo} className='h-[35px] w-[35px] mx-auto text-center text-[#FFDD00] font-bold text-2xl sm:text-5xl'/><h3 className='text-center text-white font-bold text-2xl sm:text-5xl'>UNTIL NOW</h3>
         </>):(<div className="flex justify-center gap-3 mb-[25px]">
-        <span className='ml-[10px] text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>Ultimate</span><span  className='ml-[-10px] text-center !text-[#FFDD00] font-bold sm:text-5xl text-2xl drop-shadow-md'>DeAl </span><span  className='text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>RAISED</span>
+        <span className='ml-[10px] text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>Ultra</span><span  className='ml-[-10px] text-center !text-[#FFDD00] font-bold sm:text-5xl text-2xl drop-shadow-md'>Shop </span><span  className='text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>RAISED</span>
         <h3 className='text-center font-bold sm:text-5xl text-2xl !text-[#4287f5]'>{Total}</h3>
         <br/>
         <img src={usdcoinusdclogo} className='h-[35px] w-[35px] mt-[10px] text-center text-[#FFDD00] font-bold text-2xl sm:text-5xl'/><h3 className='text-center text-white font-bold text-2xl sm:text-5xl'>UNTIL NOW</h3>

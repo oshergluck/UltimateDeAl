@@ -200,7 +200,7 @@ const isDisabled = !form.profileImageLinkFromPinata || !form.videoLinkFromPinata
                 <div className='sm:flex sm:gap-[20px]'>
                     <FormField
                         labelName="Email or Phone Number Include Country Code*"
-                        placeholder="example@UltimateDeal.net"
+                        placeholder="example@email.com"
                         inputType="text"
                         value={form.email}
                         handleChange={(e) => handleFormFieldChange('email', e)}
@@ -314,7 +314,7 @@ You can use all of the signs on the same texts or some of them.
                         <div className='sm:w-3/12 w-full flex-none'>
                     <FormField
                         labelName="Target Amount*"
-                        placeholder="$USDT Goal"
+                        placeholder="$USDC Goal"
                         inputType="number"
                         value={form.target}
                         handleChange={(e) => handleFormFieldChange('target', e)}
@@ -361,7 +361,7 @@ You can use all of the signs on the same texts or some of them.
                     <div className='sm:flex sm:justify-center'>
                     <div className='mb-[40px]'>
                     <FormField 
-                        labelName="Price Of Reward In $USDT*"
+                        labelName="Price Of Reward In $USDC*"
                         placeholder="Amount"
                         inputType="number"
                         step="0.000001"  // Allow for very small fractions
@@ -406,11 +406,11 @@ You can use all of the signs on the same texts or some of them.
           { trait_type: "Creation Date", value: new Date().toISOString().substring(0,10) },
           { trait_type: "Email", value: form.email },
           { trait_type: "Title", value: form.title },
-          { trait_type: "Goal", value: `${(form.target/1).toFixed(2)} $USDT` },
+          { trait_type: "Goal", value: `${(form.target/1).toFixed(2)} $USDC` },
           { trait_type: "Deadline", value: new Date(form.endDate).toISOString().substring(0,10) },
           { trait_type: "Reward To Investors", value: symbol },
           { trait_type: "Reward Address", value: form.rewardAddress },
-          { trait_type: "Price Of Reward", value: `${(form.minAmount/1).toFixed(3)} $USDT` }
+          { trait_type: "Price Of Reward", value: `${(form.minAmount/1).toFixed(3)} $USDC` }
         ]
       })
 

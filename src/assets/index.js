@@ -45,7 +45,7 @@ import ProfilePhotoOsher from './ProfilePhotoOsher.jpg'
 import MENU_MOBILE from './MENU_MOBILE.png'
 import Adi from './Adi.jpg'
 import etherscanlogo from './etherscanlogo.svg'
-import usdcoinusdclogo from './tether-1.svg'
+import usdcoinusdclogo from './usd-coin-usdc-logo.svg'
 import SC from './SC.svg'
 import LingureLogo from './LingureLogo.svg'
 import tetherusdtlogo from './tether-usdt-logo.svg'
@@ -55,11 +55,13 @@ import AAPL from './Apple_logo_black.png'
 import ETHLogo from './ethereum-eth-logo.png'
 import ESH from './ESH.mp3';
 import IL from './IL.png';
-import UltimateDealStartUp from './UltimateDealStartUp.png';
+import UltimateDealStartUp from './UltimateDealStartUp1.png';
+import WethLogo from './ethereum-eth-logo.svg';
 
 
 export {menu,
   IL,
+  WethLogo,
   ETHLogo,
   AAPL,
   MM,

@@ -30,7 +30,7 @@ export const Footer = () => {
   const handleNavigateHome = () => {
     navigate('/');
   }
-  const emailRecipient = 'support@UltimateDeal.net'
+  const emailRecipient = 'support@UltraShop.tech'
   return (
     <footer
       className="flex flex-col items-center text-center text-surface mx-auto">
@@ -157,7 +157,7 @@ export const Footer = () => {
         </div>
         <div className=' pb-[50px] text-center text-[#FFFFFF]'>
         © 2024 Copyright: 
-        <button className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out ml-[5px]' onClick={handleNavigateHome}> UltimateDeal.net</button>
+        <button className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out ml-[5px]' onClick={handleNavigateHome}> UltraShop.tech</button>
         </div>
       </div>
       

@@ -31,13 +31,13 @@ const City = () => {
     const [story, setStory] = useState('');
     const [mayor, setMayor] = useState('');
     const [high,setHighesBalance] = useState(0);
-    const {contract: highContract} = useContract('0x231aaC71b05e8D5C12AE7a03148a3c2BBBa66530');
+    const {contract: highContract} = useContract('0x9Cd94dA724e95250A37eB4C24c5Be761972c01B6');
     const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
     const { contract: luckMachineContract3 } = useContract(import.meta.env.VITE_LUCKY);
-    const { contract: invoicesContract } = useContract('0x228848ebc2FF46830669c297dd19d816d7ea75E7');
+    const { contract: invoicesContract } = useContract('0x3d6Cf66C9C78e5E8AC5Bccc08dd1F47C4d82BCcD');
     const [ownerShip,setOwnerShip] = useState(false);
     const navigateToDeAlStore = () => {
-        navigate('/shop/UltimateDeAl/products/LOTERRY');
+        navigate('/shop/UltraShop/products/LOTERRY');
         };
 
     const luckMachineContract2 = getContract({
@@ -50,7 +50,7 @@ const City = () => {
     const DEALShare = getContract({
         client: client,
         chain: { id: 8453, rpc: POLYRPC },
-        address: '0x231aaC71b05e8D5C12AE7a03148a3c2BBBa66530',
+        address: '0x9Cd94dA724e95250A37eB4C24c5Be761972c01B6',
     });
 
     useEffect(() => {

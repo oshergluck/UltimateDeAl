@@ -141,7 +141,7 @@ const SearchEngine = ({ searchEngineAddress, listingContractAddress }) => {
                     {Number(product.price/1e6)}
                   </span>
                   <span className="font-semibold text-white">
-                    {Number(product.price*(100-product.discountPercentage)/(100*1e6))} USDT
+                    {Number(product.price*(100-product.discountPercentage)/(100*1e6))} USDC
                   </span>
                 </div>
               </div>

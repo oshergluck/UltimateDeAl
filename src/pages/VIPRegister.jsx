@@ -107,7 +107,7 @@ const VIPRegister = () => {
                 />
                 </div>
               
-             <p className={`text-${fontSizes} text-[#FFFFFF] drop-shadow-md sm:text-${fontSizes} mt-[25px] w-10/12`}>By sending your details, you confirm to get updates about UltimateDeal
+             <p className={`text-${fontSizes} text-[#FFFFFF] drop-shadow-md sm:text-${fontSizes} mt-[25px] w-10/12`}>By sending your details, you confirm to get updates about ultrashop.tech
              <br/>
              Be aware the discount changes from time to time.
              <br/>
@@ -157,7 +157,7 @@ const VIPRegister = () => {
               </div>
       </div>
                 <div className='sm:w-10/12 w-full mx-auto sm:mt-[50px] mt-[50px] rounded-[15px]'>
-      <h1 className='text-[#FFFFFF] font-semibold sm:text-[100px] text-[25px] text-center sm:pt-[90px]'>UltimateDeal</h1>
+      <h1 className='text-[#FFFFFF] font-semibold sm:text-[100px] text-[25px] text-center sm:pt-[90px]'>UltraShop</h1>
       <h1 className='text-[#FFFFFF] font-semibold sm:text-[100px] text-[25px] text-center sm:pt-[90px]'>Where Your Business</h1>
       <h1 className='text-[#FFFFFF] font-semibold sm:text-[100px] text-[25px] text-center sm:pt-[80px]'>Meets The Future</h1>
 
@@ -181,15 +181,15 @@ const VIPRegister = () => {
                     <div class="sm:grid sm:gap-4 sm:grid-cols-2 sm:w-9/12 w-11/12 mt-[45px] ml-[30px] sm:ml-[110px]">
                       <div className='rounded-[15px] sm:w-full w-11/12 border-[1px] border-[#454545] mb-[20px] sm:mb-[0px] sm:h-[210px] h-[220px]'>
                         <h1 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Slash Those Fees</h1>
-                        <p className='text-[#FFFFFF] font-epilogue text-[15px] py-[10px] px-[20px]'>Forget the hefty cuts taken by traditional banks. With $USDT, enjoy significantly lower transaction fees. More of your funds go where they belong -- to your project!</p>
+                        <p className='text-[#FFFFFF] font-epilogue text-[15px] py-[10px] px-[20px]'>Forget the hefty cuts taken by traditional banks. With $USDC, enjoy significantly lower transaction fees. More of your funds go where they belong -- to your project!</p>
                       </div>
                       <div className='rounded-[15px] sm:w-full w-11/12 border-[1px] border-[#454545] sm:h-[210px] h-[220px] mb-[20px] sm:mb-[0px]'>
                         <h1 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Speed of Light Transactions</h1>
-                        <p className='text-[#FFFFFF] font-epilogue text-[15px] py-[10px] px-[20px]'>Time is money, and with $USDT, you save both. Experience blazing-fast transactions leaving sluggish fiat processes in the dust.</p>
+                        <p className='text-[#FFFFFF] font-epilogue text-[15px] py-[10px] px-[20px]'>Time is money, and with $USDC, you save both. Experience blazing-fast transactions leaving sluggish fiat processes in the dust.</p>
                       </div>
                       <div className='rounded-[15px] sm:w-full w-11/12 border-[1px] border-[#454545] sm:h-[210px] h-[220px] mb-[20px] sm:mb-[0px]'>
                         <h1 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Reach Borderless Fundraising</h1>
-                        <p className='text-[#FFFFFF] font-epilogue text-[15px] py-[10px] px-[20px]'>Break free from geographical and currency barriers. $USDT opens your campaign to a global audience, ready to support without the fuss of currency exchange.</p>
+                        <p className='text-[#FFFFFF] font-epilogue text-[15px] py-[10px] px-[20px]'>Break free from geographical and currency barriers. $USDC opens your campaign to a global audience, ready to support without the fuss of currency exchange.</p>
                       </div>
                       <div className='rounded-[15px] sm:w-full w-11/12 border-[1px] border-[#454545] sm:h-[210px] h-[220px] mb-[20px] sm:mb-[0px]'>
                         <h1 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Unshakeable Security</h1>
@@ -209,7 +209,7 @@ const VIPRegister = () => {
                     </div>
 
                     <h1 className='text-[#FFFFFF] font-semibold sm:text-[92px] text-[25px] text-center sm:pt-[78px]'>Join The Elite Circle</h1>
-                    <h1 className='text-[#FFFFFF] font-semibold sm:text-[85px] text-center text-[25px] sm:pt-[78px]'>Of UltimateDeal Clients</h1>
+                    <h1 className='text-[#FFFFFF] font-semibold sm:text-[85px] text-center text-[25px] sm:pt-[78px]'>Of ultrashop.tech Clients</h1>
 
                     <div class="sm:grid sm:grid-cols-3 sm:justify sm:flex-wrap sm:justify-items-stretch sm:flex w-full mx-auto mt-[45px] sm:block hidden">
                         <div className='rounded-[15px] sm:justify sm:flex sm:flex-auto w-full h-[210px]'>
@@ -243,7 +243,7 @@ const VIPRegister = () => {
                     <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Fill in your details and submit the form.</p>
                     
 
-                    <h1 className='text-[#FFFFFF] font-semibold sm:text-[92px] text-[25px] text-center leading-none'>Join UltimateDeal Revolution</h1>
+                    <h1 className='text-[#FFFFFF] font-semibold sm:text-[92px] text-[25px] text-center leading-none'>Join ultrashop.tech Revolution</h1>
                     <div className='sm:w-9/12 w-10/12 sm:flex sm:justify-center ml-[50px] sm:ml-[120px] mx-auto mt-[30px]'>
                       <div className='sm:w-3/12 sm:flex sm:flex-col w-10/12 items-center'>
                           <img src={stairsvip_desk} alt='stairs' className='mb-[15px] mx-auto'/>
@@ -251,7 +251,7 @@ const VIPRegister = () => {
                       </div>
                       <div className='sm:w-3/12 sm:flex sm:flex-col w-10/12 sm:mx-[30px]'>
                           <img src={lightning_desk} alt='pencil' className='mb-[5px] mx-auto'/>
-                          <p className="text-[#ffffff] font-semibold mt-[10px] mb-[10px] text-center">Embrace the power of $USDT and the privilage of being VIP</p>
+                          <p className="text-[#ffffff] font-semibold mt-[10px] mb-[10px] text-center">Embrace the power of $USDC and the privilage of being VIP</p>
                       </div>
                       <div className='sm:w-3/12 sm:flex sm:flex-col w-10/12 items-center'>
                           <img src={pencel_desk} alt='lightning' className='mb-[10px] mx-auto'/>
@@ -308,7 +308,7 @@ const VIPRegister = () => {
                 />
                 </div>
               
-             <p className={`text-${fontSizes} text-[#FFFFFF] drop-shadow-md sm:text-${fontSizes} mt-[25px] w-10/12`}>By sending your details, you confirm to get updates about UltimateDeal
+             <p className={`text-${fontSizes} text-[#FFFFFF] drop-shadow-md sm:text-${fontSizes} mt-[25px] w-10/12`}>By sending your details, you confirm to get updates about ultrashop.tech
              <br/>
              Be aware the discount changes from time to time.
              <br/>

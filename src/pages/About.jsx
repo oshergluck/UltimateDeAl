@@ -35,9 +35,9 @@ const About = () => {
 
   return (<>
     <div className='w-full rounded-t-[10px] linear-gradient1 py-[20px] mt-[20px]'>
-        <h2 className='text-[#FFFFFF] sm:text-[55px] text-[29px] font-semibold mt-[40px] text-center'>Welcome To UltimateDeal</h2>
+        <h2 className='text-[#FFFFFF] sm:text-[55px] text-[29px] font-semibold mt-[40px] text-center'>Welcome To UltraShop</h2>
         <div className='w-10/12 mx-[auto]'>
-        <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>UltimateDeal is a platform that allows you to raise funds for your business or project, open your own blockchain store and more. We provide a safe and secure way for you to connect with potential investors and donors who are interested in supporting your cause. Whether you are a startup looking for funding or an established business seeking to expand, UltimateDeal can help you reach your goals. Our platform is easy to use and offers a variety of features to help you create a successful business. Sign up today and start your business!</p>
+        <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>UltraShop is a platform that allows you to raise funds for your business or project, open your own blockchain store and more. We provide a safe and secure way for you to connect with potential investors and donors who are interested in supporting your cause. Whether you are a startup looking for funding or an established business seeking to expand, UltraShop can help you reach your goals. Our platform is easy to use and offers a variety of features to help you create a successful business. Sign up today and start your business!</p>
         </div>
         <h2 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[60px] mb-[30px] text-center'>Team Members</h2>
         <div className='sm:w-[450px] w-full h-[790px] mx-auto overflow-hidden mb-[60px]'>
@@ -48,10 +48,10 @@ const About = () => {
                     <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${import.meta.env.VITE_OSHER_HAIM_PINATA}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} alt='team member' className='w-[200px] h-[200px] rounded-full m-[auto]'/>
                 </div>
                 <h2 className='text-center text-[#FFFFFF] text-[22px] font-semi-bold mt-[-25px]'>Osher Haim Glick - CEO & Founder</h2>
-                <p className='text-[#FFFFFF] text-[16px] font-semibold mt-[20px] mx-[20px] text-center'>I'm the CEO and Founder of UltimateDeal and the developer of ERCUltra and ERCUltraStore. I have over 14 years of experience in developing software and has worked with various startups and businesses in the computer industry to help them raise funds and grow their businesses. I'm passionate about helping entrepreneurs succeed and is dedicated to providing a platform that empowers them to achieve their goals.</p>
+                <p className='text-[#FFFFFF] text-[16px] font-semibold mt-[20px] mx-[20px] text-center'>I'm the CEO and Founder of UltraShop and the developer of ERCUltra and ERCUltraStore. I have over 14 years of experience in developing software and has worked with various startups and businesses in the computer industry to help them raise funds and grow their businesses. I'm passionate about helping entrepreneurs succeed and is dedicated to providing a platform that empowers them to achieve their goals.</p>
                 <br/>
                 <br/>
-                <p className='text-[#FFFFFF] text-[16px] font-semibold mt-[20px] mx-[20px] text-center'>Connect with Osher Haim on LinkedIn: <a href='https://www.linkedin.com/in/%D7%90%D7%95%D7%A9%D7%A8-%D7%97%D7%99%D7%99%D7%9D-%D7%92%D7%9C%D7%99%D7%A7-a27411300/' target='_blank' className='text-[#FFDD00]'>Osher Haim Glick</a> ,by Email: osherhaim@ultimatedeal.net Or by mobile: +972-52-878-0223</p>
+                <p className='text-[#FFFFFF] text-[16px] font-semibold mt-[20px] mx-[20px] text-center'>Connect with Osher Haim on LinkedIn: <a href='https://www.linkedin.com/in/%D7%90%D7%95%D7%A9%D7%A8-%D7%97%D7%99%D7%99%D7%9D-%D7%92%D7%9C%D7%99%D7%A7-a27411300/' target='_blank' className='text-[#FFDD00]'>Osher Haim Glick</a> ,by Email: osherhaim@UltraShop.tech Or by mobile: +972-52-878-0223</p>
                 <p className='text-[#FFFFFF] text-[16px] font-semibold mt-[20px] mx-[20px] text-center'></p>
                 <p className='text-[#FFFFFF] text-[16px] font-semibold mt-[20px] mx-[20px] text-center'></p>
             </div>
@@ -79,9 +79,9 @@ const About = () => {
     <div className='linear-gradient1 py-[20px] w-full mx-[auto]'>
         <div className='w-10/12 mx-[auto]'>
         <h2 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[40px] text-center'>Our Mission</h2>
-        <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>In every city in the world that there will be crypto businesses, each business owner gets business exclusivity, and no competitors for limited time. We provide a platform that empowers entrepreneurs to achieve their goals. We believe that everyone should have the opportunity to start and grow their business, and we are committed to helping you succeed. Whether you are looking for funding, marketing support, or a place to sell your products, UltimateDeal has the tools and resources you need to make your dreams a reality. Sign up today and start building your business!</p>
+        <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>In every city in the world that there will be crypto businesses, each business owner gets business exclusivity, and no competitors for limited time. We provide a platform that empowers entrepreneurs to achieve their goals. We believe that everyone should have the opportunity to start and grow their business, and we are committed to helping you succeed. Whether you are looking for funding, marketing support, or a place to sell your products, UltraShop has the tools and resources you need to make your dreams a reality. Sign up today and start building your business!</p>
         <h2 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[60px] mb-[30px] text-center'>Our Vision</h2>
-        <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>Our vision is to create a global community of entrepreneurs who support each other and work together to build successful businesses. We believe that by connecting people with similar goals and interests, we can create a network of support that will help you achieve your dreams. Whether you are a startup looking for funding or an established business seeking to expand, UltimateDeal is here to help you succeed. Join us today and be a part of our growing community!</p>
+        <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>Our vision is to create a global community of entrepreneurs who support each other and work together to build successful businesses. We believe that by connecting people with similar goals and interests, we can create a network of support that will help you achieve your dreams. Whether you are a startup looking for funding or an established business seeking to expand, UltraShop is here to help you succeed. Join us today and be a part of our growing community!</p>
     </div>
     <h3 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[60px] mb-[30px] text-center'>How To Use Our Platfrom</h3>
     <div className='w-10/12 mx-[auto] mt-[60px]'>
@@ -117,14 +117,14 @@ const About = () => {
       <div className='w-10/12 mx-[auto]'>
           <h2 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[60px] mb-[30px] text-center'>What is the ERCUltra Protocol?</h2>
           <p className='text-[#FFDD00] text-[18px] font-semibold my-[30px] text-center'>
-            ERCUltra is an advanced protocol designed to distribute dividends to token holders seamlessly. When you create a store on UltimateDeal, you are granted your own ERCUltra token. As a store owner, you can reward your customers and investors by automatically sharing a portion of your profits with them. This feature not only incentivizes users to hold your tokens but also builds trust and loyalty within your community.
+            ERCUltra is an advanced protocol designed to distribute dividends to token holders seamlessly. When you create a store on UltraShop, you are granted your own ERCUltra token. As a store owner, you can reward your customers and investors by automatically sharing a portion of your profits with them. This feature not only incentivizes users to hold your tokens but also builds trust and loyalty within your community.
           </p>
           <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>
             Every store on our platform operates with its unique ERCUltra token, ensuring that profits are fairly distributed among token holders. The protocol let you choose how much dividend payouts and with anycoin you choose to pay with, providing a transparent and efficient way to manage your business's revenue sharing.
           </p>
         </div>
       <h2 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[60px] mb-[60px] text-center'>
-        Why Use UltimateDeal
+        Why Use UltraShop
       </h2>
       <div className='sm:flex sm:flex-row gap-10 sm:justify-center mx-auto w-10/12'> {/* Flex container adjusted to center and match the width of the parent */}
         <div className='mx-auto border-[1px] border-[#FFFFFF] rounded-[10px] sm:w-4/12 w-full sm:flex items-center'>
@@ -157,7 +157,7 @@ const About = () => {
           <div>
           <img src={V_ABOUT_DESKTOP} alt='V' className='mx-auto mt-[30px]'/>
             <p className='text-[#FFDD00] text-[18px] font-semibold my-[30px] text-center px-[10px]'>
-              With UltimateDeal people from all around the globe can invest in your company anonymously.
+              With UltraShop people from all around the globe can invest in your company anonymously.
             </p>
           </div>
         </div>
@@ -175,16 +175,16 @@ const About = () => {
     <div className='w-full linear-gradient1 py-[20px] rounded-b-[15px]'>
         <h1 className='text-[#FFFFFF] sm:text-[55px] text-[25px] font-semibold mt-[40px] text-center'>FAQ</h1>
         <div className='w-10/12 mx-auto'>
-            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: What is UltimateDeal?</h2>
-            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: UltimateDeal is a platform that allows you to raise funds for your business or project, open your own blockchain store and more. We provide a safe and secure way for you to connect with potential investors and donors who are interested in supporting your cause. Whether you are a startup looking for funding or an established business seeking to expand, UltimateDeal can help you reach your goals. Our platform is easy to use and offers a variety of features to help you create a successful business. Sign up today and start your business!</p>
-            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How does UltimateDeal work?</h2>
-            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A:UltimateDeal works by connecting entrepreneurs with potential investors and donors who are interested in supporting their cause. You can create a fundraising campaign, open your own blockchain store, or sell your products on our platform. We provide a safe and secure way for you to connect with others and achieve your goals!</p>
-            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How do I get started with UltimateDeal?</h2>
-            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: To get started with UltimateDeal, simply login with your wallet to our platform. Once you have created an account, you can start raising funds for your business, opening your own blockchain store, or selling your products. Our platform is easy to use and offers a variety of features to help you succeed!</p>
-            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How can I contact UltimateDeal?</h2>
-            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: You can contact UltimateDeal by email at support@UltimateDeal.net</p> 
-            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How can I get help with UltimateDeal?</h2>
-            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: If you need help with UltimateDeal, you can contact our support team by email at support@UltimateDeal.net or at our WhatsApp group: <a href='https://chat.whatsapp.com/KIfMtgmEf0PASAsn9MUnTk' target='_blank' className='text-[#FFDD00]'>UltimateDeal</a></p>
+            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: What is UltraShop?</h2>
+            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: UltraShop is a platform that allows you to raise funds for your business or project, open your own blockchain store and more. We provide a safe and secure way for you to connect with potential investors and donors who are interested in supporting your cause. Whether you are a startup looking for funding or an established business seeking to expand, UltraShop can help you reach your goals. Our platform is easy to use and offers a variety of features to help you create a successful business. Sign up today and start your business!</p>
+            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How does UltraShop work?</h2>
+            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A:UltraShop works by connecting entrepreneurs with potential investors and donors who are interested in supporting their cause. You can create a fundraising campaign, open your own blockchain store, or sell your products on our platform. We provide a safe and secure way for you to connect with others and achieve your goals!</p>
+            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How do I get started with UltraShop?</h2>
+            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: To get started with UltraShop, simply login with your wallet to our platform. Once you have created an account, you can start raising funds for your business, opening your own blockchain store, or selling your products. Our platform is easy to use and offers a variety of features to help you succeed!</p>
+            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How can I contact UltraShop?</h2>
+            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: You can contact UltraShop by email at support@UltraShop.tech</p> 
+            <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How can I get help with UltraShop?</h2>
+            <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: If you need help with UltraShop, you can contact our support team by email at support@UltraShop.tech or at our WhatsApp group: <a href='https://chat.whatsapp.com/KIfMtgmEf0PASAsn9MUnTk' target='_blank' className='text-[#FFDD00]'>UltraShop</a></p>
             <h2 className='text-[#FFDD00] text-[30px] font-semibold mt-[40px] text-center'>Q: How do I upload video or profile picture when I invest or open a campaign?</h2>    
             <p className='text-[#FFFFFF] text-[18px] font-semibold my-[30px] text-center'>A: To upload a video or profile picture when you invest or open a campaign, you can use IPFS of <a href='https://www.thirdweb.com' target='_blank' className='text-[#FFDD00]'>ThirdWeb</a> Or <a href='https://www.pinata.cloud' target='_blank' className='text-[#FFDD00]'>Pinata.cloud</a>. You can upload your video or picture to the IPFS network and then paste the hash into the appropriate field on our platform. If you need help with this process, you can contact our support team for assistance.<p className='text-red-500'>Do not add ipfs:// at the Begining!</p> only the CID itself</p>   
         </div>

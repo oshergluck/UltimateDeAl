@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
       <h1 className='text-[#FFFFFF] sm:text-[45px] text-[25px] font-epilogue font-bold sm:pt-[100px] sm:pb-[70px] pt-[45px]'>Privacy Policy</h1>
 
       <span className='text-[#FFDD00] font-epilogue font-semibold text-[16px]'>1. Introduction</span>
-      <p className='text-[#FFFFFF] font-epilogue font-semibold text-[16px] mt-[10px] mb-[30px]'>UltimateDeal ("we", "our", or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy outlines how we collect, use, disclose, and safeguard the information you provide when using our website and services.</p>
+      <p className='text-[#FFFFFF] font-epilogue font-semibold text-[16px] mt-[10px] mb-[30px]'>UltraShop ("we", "our", or "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy outlines how we collect, use, disclose, and safeguard the information you provide when using our website and services.</p>
 
       <span className='text-[#FFDD00] font-epilogue font-semibold text-[16px]'>2. Information We Collect</span>
       <p className='text-[#FFFFFF] font-epilogue font-semibold text-[16px] mt-[10px] mb-[30px]'>We may collect personal information such as your name, email address, and contact details when you create an account, initiate a crowdfunding campaign, or communicate with us. We may also collect non-personal information, such as your IP address and browser type, for analytical purposes.</p>
@@ -38,7 +38,7 @@ const PrivacyPolicy = () => {
       <p className='text-[#FFFFFF] font-epilogue font-semibold text-[16px] mt-[10px] mb-[30px]'>We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. We encourage you to review this page periodically for any updates.</p>
 
       <span className='text-[#FFDD00] font-epilogue font-semibold text-[16px]'>9. Contact Us</span>
-      <p className='text-[#FFFFFF] font-epilogue font-semibold text-[16px] mt-[10px] mb-[30px]'>If you have any questions or concerns regarding this Privacy Policy or our data practices, please contact us at support@UltimateDeal.net</p>
+      <p className='text-[#FFFFFF] font-epilogue font-semibold text-[16px] mt-[10px] mb-[30px]'>If you have any questions or concerns regarding this Privacy Policy or our data practices, please contact us at support@UltraShop.tech</p>
 
       <p className='text-[#FFFFFF] font-epilogue text-[14px] mt-[70px] mb-[30px]'>Last updated: 08/09/2024</p>
 

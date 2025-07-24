@@ -38,7 +38,7 @@ const english = en({
         instruction: "Accept connection request in your MetaMask wallet",
         confirmInWallet: "Confirm in your wallet",
       },
-      getStartedLink: "https://ultimatedeal.net",
+      getStartedLink: "https://ultrashop.tech",
       getStartedScreen: {
         instruction: "Accept connection request in your MetaMask wallet",
     },
@@ -54,7 +54,7 @@ root.render(
     clientId={import.meta.env.VITE_THIRDWEB_CLIENT}
     authConfig={{
       // Set this to your domain to prevent phishing attacks
-      domain: "https://www.ultimatedeal.net",
+      domain: "https://www.ultrashop.tech",
       // The URL of your Auth API
     }}
     >

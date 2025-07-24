@@ -996,7 +996,7 @@ useEffect(() => {
       </>
     ):(
       <>
-      Approve $USDT
+      Approve $USDC
       </>
     )}
   </TransactionButton>
@@ -1005,13 +1005,7 @@ useEffect(() => {
     className={`!mt-[30px] !bg-[#FFDD00] ${allowance >= (HexToInteger(product?.price._hex)-HexToInteger(product?.discountPercentage._hex)*HexToInteger(product?.price._hex)/100)*amountOfProduct ? (''):('!hidden')}`}
       transaction={async() => {
         let IPFSOFNFT = '';
-        let priceForNFT = 0;
-        if(paymentAddress=='0xE1CbE71D2e56aAc7d50eB0ef855Fe5E4B51DF26c') {
-          priceForNFT = await ((HexToInteger(product?.price._hex) * (100 - HexToInteger(product?.discountPercentage._hex))) / (100 * 1e18));
-        }
-        if(paymentAddress=='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913') {
-          priceForNFT = await ((HexToInteger(product?.price._hex) * (100 - HexToInteger(product?.discountPercentage._hex))) / (100 * 1e6));
-        }
+        let priceForNFT = await ((HexToInteger(product?.price._hex) * (100 - HexToInteger(product?.discountPercentage._hex))) / (100 * 1e6));
         const rewardForUser = await rewardCalc(type);
         const today = new Date();
         const sellDate = await `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
@@ -1023,16 +1017,16 @@ useEffect(() => {
         if(type=='Rentals' || type=='Renting') {
           const upload = await pinata.upload.json({
             name: `Invoice`,
-            description: `Services entrence from ${storeName}\nLink to the store: https://ultimatedeal.net/shop/${StoreURL}`,
-            external_url: `https://ultimatedeal.net/shop/${StoreURL}`,
+            description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
+            external_url: `https://UltraShop.tech/shop/${StoreURL}`,
             image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
             attributes: [
               { trait_type: "Invoice Id", value: invoiceCounter },
               { trait_type: "Product Name", value: product.name },
               { trait_type: "Rental Period", value: `${amountOfProduct} Days` },
               { trait_type: "Sell Date", value: sellDate },
-              { trait_type: "Amount Payed", value: `${(priceForNFT*amountOfProduct).toFixed(2)} $USDT` },
-              { trait_type: "Price Per Day", value: `${priceForNFT.toFixed(2)} $USDT` },
+              { trait_type: "Amount Payed", value: `${(priceForNFT*amountOfProduct).toFixed(2)} $USDC` },
+              { trait_type: "Price Per Day", value: `${priceForNFT.toFixed(2)} $USDC` },
               { trait_type: "Reward Address", value: rewardAddress },
               { trait_type: "Reward Amount", value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}` },
               { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
@@ -1041,39 +1035,19 @@ useEffect(() => {
           });
           IPFSOFNFT = await upload.IpfsHash;
         }
-
-        if(type=='Liquidity') {
-          const upload = await pinata.upload.json({
-            name: `Invoice`,
-            description: `Services entrence from ${storeName}\nLink to the store: https://ultimatedeal.net/shop/${StoreURL}`,
-            external_url: `https://ultimatedeal.net/shop/${StoreURL}`,
-            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
-            attributes: [
-              { trait_type: "Invoice Id", value: invoiceCounter },
-              { trait_type: "Product Name", value: product.name },
-              { trait_type: "Sell Date", value: sellDate },
-              { trait_type: "Amount Payed", value: `${(priceForNFT*amountOfProduct).toFixed(2)} $USDT` },
-              { trait_type: "Price Of DeAl", value: `${priceForNFT.toFixed(2)} $USDT` },
-              { trait_type: "Reward Address", value: rewardAddress },
-              { trait_type: "Reward Amount", value: `${amountOfProduct} ${theSymbolOfReward}` },
-              { trait_type: "Symbol", value: `${theSymbolOfReward}` }
-            ]
-          });
-          IPFSOFNFT = await upload.IpfsHash;
-        }
         else if(type=='Sales') {
           const upload = await pinata.upload.json({
             name: `Invoice`,
-            description: `Services entrence from ${storeName}\nLink to the store: https://ultimatedeal.net/shop/${StoreURL}`,
-            external_url: `https://ultimatedeal.net/shop/${StoreURL}`,
+            description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
+            external_url: `https://UltraShop.tech/shop/${StoreURL}`,
             image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
             attributes: [
               { trait_type: "Invoice Id", value: invoiceCounter },
               { trait_type: "Product Name", value: product.name },
               { trait_type: "Amount", value: amountOfProduct },
               { trait_type: "Sell Date", value: sellDate },
-              { trait_type: "Amount Payed", value: `${(priceForNFT*(amountOfProduct)).toFixed(2)} $USDT` },
-              { trait_type: "Price", value: `${(priceForNFT).toFixed(2)} $USDT` },
+              { trait_type: "Amount Payed", value: `${(priceForNFT*(amountOfProduct)).toFixed(2)} $USDC` },
+              { trait_type: "Price", value: `${(priceForNFT).toFixed(2)} $USDC` },
               { trait_type: "Reward Address", value: rewardAddress },
               { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
               { trait_type: "Reward Amount", value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}` }
@@ -1105,7 +1079,7 @@ useEffect(() => {
       }}
     >
       {storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (<>
-      Purchase $USDT
+      Purchase $USDC
       </>
     ):(<>
         Purchase
@@ -1274,7 +1248,6 @@ useEffect(() => {
         </>):(<>
         <ConnectButton
               client={client}
-
               wallets={wallets}
 
               theme={"dark"}
@@ -1309,9 +1282,9 @@ useEffect(() => {
 
               },
 
-              termsOfServiceUrl: "https://ultimateDeal.net/terms",
+              termsOfServiceUrl: "https://UltraShop.tech/terms",
 
-              privacyPolicyUrl: "https://ultimateDeal.net/privacy-policy",
+              privacyPolicyUrl: "https://UltraShop.tech/privacy-policy",
 
               showThirdwebBranding: true,
 

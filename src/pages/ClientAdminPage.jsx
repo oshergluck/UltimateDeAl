@@ -47,7 +47,7 @@ const ClientAdminPage = () => {
     const [userContract, setUserContract] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [responseData, setResponseData] = useState('');
-    const [userSecretKey, setUserSecretKey] = useState('');
+    const [contractPassword, setcontractPassword] = useState('');
     const { approveCoinsForSmartContractDeAl,address ,login,storeRegistery,encryptIPFS,encrypt,decrypt,HexToInteger,generateKey,formatDate,generateSecretKey,ethAddressToBinaryKey} = useStateContext();
     const [connectedto,setConnectedto] = useState(false);
     const [productCategory,setProductCategory] = useState('');
@@ -71,7 +71,7 @@ const ClientAdminPage = () => {
           id:8453,
           rpc:POLYRPC,
         },
-        address: '0x3e148491A9132D47201626A7161e09ad897e5861',
+        address: '0x1D77BB9b27953ca21a1b7Bc408d090b6056632b9',
       });
 
       
@@ -242,9 +242,9 @@ const ClientAdminPage = () => {
 
     const handleAddWorker = async () => {
         try {
-        await setUserSecretKey(userSecretKey);
+        await setcontractPassword(contractPassword);
         const encryptedName = encrypt(nameofworker,address,userContract);
-        const encryptedEmail = encrypt(email,userSecretKey,address,userContract);
+        const encryptedEmail = encrypt(email,contractPassword,address,userContract);
         setIsLoading(true);
         const provider = new ethers.providers.JsonRpcProvider(POLYRPC, Base);
         const gasPrice = await provider.getGasPrice();
@@ -295,7 +295,7 @@ const ClientAdminPage = () => {
         try {
             setIsLoading(true);
             const data = await contract.call('Balance');
-            setResponseData("Profit Balance: " + HexToInteger(data._hex)/1e6 + ' USDT');
+            setResponseData("Profit Balance: ~" + HexToInteger(data._hex)/1e6 + ' USDC~');
             setIsLoading(false);
             return data;
         } catch (error) {
@@ -307,7 +307,7 @@ const ClientAdminPage = () => {
     const handleTotal = async () => {
         try { setIsLoading(true);
             const data = await contract.call('total');
-            setResponseData("Total Deposited From Creation: ~"+HexToInteger(data._hex)/1e6 + '~ USDT');
+            setResponseData("Total Deposited From Creation: ~"+HexToInteger(data._hex)/1e6 + '~ USDC');
             setIsLoading(false);
             return data;
         }
@@ -324,7 +324,7 @@ const ClientAdminPage = () => {
             const totalPayments = data.length;
             const formattedPayments = data.map((payment, index) => {
                 const reversedIndex = totalPayments - index - 1;
-                return `${reversedIndex.toString().padStart(2, '0')}: ${ethers.BigNumber.from(payment)} USDT`;
+                return `${reversedIndex.toString().padStart(2, '0')}: ${ethers.BigNumber.from(payment)} USDC`;
             });
     
             await setResponseData(`Worker ${workerIndex} Payments:\n${formattedPayments.join('\n')}`);
@@ -445,8 +445,8 @@ const ClientAdminPage = () => {
             const formattedReceipts = receipts.map((receipt, index) => {
                 // Decrypt specific fields in the receipt array
                 const decryptedReceipt = [
-                    receipt[0],  // Assuming fields 0, 1, 2 do not need decryption
-                    Date(receipt[1]),
+                    `Invoice Id `+receipt[0],  // Assuming fields 0, 1, 2 do not need decryption
+                    formatDate(receipt[1]*1000),
                     receipt[2],
                     receipt[5],  // Assuming fields 5, 6, 7 do not need decryption
                     receipt[6] / 1e6, // Decrypt field at index 8
@@ -454,14 +454,14 @@ const ClientAdminPage = () => {
     
                 // Calculate reverse index for display purposes
                 const reversedIndex = totalReceipts - index - 1;
-                return `${index.toString().padStart(2, '0')}: ${decryptedReceipt.join(', ')}`;
+                return `${decryptedReceipt.join(', ')}`;
             });
     
             // Join formatted receipts with double newlines to separate them
-            const formattedString = formattedReceipts.join('\n\n');
+            const formattedString = formattedReceipts.join('~\n\n~');
     
             // Update UI or state with formatted data
-            setResponseData(`All Receipts:\n${formattedString}`);
+            setResponseData(`All Invoices:\n~${formattedString}~`);
             setIsLoading(false);
             return formattedReceipts;
         } catch (error) {
@@ -475,24 +475,24 @@ const ClientAdminPage = () => {
     const getReceipt = async () => {
         try { setIsLoading(true);
             clearResponseData();
-            setUserSecretKey('');
+            setcontractPassword('');
             const data = await contract.call('receipts',[indexOfReceipt]);
             const moreData = await contract.call('infos',[indexOfReceipt]);
             const formattedData = await {  
                 rId: data[0],
                 time: data[1],
                 wallet: data[2],
-                name: await decrypt(data[3],userSecretKey,data[2],userContract,userPass),
-                email: await decrypt(data[4],userSecretKey,data[2],userContract,userPass),
+                name: await decrypt(data[3],contractPassword,data[2],userContract,userPass),
+                email: await decrypt(data[4],contractPassword,data[2],userContract,userPass),
                 poductbarcode: data[5],
                 amountpayed: ethers.BigNumber.from(data[6].toString())/1e6.toString(),
-                pysicaladdress: await decrypt(data[7],userSecretKey,data[2],userContract,userPass),
-                phone: await decrypt(data[8],userSecretKey,data[2],userContract,userPass),
+                pysicaladdress: await decrypt(data[7],contractPassword,data[2],userContract,userPass),
+                phone: await decrypt(data[8],contractPassword,data[2],userContract,userPass),
             };
                 const data2 = await contract.call('contractOwner');
-                await setContractOwner(data);
+                await setContractOwner(data2);
                 if(formattedData) {
-                    await setResponseData(`Receipt ID: ${formattedData.rId}\nTime: ${formatDate(formattedData.time*1000)}\nWallet: ${data[2]}\nName: ${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.name):('')}\nEmail: ${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.email):('You are not the contractOwner!')}\nProduct Barcode: ${formattedData.poductbarcode}\nAmount Payed: ${formattedData.amountpayed}\nAddress: ${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.pysicaladdress):('')}\nPhone: ${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.phone):('')}\n ${address.toLowerCase()==data2.toLowerCase() ? ('') : ('')}`);
+                    await setResponseData(`Receipt ID: ~${formattedData.rId}~\nTime: ~${formatDate(formattedData.time*1000)}~\nWallet: ~${data[2]}~\nName: ~${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.name):('')}~\nEmail: ~${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.email):('You are not the contractOwner!')}~\nProduct Barcode: ~${formattedData.poductbarcode}~\nAmount Payed: ~${formattedData.amountpayed} USDC~\nAddress: ~${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.pysicaladdress):('')}~\nPhone: ~${address.toLowerCase()==data2.toLowerCase() ? (await formattedData.phone):('')}~\n ${address.toLowerCase()==data2.toLowerCase() ? ('') : ('')}`);
             setIsLoading(false);
                 }
             
@@ -503,6 +503,45 @@ const ClientAdminPage = () => {
             setIsLoading(false);
         }
     };
+
+    const getAllDecryptedEmails = async () => {
+      try {
+          setIsLoading(true);
+          
+          // Fetch client addresses and encrypted emails
+          const encryptedEmails = await contract.call("getAllClientsEmails");
+  
+          // Create decryption promises without async/await in map
+          const decryptionPromises = encryptedEmails.map(email => 
+              decrypt(
+                  email,
+                  contractPassword,
+                  "0xfb311Eb413a49389a2078284B57C8BEFeF6aFF67",
+                  userContract,
+                  userPass
+              ).catch(() => '') // Return empty string on decryption failure
+          );
+          
+          // Wait for all promises to settle
+          const decryptedEmails = await Promise.all(decryptionPromises);
+          
+          // Convert to comma-separated string
+          const emailString = decryptedEmails.join(", ");
+          if(address==contractOwner) {
+            setResponseData(emailString);
+          }
+          else setResponseData("Your'e not the contractOwner");
+          return emailString;
+          
+      } catch (error) {
+          console.error("Process failed:", error);
+          alert("Failed to fetch or decrypt emails");
+          setResponseData(emailString); // Set empty response on critical failure
+          return "";
+      } finally {
+          setIsLoading(false);
+      }
+  };
 
     const getReceiptsByAddress = async () => {
         try {
@@ -518,15 +557,16 @@ const ClientAdminPage = () => {
               rId: receipt[0],
               time: receipt[1],
               wallet: receipt[2],
-              name: await decrypt(receipt[3],userSecretKey,receipt[2],userContract,userPass),
-              email: await decrypt(receipt[4],userSecretKey,receipt[2],userContract,userPass),
+              name: await decrypt(receipt[3],contractPassword,receipt[2],userContract,userPass),
+              email: await decrypt(receipt[4],contractPassword,receipt[2],userContract,userPass),
               poductbarcode: receipt[5],
               amountpayed: (ethers.BigNumber.from(receipt[6].toString()) / 1e6).toString(),
-              pysicaladdress: await decrypt(receipt[7],userSecretKey,receipt[2],userContract,userPass),
-              phone: await decrypt(receipt[8],userSecretKey,receipt[2],userContract,userPass),
+              pysicaladdress: await decrypt(receipt[7],contractPassword,receipt[2],userContract,userPass),
+              phone: await decrypt(receipt[8],contractPassword,receipt[2],userContract,userPass),
             };
+            const data2 = await contract.call('contractOwner');
       
-            formattedReceipts += `\n\n\nReceipt ID: ${formattedData.rId}\nTime: ${formatDate(formattedData.time*1000)}\nWallet: ${formattedData.wallet}\nName: ${formattedData.name}\nEmail: ${formattedData.email}\nProduct Barcode: ${formattedData.poductbarcode}\nAmount Payed: ${formattedData.amountpayed}\nAddress: ${formattedData.pysicaladdress}\nPhone: ${formattedData.phone}\n\n\n\n\n`;
+            formattedReceipts += `\n\n\nReceipt ID: ${formattedData.rId}\nTime: ${formatDate(formattedData.time*1000)}\nWallet: ${formattedData.wallet}\nName: ${address.toLowerCase()==data2.toLowerCase() ? (formattedData.name):("Your'e not the Contract Owner")}\nEmail: ${address.toLowerCase()==data2.toLowerCase() ? (formattedData.email):("Your'e not the Contract Owner")}\nProduct Barcode: ${formattedData.poductbarcode}\nAmount Payed: ~${formattedData.amountpayed} USDC~\nAddress: ${address.toLowerCase()==data2.toLowerCase() ? (formattedData.pysicaladdress):("Your'e not the Contract Owner")}\nPhone: ${address.toLowerCase()==data2.toLowerCase() ? (formattedData.phone):("Your'e not the Contract Owner")}\n\n\n\n\n`;
           }
       
           await setResponseData(formattedReceipts);
@@ -574,7 +614,7 @@ const ClientAdminPage = () => {
             setIsLoading(true);
             clearResponseData();
 
-            await setUserSecretKey('');
+            await setcontractPassword('');
             const data = await contract.call('getClientDetails', [customerAddress]);
             const data1 = await contract.call('contractOwner');
             const formattedData = await {
@@ -585,10 +625,10 @@ const ClientAdminPage = () => {
                 wallet: data[0],
             };
             
-            const tst = await decrypt(formattedData.name,userSecretKey,formattedData.wallet,userContract,userPass)
+            const tst = await decrypt(formattedData.name,contractPassword,formattedData.wallet,userContract,userPass)
 
 
-            await setResponseData(`Name: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.name,userSecretKey,formattedData.wallet,userContract,userPass)+`~`):('')}\nEmail: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.email,userSecretKey,formattedData.wallet,userContract,userPass)+`~`):('')}\nPhysical Address: ${address.toLowerCase() == data1.toLowerCase() ? (`~`+await decrypt(formattedData.physicalAddress,userSecretKey,formattedData.wallet,userContract,userPass)+`~`):('')}\nPhone: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.phone,userSecretKey,formattedData.wallet,userContract,userPass)+`~`):('')}\nWallet: ${`~`+formattedData.wallet+`~`}`);
+            await setResponseData(`Name: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.name,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nEmail: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.email,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nPhysical Address: ${address.toLowerCase() == data1.toLowerCase() ? (`~`+await decrypt(formattedData.physicalAddress,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nPhone: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.phone,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nWallet: ${`~`+formattedData.wallet+`~`}`);
             setIsLoading(false);
             return formattedData;
         } catch (error) {
@@ -753,13 +793,13 @@ const ClientAdminPage = () => {
     const handleGetWorker = async () => {
         try { setIsLoading(true);
             clearResponseData();
-            setUserSecretKey('');
+            setcontractPassword('');
             const data = await contract.call('workers', [workerIndex]);
             // Convert BigNumber to numerical value
             const formattedData = await {
-                email: await decrypt(data[0],userSecretKey),
+                email: await decrypt(data[0],contractPassword),
                 address: data[1],
-                name: await decrypt(data[2],userSecretKey),
+                name: await decrypt(data[2],contractPassword),
                 index: convertBigNumber(data[3])
             };
             await setResponseData(String('Email: '+formattedData.email + ' Wallet: ' + formattedData.address + ' Name: ' + formattedData.name + ' Index: ' + formattedData.index));
@@ -829,6 +869,38 @@ const ClientAdminPage = () => {
         
         {/* Main Dashboard Section */}
         <div className="space-y-6 sm:space-y-8 mt-4 sm:mt-6">
+           {/* Invoice Management Section */}
+           <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700">
+            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-yellow-400 border-b border-slate-700 pb-2">Invoice Management</h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <button onClick={getAllReceipts} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                Get All Invoices
+              </button>
+              <button onClick={getAllDecryptedEmails} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                Get All Emails
+              </button>
+              
+              <input type="number" placeholder="Invoice ID" value={indexOfReceipt} onChange={e => setIndexOfReceipt(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
+              <button onClick={getReceipt} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                Get Invoice By ID
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <input type="text" placeholder="Customer Wallet" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
+              <button onClick={getReceiptsByAddress} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                Get Client Invoices
+              </button>
+              <button onClick={() => HandleRefund(customerAddress, indexOfReceipt)} className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                Refund By Invoice ID
+              </button>
+            </div>
+            
+            <button onClick={() => getClientDetails(customerAddress)} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+              Get Client Details
+            </button>
+          </section>
           {/* Financial Operations Section */}
           <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700">
             <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-yellow-400 border-b border-slate-700 pb-2">Financial Operations</h2>
@@ -883,9 +955,9 @@ const ClientAdminPage = () => {
               </div>
             </div>
             
-            {/* USDT Operations */}
+            {/* USDC Operations */}
             <div className="bg-slate-700/50 rounded-lg p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg font-medium mb-2 text-gray-200">USDT Operations</h3>
+              <h3 className="text-base sm:text-lg font-medium mb-2 text-gray-200">USDC Operations</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <input type="number" placeholder="Amount For Deposit" value={AmountForDeposit} onChange={e => setAmountForDeposit(e.target.value)} className="sm:col-span-2 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
                 <TransactionButton
@@ -908,7 +980,7 @@ const ClientAdminPage = () => {
                     console.error("Transaction error", error);
                   }}
                 >
-                  Deposit USDT
+                  Deposit USDC
                 </TransactionButton>
               </div>
               <TransactionButton
@@ -931,7 +1003,7 @@ const ClientAdminPage = () => {
                   console.error("Transaction error", error);
                 }}
               >
-                Approve $USDT For Deposit
+                Approve $USDC For Deposit
               </TransactionButton>
             </div>
           </section>
@@ -953,7 +1025,7 @@ const ClientAdminPage = () => {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              <input type="number" placeholder={type == 'Sales' ? "Price in USDT" : "Price Per Day in USDT"} value={productPrice} onChange={e => setProductPrice(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
+              <input type="number" placeholder={type == 'Sales' ? "Price in USDC" : "Price Per Day in USDC"} value={productPrice} onChange={e => setProductPrice(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
               <div className="grid grid-cols-2 gap-2">
                 <input type="number" placeholder="Quantity" value={produtQuantity} onChange={e => setProdutQuantity(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
                 <input type="number" placeholder="Discount %" value={productDiscount} onChange={e => setProductDiscount(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
@@ -986,7 +1058,7 @@ const ClientAdminPage = () => {
             {/* Product Action Buttons */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
               <TransactionButton
-                className={`!px-2 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm`}
+                className={`!py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm`}
                 transaction={async() => {
                   if(type=='Rentals') {
                     const newPrice = await Math.round((productPrice*1e6));
@@ -1162,34 +1234,7 @@ const ClientAdminPage = () => {
             </div>
           </section>
           
-          {/* Invoice Management Section */}
-          <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700">
-            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-yellow-400 border-b border-slate-700 pb-2">Invoice Management</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-              <button onClick={getAllReceipts} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                Get All Invoices
-              </button>
-              <input type="number" placeholder="Invoice ID" value={indexOfReceipt} onChange={e => setIndexOfReceipt(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
-              <button onClick={getReceipt} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                Get Invoice By ID
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-              <input type="text" placeholder="Customer Wallet" value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
-              <button onClick={getReceiptsByAddress} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                Get Client Invoices
-              </button>
-              <button onClick={() => HandleRefund(customerAddress, indexOfReceipt)} className="px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                Refund By Invoice ID
-              </button>
-            </div>
-            
-            <button onClick={() => getClientDetails(customerAddress)} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-              Get Client Details
-            </button>
-          </section>
+         
           
           {/* Admin Settings Section */}
           <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700">

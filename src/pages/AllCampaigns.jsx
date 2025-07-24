@@ -53,7 +53,7 @@ const AllCampaigns = () => {
   };
 
   return (<>
-  <div className='linear-gradient pb-[20px]'>
+  <div className='linear-gradient'>
           <div className="mx-auto">
         {isMobile ? <FeaturedMobile /> : <Featured/>}
         </div>

@@ -89,10 +89,10 @@ const RegisterNewStore = () => {
                 or resend this password. If you encounter any issues, contact our support team at
               </p>
               <a 
-                href="mailto:support@ultimatedeal.net" 
+                href="mailto:support@ultrashop.tech" 
                 className="inline-block text-blue-600 hover:text-blue-800 text-sm sm:text-base font-medium transition-colors"
               >
-                support@ultimatedeal.net
+                support@ultrashop.tech
               </a>
             </div>
   
@@ -173,7 +173,7 @@ const RegisterNewStore = () => {
           />
           <FormField
             labelName="Email For Notifications*"
-            placeholder="SuperMan@ultimatedeal.net"
+            placeholder="SuperMan@email.com"
             inputType="text"
             value={form._contactInfo}
             handleChange={(e) => handleFormFieldChange('_contactInfo', e)}
@@ -207,7 +207,7 @@ const RegisterNewStore = () => {
                 const tx = prepareContractCall({
                   contract: Stores,
                   method: "function registerStore(string _urlPath, address _smartContractAddress, string _picture, string _name, string _description, string _category, string _contactInfo, uint256 _receiptId, string _city, address _votingSystemAddress, address _ERCUltra)",
-                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId) + 1, form._city, form.voting, form.ercultra],
+                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId) + 2, form._city, form.voting, form.ercultra],
                 });
                 return tx;
               }}

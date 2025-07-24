@@ -141,8 +141,8 @@ function processtitle(description, maxLength = 50) {
           </div>
           <div className='flex justify-between items-center mb-[30px]'>
           <div className="mt-[5px] w-8/12 mx-[15px]">
-            {campaign.parsedCampaign.iscashedout==true ? (<h2 className='text-[#FFFFFF] text-[20px]  mt-[15px] ml-[25px] font-bold'>{parseFloat(extractNumberFromString(campaign.parsedCampaign.websiteComment))} $USDT</h2>):(<h2 className='text-[#FFFFFF] text-[20px]  mt-[15px] ml-[25px] font-bold'>{total} $USDT</h2>)}
-            <h2 className='text-[#FFFFFF] text-[12px] ml-[25px]'>Out Of {target} $USDT</h2>
+            {campaign.parsedCampaign.iscashedout==true ? (<h2 className='text-[#FFFFFF] text-[20px]  mt-[15px] ml-[25px] font-bold'>{parseFloat(extractNumberFromString(campaign.parsedCampaign.websiteComment))} $USDC</h2>):(<h2 className='text-[#FFFFFF] text-[20px]  mt-[15px] ml-[25px] font-bold'>{total} $USDC</h2>)}
+            <h2 className='text-[#FFFFFF] text-[12px] ml-[25px]'>Out Of {target} $USDC</h2>
           </div>
           <div className='flex-1'>
           <h2 className='text-[#FFFFFF] text-[20px]  mt-[15px] mr-[45px] font-bold'>{daysLeft(campaign.parsedCampaign.endDate)}</h2>

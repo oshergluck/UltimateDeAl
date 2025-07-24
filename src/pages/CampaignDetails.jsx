@@ -285,15 +285,15 @@ const handleCommentChange = (e) => {
 
   return (
     <>{isLoading && <Loader />}
-    <div className='linear-gradient pb-[20px]'>
-    <div className="pt-[35px] mx-auto">
+    <div className='linear-gradient'>
+    <div className="mx-auto">
         {isMobile ? <FeaturedMobile /> : <Featured/>}
         </div>
         </div>
 {isMobile ? (<><div className={`rounded-[15px] h-[280px] absolute inset-0 sm:w-[20%] mx-auto flex items-center justify-center border-[1px] border-[#FFDD00] bg-[#000000] z-10 drop-shadow py-4 transition-all duration-700 ${toggleApproveCoins ? 'translate-y-[2600px]' : '-translate-y-full'}`}>
   <p className={`text-[#FFFFFF] font-epilogue font-bold text-[30px] text-center absolute bottom-1 right-2 cursor-pointer`} onClick={() => setToggleApproveCoins(prev => !prev)}>X</p>
   <div>
-    <p className="text-[#FFFFFF] font-epilogue font-bold text-[16px] text-center mt-[25px] drop-shadow">Approve $USDT For Fundraising</p>
+    <p className="text-[#FFFFFF] font-epilogue font-bold text-[16px] text-center mt-[25px] drop-shadow">Approve $USDC For Fundraising</p>
     <div className='w-full flex flex-col items-center'>
       <div className='mt-[20px] w-10/12'>
         <input
@@ -337,8 +337,8 @@ const handleCommentChange = (e) => {
           </div>
             <div className='flex w-full justify-between mt-[30px] gap-[40px] overflow-auto touch-auto px-[20px]'>
             <div>
-{campaign?.iscashedout ? (<h2 className='text-[#fc941c] text-center w-full mx-auto text-[20px] font-bold'>{parseFloat(extractNumberFromString(campaign?.websiteComment))} USDT</h2>):(<><h2 className='text-[#fc941c] w-full mx-auto text-center text-[20px] font-bold'>{(total*1e-6).toFixed(1)} USDT</h2></>)}
-            <h2 className='text-[#FFFFFF] !w-full text-[12px] text-center'>{formatNumberWithCommas(campaign?.target*1e-6)}USDT</h2>
+{campaign?.iscashedout ? (<h2 className='text-[#fc941c] text-center w-full mx-auto text-[20px] font-bold'>{parseFloat(extractNumberFromString(campaign?.websiteComment))} USDC</h2>):(<><h2 className='text-[#fc941c] w-full mx-auto text-center text-[20px] font-bold'>{(total*1e-6).toFixed(1)} USDC</h2></>)}
+            <h2 className='text-[#FFFFFF] !w-full text-[12px] text-center'>{formatNumberWithCommas(campaign?.target*1e-6)}USDC</h2>
             </div>
             <div>
             <h2 className='text-[#FFFFFF] text-center text-[20px] font-bold'>{remainingDays}</h2>
@@ -346,7 +346,7 @@ const handleCommentChange = (e) => {
             </div>
             <div>
             <h2 className='text-[#FFDD00] text-center text-[20px] w-[120px] font-bold'>{(1/(rewardPrice/1e6)).toFixed(5)} {symbol}</h2>
-            <h2 className='text-[#FFFFFF] text-[12px] w-[80px] mx-auto text-center'>Reward Per USDT</h2>
+            <h2 className='text-[#FFFFFF] text-[12px] w-[80px] mx-auto text-center'>Reward Per USDC</h2>
             </div>
             <div>
             <h2 className='text-[#FFFFFF] text-center text-[20px] font-bold'>{investors?.comments ? (investors.comments.length) : ('0') }</h2>
@@ -378,11 +378,13 @@ const handleCommentChange = (e) => {
                 
                 </div>
                 {campaign?.iscashedout ? (<>
-                  <Swapper
-                  address={address}
-                  ERCUltraAddress={rewardAddress}
-                  SYMBOL={symbol}
-                  />
+                <div className='my-[35px] mx-[20px] rounded-[15px]'>
+                <div class="bg-gray-900 mx-auto sm:w-11/12 w-full rounded-lg shadow-lg py-[20px]">
+                  <p className='text-[12px] !text-white font-bold text-center sm:text-[30px]'>
+                  {symbol} address is {rewardAddress}
+                </p>
+</div>
+                </div>
                    <div className='sm:flex sm:justify-items-center m-auto sm:items-center h-[720px] rounded-[15px] sm:w-11/12 w-full'>
                    <iframe className='rounded-[15px] h-[720px] mx-auto sm:w-[9/10] w-full' id="geckoterminal-embed" title="GeckoTerminal Embed" src={`https://www.geckoterminal.com/base/tokens/${rewardAddress}?embed=1&info=0&swaps=1`} frameborder="0" allow="clipboard-write" allowfullscreen></iframe>
                    </div>
@@ -401,8 +403,8 @@ const handleCommentChange = (e) => {
                       {address?(<div className={`w-full min-h-[780px] ${campaign?.iscashedout? ('hidden'):('block')} rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]`} >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
                         <FormField
-                        labelName='Amount Of USDT to invest'
-                        placeholder='Minimum 0.5 $USDT'
+                        labelName='Amount Of USDC to invest'
+                        placeholder='Minimum 0.5 $USDC'
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -470,9 +472,9 @@ const handleCommentChange = (e) => {
       transaction={async() => {
 
     const upload = await pinata.upload.json({
-      name: `Investment on Campaign #${campaignId} UltimateDeAl.net`,
-      description: `Investment of ${amount} $USDT to Campaign #${campaignId}`,
-      external_url: `https://ultimatedeal.net/campaign-details/${campaignId}`,
+      name: `Investment on Campaign #${campaignId} UltraShop.tech`,
+      description: `Investment of ${amount} $USDC to Campaign #${campaignId}`,
+      external_url: `https://UltraShop.tech/campaign-details/${campaignId}`,
       image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.profilePhoto}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       animation_url : `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       attributes: [
@@ -480,11 +482,11 @@ const handleCommentChange = (e) => {
         { trait_type: "Campaign ID", value: campaignId.toString() },
         { trait_type: "Campaign Title", value: campaign?.title },
         { trait_type: "Investor", value: address },
-        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDT` },
+        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDC` },
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDT` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
       ]
     });
     
@@ -519,7 +521,7 @@ const handleCommentChange = (e) => {
                         <p className='text-[#FFFFFF]'>Share:</p>
                         </div>
                         <div className='h-[40px] my-[20px] w-[85%] mx-[auto] flex justify-center gap-[30px]'>
-                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltimateDeal.net/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltimateDeal.net%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
+                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltraShop.tech/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltraShop.tech%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
                         <span className="[&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -544,7 +546,7 @@ const handleCommentChange = (e) => {
                         </svg>
                         </span>
                         </a>
-                        <a href={`whatsapp://send?text=Invest in my campaign at UltimateDeal%20${url}`}       data-action="share/whatsapp/share"  
+                        <a href={`whatsapp://send?text=Invest in my campaign at UltraShop%20${url}`}       data-action="share/whatsapp/share"  
                         target="_blank">
                             <span className="mx-auto [&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                             <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -553,7 +555,7 @@ const handleCommentChange = (e) => {
                             </svg>
                             </span> 
                         </a>
-                        <a href={`https://t.me/share/url?url=${url}&text=${campaign?.title} Invest in my campaign at UltimateDeal`} target="_blank">
+                        <a href={`https://t.me/share/url?url=${url}&text=${campaign?.title} Invest in my campaign at UltraShop`} target="_blank">
                         <span className="mx-auto [&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                             <svg fill="#FFDD00" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
                             <title>telegram</title>
@@ -567,7 +569,6 @@ const handleCommentChange = (e) => {
                     <div className='ml-[20px]'>
         <ConnectButton
               client={client}
-
               wallets={wallets}
 
               theme={"dark"}
@@ -578,13 +579,13 @@ const handleCommentChange = (e) => {
 
               size: "wide",
 
-              title: "UltimateDeal",
+              title: "UltraShop",
 
               titleIcon: logoOfWebsite,
 
               welcomeScreen: {
 
-              title: "UltimateDeal",
+              title: "UltraShop",
 
               subtitle:
 
@@ -602,9 +603,9 @@ const handleCommentChange = (e) => {
 
               },
 
-              termsOfServiceUrl: "https://ultimateDeal.net/terms",
+              termsOfServiceUrl: "https://UltraShop.tech/terms",
 
-              privacyPolicyUrl: "https://ultimateDeal.net/privacy-policy",
+              privacyPolicyUrl: "https://UltraShop.tech/privacy-policy",
 
               showThirdwebBranding: true,
 
@@ -629,9 +630,9 @@ const handleCommentChange = (e) => {
 
               address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // token contract address
 
-              name: "USDT",
+              name: "USDC",
 
-              symbol: "USDT",
+              symbol: "USDC",
 
               icon: usdcoinusdclogo,
 
@@ -676,8 +677,8 @@ const handleCommentChange = (e) => {
                       <div className='w-full min-h-[780px] rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]' >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
                         <FormField
-                        labelName='Amount Of USDT to invest'
-                        placeholder='Minimum 0.5 $USDT'
+                        labelName='Amount Of USDC to invest'
+                        placeholder='Minimum 0.5 $USDC'
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -717,9 +718,9 @@ const handleCommentChange = (e) => {
       transaction={async() => {
       
     const upload = await pinata.upload.json({
-      name: `Investment on Campaign #${campaignId} UltimateDeAl.net`,
-      description: `Investment of ${amount} $USDT to Campaign #${campaignId}`,
-      external_url: `https://ultimatedeal.net/campaign-details/${campaignId}`,
+      name: `Investment on Campaign #${campaignId} UltraShop.tech`,
+      description: `Investment of ${amount} $USDC to Campaign #${campaignId}`,
+      external_url: `https://UltraShop.tech/campaign-details/${campaignId}`,
       image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.profilePhoto}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       animation_url : `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       attributes: [
@@ -727,11 +728,11 @@ const handleCommentChange = (e) => {
         { trait_type: "Campaign ID", value: campaignId.toString() },
         { trait_type: "Campaign Title", value: campaign?.title },
         { trait_type: "Investor", value: address },
-        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDT` },
+        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDC` },
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDT` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
       ]
     });
         // Create a transaction object and return it
@@ -764,7 +765,7 @@ const handleCommentChange = (e) => {
                         <p className='text-[#FFFFFF]'>Share:</p>
                         </div>
                         <div className='h-[40px] my-[20px] w-[85%] mx-[auto] flex justify-center gap-[30px]'>
-                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltimateDeal.net/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltimateDeal.net%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
+                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltraShop.tech/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltraShop.tech%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
                         <span className="[&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -789,7 +790,7 @@ const handleCommentChange = (e) => {
                         </svg>
                         </span>
                         </a>
-                        <a href={`whatsapp://send?text=Invest in my campaign at UltimateDeal%20${url}`}       data-action="share/whatsapp/share"  
+                        <a href={`whatsapp://send?text=Invest in my campaign at UltraShop%20${url}`}       data-action="share/whatsapp/share"  
                         target="_blank">
                             <span className="mx-auto [&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                             <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -798,7 +799,7 @@ const handleCommentChange = (e) => {
                             </svg>
                             </span> 
                         </a>
-                        <a href={`https://t.me/share/url?url=${url}&text=${campaign?.title} Invest in my campaign at UltimateDeal`} target="_blank">
+                        <a href={`https://t.me/share/url?url=${url}&text=${campaign?.title} Invest in my campaign at UltraShop`} target="_blank">
                         <span className="mx-auto [&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                             <svg fill="#FFDD00" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
                             <title>telegram</title>
@@ -837,7 +838,7 @@ const handleCommentChange = (e) => {
 
 
                     <div className='h-[40px] w-[85%] mx-[auto] !text-[16px]'>
-                        {campaign?.owner === address&&(remainingDays <= 0) ? (<>
+                        {campaign?.owner === address&&(remainingDays <= 0) && campaign?.iscashedout === false ? (<>
                       <TransactionButton
                       className={"!w-full !h-full !mx-[auto] !bg-[#FFDD00] !opacity-[60%] !hover:opacity-[100%] !duration-500 !ease-in-out !hover:bg-[#FFDD00] !text-[#000000] !font-epilogue !font-semibold !text-[16px] !py-[5px] !px-[10px] !rounded-[5px] !text-[14px]"}
                       transaction={() => {
@@ -860,12 +861,12 @@ const handleCommentChange = (e) => {
                         console.error("Transaction error", error);
                       }}
                     >
-                      Validate
+                      Withdraw
                     </TransactionButton>
                     </>
                     ):
                       (
-                      <button className='w-full h-full mx-[auto] bg-[#FFDD00] opacity-[60%] cursor-not-allowed hover:bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[5px] px-[10px] rounded-[5px] text-[14px]'>Withdraw</button>)}      
+                      <></>)}      
                     </div>
                     <h1 className='text-[#FFFFFF] font-epilogue font-semibold text-[20px] py-[5px] px-[20px] mt-[25px]'>Website Comment</h1>
                     <div className='border-[1px] border-[#FFDD00] rounded-[10px] mt-[20px] min-h-[60px]'>
@@ -879,7 +880,7 @@ const handleCommentChange = (e) => {
             </div> </>) : (<> <div className={`rounded-[15px] h-[280px] absolute inset-0 sm:w-[20%] mx-auto flex items-center justify-center border-[1px] border-[#FFDD00] bg-[#000000] z-10 drop-shadow py-4 transition-all duration-700 ${toggleApproveCoins ? 'translate-y-[1500px]' : '-translate-y-full'}`}>
   <p className={`text-[#FFFFFF] font-epilogue font-bold text-[30px] text-center absolute bottom-1 right-2 cursor-pointer`} onClick={() => setToggleApproveCoins(prev => !prev)}>X</p>
   <div>
-    <p className="text-[#FFFFFF] font-epilogue font-bold text-[16px] text-center mt-[25px] drop-shadow">Approve USDT For Fundraising</p>
+    <p className="text-[#FFFFFF] font-epilogue font-bold text-[16px] text-center mt-[25px] drop-shadow">Approve USDC For Fundraising</p>
     <div className='w-full flex flex-col items-center'>
       <div className='mt-[20px] w-10/12'>
         <input
@@ -903,7 +904,7 @@ const handleCommentChange = (e) => {
         <video className=' w-full rounded-[15px] my-[50px]' controls>
            </video>
          ) : ( 
-         <video className='w-full rounded-[15px] my-[50px]' controls preload="metadata">
+         <video className='w-11/12 mx-auto rounded-[15px] my-[50px]' controls preload="metadata">
           <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/mp4"></source>
           <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/ogg"></source>
           Your browser does not support the video tag.
@@ -923,8 +924,8 @@ const handleCommentChange = (e) => {
           </div>
             <div className='flex  w-10/12 mx-auto justify-between mt-[30px] px-[20px]'>
             <div>
-            {campaign?.iscashedout ? (<h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{parseFloat(extractNumberFromString(campaign?.websiteComment))} USDT</h2>):(<><h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{(total*1e-6).toFixed(1)} USDT</h2></>)}
-            <h2 className='text-[#FFFFFF] text-[12px] text-center'>{formatNumberWithCommas(campaign?.target*1e-6)}USDT</h2>
+            {campaign?.iscashedout ? (<h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{parseFloat(extractNumberFromString(campaign?.websiteComment))} USDC</h2>):(<><h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{(total*1e-6).toFixed(1)} USDC</h2></>)}
+            <h2 className='text-[#FFFFFF] text-[12px] text-center'>{formatNumberWithCommas(campaign?.target*1e-6)}USDC</h2>
             </div>
             <div>
             <h2 className='text-[#FFFFFF] text-center text-[20px] font-bold'>{remainingDays}</h2>
@@ -932,7 +933,7 @@ const handleCommentChange = (e) => {
             </div>
             <div>
             <h2 className='text-[#FFDD00] text-center text-[20px] font-bold'>{(1/(rewardPrice/1e6)).toFixed(5)} {symbol}</h2>
-            <h2 className='text-[#FFFFFF] text-[12px] text-center'>Reward Per USDT</h2>
+            <h2 className='text-[#FFFFFF] text-[12px] text-center'>Reward Per USDC</h2>
             </div>
             <div>
             <h2 className='text-[#FFFFFF] text-center text-[20px] font-bold'>{investors?.comments ? (investors.comments.length) : ('0') }</h2>
@@ -964,11 +965,11 @@ const handleCommentChange = (e) => {
                 </div>
                
                 {campaign?.iscashedout ? (<>
-                  <Swapper
-           address={address}
-           ERCUltraAddress={rewardAddress}
-           SYMBOL={symbol}
-           />
+                  <div class="bg-gray-900 mx-auto sm:w-11/12 w-full rounded-lg shadow-lg py-[20px]">
+                  <p className='text-[15] !text-white font-bold text-center sm:text-[30px]'>
+                  {symbol} address is {rewardAddress}
+                </p>
+</div>
                    <div className='sm:flex sm:justify-items-center m-auto sm:items-center h-[720px] rounded-[15px] sm:w-11/12 w-full'>
                    <iframe height="80%" className='rounded-[15px] mx-auto sm:w-[9/10] w-full' id="geckoterminal-embed" title="GeckoTerminal Embed" src={`https://www.geckoterminal.com/base/tokens/${rewardAddress}?embed=1&info=0&swaps=1`} frameborder="0" allow="clipboard-write" allowfullscreen></iframe>
                    </div>
@@ -990,8 +991,8 @@ const handleCommentChange = (e) => {
                       {address?(<div className={`w-full ${campaign?.iscashedout? ('hidden'):('block')} min-h-[780px] rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]`} >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
                         <FormField
-                        labelName='Amount Of USDT to invest'
-                        placeholder='Minimum 0.5 $USDT'
+                        labelName='Amount Of USDC to invest'
+                        placeholder='Minimum 0.5 $USDC'
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -1058,9 +1059,9 @@ const handleCommentChange = (e) => {
       transaction={async() => {
       
     const upload = await pinata.upload.json({
-      name: `Investment on Campaign #${campaignId} UltimateDeAl.net`,
-      description: `Investment of ${amount} $USDT to Campaign #${campaignId}`,
-      external_url: `https://ultimatedeal.net/campaign-details/${campaignId}`,
+      name: `Investment on Campaign #${campaignId} UltraShop.tech`,
+      description: `Investment of ${amount} $USDC to Campaign #${campaignId}`,
+      external_url: `https://UltraShop.tech/campaign-details/${campaignId}`,
       image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.profilePhoto}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       animation_url : `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       attributes: [
@@ -1068,11 +1069,11 @@ const handleCommentChange = (e) => {
         { trait_type: "Campaign ID", value: campaignId.toString() },
         { trait_type: "Campaign Title", value: campaign?.title },
         { trait_type: "Investor", value: address },
-        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDT` },
+        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDC` },
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDT` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
       ]
     });
         // Create a transaction object and return it
@@ -1106,7 +1107,7 @@ const handleCommentChange = (e) => {
                         <p className='text-[#FFFFFF]'>Share:</p>
                         </div>
                         <div className='h-[40px] my-[20px] w-[85%] mx-[auto] flex justify-center gap-[30px]'>
-                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltimateDeal.net/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltimateDeal.net%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
+                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltraShop.tech/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltraShop.tech%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
                         <span className="[&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -1154,7 +1155,6 @@ const handleCommentChange = (e) => {
                     <div className='ml-[20px]'>
         <ConnectButton
               client={client}
-
               wallets={wallets}
 
               theme={"dark"}
@@ -1165,13 +1165,13 @@ const handleCommentChange = (e) => {
 
               size: "wide",
 
-              title: "UltimateDeal",
+              title: "UltraShop",
 
               titleIcon: logoOfWebsite,
 
               welcomeScreen: {
 
-              title: "UltimateDeal",
+              title: "UltraShop",
 
               subtitle:
 
@@ -1189,9 +1189,9 @@ const handleCommentChange = (e) => {
 
               },
 
-              termsOfServiceUrl: "https://ultimateDeal.net/terms",
+              termsOfServiceUrl: "https://UltraShop.tech/terms",
 
-              privacyPolicyUrl: "https://ultimateDeal.net/privacy-policy",
+              privacyPolicyUrl: "https://UltraShop.tech/privacy-policy",
 
               showThirdwebBranding: true,
 
@@ -1216,9 +1216,9 @@ const handleCommentChange = (e) => {
 
               address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // token contract address
 
-              name: "USDT",
+              name: "USDC",
 
-              symbol: "USDT",
+              symbol: "USDC",
 
               icon: usdcoinusdclogo,
 
@@ -1262,8 +1262,8 @@ const handleCommentChange = (e) => {
                       <div className='w-full min-h-[780px] rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]' >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
                         <FormField
-                        labelName='Amount Of USDT to invest'
-                        placeholder='Minimum 0.5 $USDT'
+                        labelName='Amount Of USDC to invest'
+                        placeholder='Minimum 0.5 $USDC'
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -1302,9 +1302,9 @@ const handleCommentChange = (e) => {
       className={"!w-full !h-full !mx-[auto] !bg-[#FFDD00] !opacity-[60%] !hover:opacity-[100%] !duration-500 !ease-in-out !hover:bg-[#FFDD00] !text-[#000000] !font-epilogue !font-semibold !text-[16px] !py-[5px] !px-[10px] !rounded-[5px] !text-[14px]"}
       transaction={async() => {
     const upload = await pinata.upload.json({
-      name: `Investment on Campaign #${campaignId} UltimateDeAl.net`,
-      description: `Investment of ${amount} $USDT to Campaign #${campaignId}`,
-      external_url: `https://ultimatedeal.net/campaign-details/${campaignId}`,
+      name: `Investment on Campaign #${campaignId} UltraShop.tech`,
+      description: `Investment of ${amount} $USDC to Campaign #${campaignId}`,
+      external_url: `https://UltraShop.tech/campaign-details/${campaignId}`,
       image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.profilePhoto}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       animation_url : `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
       attributes: [
@@ -1312,11 +1312,11 @@ const handleCommentChange = (e) => {
         { trait_type: "Campaign ID", value: campaignId.toString() },
         { trait_type: "Campaign Title", value: campaign?.title },
         { trait_type: "Investor", value: address },
-        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDT` },
+        { trait_type: "Amount", value: `${(amount/1).toFixed(2)} $USDC` },
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDT` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
       ]
     });
         // Create a transaction object and return it
@@ -1349,7 +1349,7 @@ const handleCommentChange = (e) => {
                         <p className='text-[#FFFFFF]'>Share:</p>
                         </div>
                         <div className='h-[40px] my-[20px] w-[85%] mx-[auto] flex justify-center gap-[30px]'>
-                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltimateDeal.net/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltimateDeal.net%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
+                        <div className="w-[32px] h-[32px]" data-href={`https://www.UltraShop.tech/campaign-details/${campaignId}`} data-layout="" data-size=""><a target="_blank" href={`https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.UltraShop.tech%2Fcampaign-details%2F${campaignId}&amp;src=sdkpreparse`} className="fb-xfbml-parse-ignore">
                         <span className="[&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -1374,7 +1374,7 @@ const handleCommentChange = (e) => {
                         </svg>
                         </span>
                         </a>
-                        <a href={`whatsapp://send?text=Invest in my campaign at UltimateDeal%20${url}`}       data-action="share/whatsapp/share"  
+                        <a href={`whatsapp://send?text=Invest in my campaign at UltraShop%20${url}`}       data-action="share/whatsapp/share"  
                         target="_blank">
                             <span className="mx-auto [&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                             <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1383,7 +1383,7 @@ const handleCommentChange = (e) => {
                             </svg>
                             </span> 
                         </a>
-                        <a href={`https://t.me/share/url?url=${url}&text=${campaign?.title} Invest in my campaign at UltimateDeal`} target="_blank">
+                        <a href={`https://t.me/share/url?url=${url}&text=${campaign?.title} Invest in my campaign at UltraShop`} target="_blank">
                         <span className="mx-auto [&>svg]:h-8 [&>svg]:w-8 opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out">
                             <svg fill="#FFDD00" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
                             <title>telegram</title>
@@ -1422,7 +1422,7 @@ const handleCommentChange = (e) => {
 
 
                     <div className='h-[40px] w-[85%] mx-[auto] !text-[16px]'>
-                        {campaign?.owner === address&&(remainingDays <= 0) ? (<>
+                        {campaign?.owner === address&&(remainingDays <= 0) && campaign?.iscashedout===false ? (<>
                       <TransactionButton
                       className={"!w-full !h-full !mx-[auto] !bg-[#FFDD00] !opacity-[60%] !hover:opacity-[100%] !duration-500 !ease-in-out !hover:bg-[#FFDD00] !text-[#000000] !font-epilogue !font-semibold !text-[16px] !py-[5px] !px-[10px] !rounded-[5px] !text-[14px]"}
                       transaction={() => {
@@ -1450,7 +1450,7 @@ const handleCommentChange = (e) => {
                     </>
                       ):(
                       
-                      <button className='w-full h-full mx-[auto] bg-[#FFDD00] opacity-[60%] cursor-not-allowed hover:bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[5px] px-[10px] rounded-[5px] text-[14px]'>Withdraw</button>)}      
+                      <></>)}      
                     </div>
                     <h1 className='text-[#FFFFFF] font-epilogue font-semibold text-[20px] py-[5px] px-[20px] mt-[25px]'>Website Comment</h1>
                     <div className='border-[1px] border-[#FFDD00] rounded-[10px] mt-[20px] min-h-[60px]'>

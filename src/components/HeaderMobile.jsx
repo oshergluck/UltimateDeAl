@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import {logoOfWebsite, search, menu, tetherusdtlogo, IL, Aicon, usdcoinusdclogo, AAPL} from '../assets'
+import {logoOfWebsite, search, menu, tetherusdtlogo, IL, Aicon, usdcoinusdclogo, WethLogo} from '../assets'
 import { Search } from "./"
 import { ConnectWallet, useLogin, useTokenBalance} from '@thirdweb-dev/react';
 import {
@@ -97,12 +97,12 @@ const HeaderMobile = () => {
     async function handleLogin() {
         try {
             await login({
-                uri: "https://www.ultimateDeal.net",
+                uri: "https://www.ultrashop.tech",
                 statement: "Kindly read our terms of service, by continue you agree to it.",
                 chainId: "8453",
                 nonce: "272",
                 version: "1.0.3",
-                resources: ["https://www.ultimateDeal.net/terms", "https://www.ultimateDeal.net/privacy-policy"],
+                resources: ["https://www.ultrashop.tech/terms", "https://www.ultrashop.tech/privacy-policy"],
             });
         } catch (err) {
             console.error(err);
@@ -161,8 +161,8 @@ const HeaderMobile = () => {
 
                     <div className='flex cursor-pointer' onClick={() => naviateToStoreVip()}>
                         <img src={logoOfWebsite} alt='logo' className='w-[35px] h-[35px] object-contain my-auto mx-[10px]'/>
-                        <h1 className='text-white font-epilogue font-semibold text-[18px] my-auto'>Ultimate</h1>
-                        <h1 className='text-[#FFDD00] font-epilogue font-semibold text-[18px] my-auto'>DeAl</h1>
+                        <h1 className='text-white font-epilogue font-semibold text-[18px] my-auto'>Ultra</h1>
+                        <h1 className='text-[#FFDD00] font-epilogue font-semibold text-[18px] my-auto'>Shop</h1>
                     </div>
                     
                     <div className='flex flex-1 !w-[35px] !h-[35px] justify justify-end self-end'>
@@ -254,10 +254,10 @@ const HeaderMobile = () => {
                         connectButton={{ label: "Connect" }}
                         connectModal={{
                             size: "wide",
-                            title: "UltimateDeal",
+                            title: "UltraShop",
                             titleIcon: logoOfWebsite,
                             welcomeScreen: {
-                                title: "UltimateDeal",
+                                title: "UltraShop",
                                 subtitle: "Make your first step to the journey of your life. Contribute to businesses anonymously and get shares in return and dividends. Open a Crowdfunding campaign and issue your business shares to the public. Get started by connecting your wallet.",
                                 img: {
                                     src: logoOfWebsite,
@@ -265,24 +265,40 @@ const HeaderMobile = () => {
                                     height: 150,
                                 },
                             },
-                            termsOfServiceUrl: "https://ultimateDeal.net/terms",
-                            privacyPolicyUrl: "https://ultimateDeal.net/privacy-policy",
+                            termsOfServiceUrl: "https://ultrashop.tech/terms",
+                            privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
                             showThirdwebBranding: true,
                         }}
                         supportedTokens={{
                             [Base.chainId]: [
                                 {
-                                    address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", // token contract address
-                                    name: "USDT",
-                                    symbol: "USDT",
+
+                                    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // token contract address
+                      
+                                    name: "USD Coin",
+                      
+                                    symbol: "USDC",
+                      
                                     icon: usdcoinusdclogo,
-                                },
+                      
+                                    },
                                 {
-                                    address: "0x231aaC71b05e8D5C12AE7a03148a3c2BBBa66530", // token contract address
-                                    name: "UltimateDeAl",
+                                    address: "0x9Cd94dA724e95250A37eB4C24c5Be761972c01B6", // token contract address
+                                    name: "UltraShop",
                                     symbol: "ULTI",
                                     icon: logoOfWebsite,
                                 },
+                                {
+
+                                    address: "0x4200000000000000000000000000000000000006", // token contract address
+                      
+                                    name: "Wrapped ETH",
+                      
+                                    symbol: "WETH",
+                      
+                                    icon: WethLogo,
+                      
+                                    },
                             ],
                         }}
                         detailsButton={{

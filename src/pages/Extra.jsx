@@ -128,19 +128,19 @@ const Extra = () => {
     }, [isInitialized,Curses]);
 
     const renderContent = () => {
-        if (StoreURL === 'UltimateDeAl' && ProductURL === 'LISTESH') {
+        if (StoreURL === 'UltraShop' && ProductURL === 'LISTESH') {
             return (<><div>
             <RegisterNewStore />
             </div>
             </>);
         }
-        if (StoreURL === 'UltimateDeAl' && ProductURL === 'LOTERRY') {
+        if (StoreURL === 'UltraShop' && ProductURL === 'LOTERRY') {
             return <City />;
         }
-        if (StoreURL === 'UltimateDeAl' && ProductURL === 'PROS') {
+        if (StoreURL === 'UltraShop' && ProductURL === 'PROS') {
             return <SnakeGame/>;
         }
-        if (StoreURL === 'UltimateDeAl' && ProductURL === 'FUNDPROS') {
+        if (StoreURL === 'UltraShop' && ProductURL === 'FUNDPROS') {
             return <MemoryGame/>;
         }
         return null;

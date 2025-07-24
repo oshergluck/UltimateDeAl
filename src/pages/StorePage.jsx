@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStateContext } from '../context';
 import { useNavigate } from 'react-router-dom';
 import { logoOfWebsite, leader, atom, LingureLogo,VerifiedIcon,done_desktop } from '../assets';
-import { CustomButton, Loader, CustomDropdownProducts, FormField, StarRatingForNewReview,ProductBox,Swapper,ProductSearch,RewardBadge } from '../components';
+import { CustomButton, Loader, CustomDropdownProducts, FormField, StarRatingForNewReview,ProductBox,ProductSearch,RewardBadge, Swapper } from '../components';
 import { Base } from "@thirdweb-dev/chains";
 import { ethers } from 'ethers';
 import { useContract } from '@thirdweb-dev/react';
@@ -754,7 +754,7 @@ const StorePage = () => {
                         onChange={(e) => handleFormFieldChange('review', e)}
                     />
                     <input
-                        className="w-full p-4 rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
+                        className="w-8/12 p-4 rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
                         type="text"
                         placeholder="Receipt ID"
                         value={receipt}
@@ -864,13 +864,9 @@ const StorePage = () => {
            
                 <div className='my-[35px]'>
            </div>
-           {theERCUltra!=='0x0000000000000000000000000000000000000040'&&theERCUltra!=='0x0000000000000000000000000000000000000020'&&theSymbolOfReward ? (<>
-            <Swapper
-           address={address||null}
-           ERCUltraAddress={theERCUltra}
-           SYMBOL={theSymbolOfReward}
-           />
-           </>):(<></>)}
+           <p className='text-center text-[#FFFFFF] sm:text-[30px] text-[12px] font-bold my-[25px]'>{theSymbolOfReward} address is {rewardAddress}</p>
+           <p className=''></p>
+           {theSymbolOfReward && rewardAddress ? (<><Swapper ERCUltraAddress={rewardAddress} SYMBOL={theSymbolOfReward}/></>):(<></>)} 
            
 
                 <p className='text-center text-[#FFFFFF] sm:text-[50px] text-[25px] font-bold my-[25px]'>{theSymbolOfReward} Price</p>

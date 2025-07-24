@@ -1220,7 +1220,7 @@ const Featured = async () => {
   }
 
   const emailUsAboutTerms = async () => {
-    const emailRecipient = "support@UltimateDeal.net"; // Change to the desired email recipient
+    const emailRecipient = "support@ultrashop.tech"; // Change to the desired email recipient
     const subject = `I Have A Question About The Terms`;
     const body = `Hello, I have a question about the terms. My question is:`;
 
@@ -1232,7 +1232,7 @@ const Featured = async () => {
   }
 
   const ReportCampaign = async (id) => {
-    const emailRecipient = "support@UltimateDeal.net"; // Change to the desired email recipient
+    const emailRecipient = "support@ultrashop.tech"; // Change to the desired email recipient
     const subject = `I want to report a campaign`;
     const body = `Hello, I want to report a campaign:\n The campaign ID is ${id}\n Reason:\n\n\nMy Details Are:\n
     Name:
@@ -1258,7 +1258,7 @@ const Featured = async () => {
   }
 
   const emailUsAboutPrivacyPolicy = async () => {
-    const emailRecipient = "support@ultimatedeal.net"; // Change to the desired email recipient
+    const emailRecipient = "support@ultrashop.tech"; // Change to the desired email recipient
     const subject = `I Have A Question About The Privacy Policy`;
     const body = `Hello, I have a question about the privacy policy. My question is:`;
 
@@ -1270,7 +1270,7 @@ const Featured = async () => {
   }
 
   const contactUsEmail = async () => {
-    const emailRecipient = "support@UltimateDeal.net"
+    const emailRecipient = "support@ultrashop.tech"
     const subject = `I Have A Question About UltimateDeal.net`;
     const body = `Hello, I have a question about UltimateDeal.net. My question is:`;
 
@@ -1282,7 +1282,7 @@ const Featured = async () => {
   }
 
   const LandingPageContactUs = async () => {
-    const emailRecipient = "support@UltimateDeal.net"; // Change to the desired email recipient
+    const emailRecipient = "support@ultrashop.tech"; // Change to the desired email recipient
     const subject = `I Have A Question About Becoming VIP Member`;
     const body = `Hello, I have a question about the VIP membership. My question is:`;
 
@@ -1294,7 +1294,7 @@ const Featured = async () => {
   }
 
   const emailUsAbout = async () => {
-    const emailRecipient = "support@UltimateDeal.net"; // Change to the desired email recipient
+    const emailRecipient = "support@ultrashop.tech"; // Change to the desired email recipient
     const subject = `I Have A Question About UltimateDeal`;
     const body = `I have a question about UltimateDeal My question is:`;
 
