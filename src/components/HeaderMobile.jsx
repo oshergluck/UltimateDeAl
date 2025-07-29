@@ -87,8 +87,9 @@ const HeaderMobile = () => {
         navigate('/');
     }
 
-    const navigateToCompiler = () => {
-        navigate('/compiler');
+    const naviateToNFTs = () => {
+        setToggleMenu(prev => !prev);
+        navigate('/nfts');
     }
     const navigateToMiner = () => {
         navigate('/miner');
@@ -152,6 +153,15 @@ const HeaderMobile = () => {
         </svg>
     );
 
+    const MyNFTsIcon = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <rect x="2" y="3" width="6" height="6" rx="1" stroke="white" strokeWidth={2} fill="none" />
+            <rect x="16" y="3" width="6" height="6" rx="1" stroke="white" strokeWidth={2} fill="none" />
+            <rect x="2" y="15" width="6" height="6" rx="1" stroke="white" strokeWidth={2} fill="none" />
+        </svg>
+    );
+
     return (
         <>
         <div className={`drop-shadow fixed-header ${address ? ('h-[87px]') : ('h-[75px]')}`}>
@@ -190,6 +200,13 @@ const HeaderMobile = () => {
                                 <div onClick={() => naviateToStoreVip()} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
                                     <HomeIcon />
                                     <h2 className='text-[#FFFFFF] font-epilogue text-left font-semibold text-[24px] ml-3'>Home Page</h2>
+                                </div>
+                            </div>
+                            {/*My NFTs*/}
+                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
+                                <div onClick={() => naviateToNFTs()} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
+                                    <MyNFTsIcon />
+                                    <h2 className='text-[#FFFFFF] font-epilogue text-left font-semibold text-[24px] ml-3'>My NFTs</h2>
                                 </div>
                             </div>
                             

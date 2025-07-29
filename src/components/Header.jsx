@@ -101,6 +101,9 @@ useEffect(() => {
         const naviateToAdmin = () => {
             navigate('/dashboard');
         }
+        const naviateToNFTs = () => {
+          navigate('/nfts');
+      }
         const naviateToStoreVip = () => {
             navigate('/');
         }
@@ -143,6 +146,7 @@ useEffect(() => {
                 <button onClick={naviateToAdmin} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Dashboard</button>
                     <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Campaign</button>
                     <button onClick={naviateToAllCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>All Campaigns</button>
+                    <button onClick={naviateToNFTs} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My NFTs</button>
                     
                 </div>
             </div>

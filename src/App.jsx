@@ -4,7 +4,7 @@ import { Route, Routes,useParams,useLocation } from 'react-router-dom';
 import "./styles/Home.css";
 import {Header,BackgroundMusic,Footer, Loader,AccessibilityMenu,Search,HeaderMobile,FooterMobile ,SearchEngine} from './components';
 import { useStateContext } from './context';
-import {ListingInfo,Swapper,QuantumBusinessInterface,EditStore,City,Extra, CreateCampaign,Profile,CampaignDetails,AllCampaigns,EditCampaign,News, VIPRegister,Admin,ClientAdminPage,About,Terms,PrivacyPolicy,Post,NewPost,EditPost,StorePage,RegisterNewStore,SetOfficialStore,EditOfficialStore,Home,Product,TokenDistributorPage, LuckMachine, ESHVoting} from './pages';
+import {ListingInfo,Swapper,QuantumBusinessInterface,EditStore,City,Extra, CreateCampaign,Profile,MyNFTs,CampaignDetails,AllCampaigns,EditCampaign,News, VIPRegister,Admin,ClientAdminPage,About,Terms,PrivacyPolicy,Post,NewPost,EditPost,StorePage,RegisterNewStore,SetOfficialStore,EditOfficialStore,Home,Product,TokenDistributorPage, LuckMachine, ESHVoting} from './pages';
 import { useMediaQuery } from 'react-responsive';
 
 
@@ -117,6 +117,7 @@ export default function App() {
           <Route path ="/bonus" element ={<LuckMachine/>}/>
           <Route path ="/city/:cityofuser" element ={<City/>}/>
           <Route path ="/ListingInfo" element ={<ListingInfo/>}/>
+          <Route path ="/nfts" element ={<MyNFTs/>}/>
         </Routes>
     </div>
     <AccessibilityMenu />

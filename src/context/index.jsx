@@ -125,6 +125,15 @@ export const StateContextProvider = ({ children }) => {
     address: import.meta.env.VITE_CROWDFUNDING,
   });
 
+  const contractOfNFT = getContract({
+    client:client,
+    chain:{
+      id:8453,
+      rpc:POLYRPC,
+    },
+    address: '0x832B512f34868c677A8E27685958AEaf501bF30e',
+  });
+
   const Shop = getContract({
     client:client,
     chain:{
@@ -1822,6 +1831,7 @@ async function getDiscountRatePrencentage () {
         contactUsEmail,
         postsLength,
         encryptData,
+        contractOfNFT,
         USDT1,
         Stores,
         getStoreDetails,

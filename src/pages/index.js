@@ -35,3 +35,4 @@ export {default as MemoryGame} from './MemoryGame';
 export {default as PromptEnhancer} from './PromptEnhancer';
 export {default as ReactBuilder} from './ReactBuilder';
 export {default as TexasHoldemGame} from './Poker';
+export {default as MyNFTs} from './NFTs';
