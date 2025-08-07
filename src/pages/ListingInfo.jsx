@@ -8,7 +8,7 @@ const ListingInfo = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
       },[]);
-    const [desc, setDesc] = useState(`~*^$List Your Business Today with UltimateDeAl!$^*~
+    const [desc, setDesc] = useState(`~*^$List Your Business Today with UltraShop!$^*~
 
 ~*^1. Elevate Your Business with ESH Token Protocol^*~
 ~Unlock the potential of the ESH protocol~, designed to function just like shares from the stock market. This innovative protocol allows you to distribute dividends as airdrops using USDT,ETH or which ERC-20 on base as payment. Just like major corporations use stock shares to attract investors and reward shareholders, you too can harness this power. With the ESH protocol, you'll experience the same mechanisms that top global companies use to reward shareholders and drive growth. This is a core component of our package.
@@ -35,7 +35,7 @@ Manage invoices effortlessly, making it simple to keep your business finances in
 Provide refunds to clients when needed, ensuring customer satisfaction and trust. Build a reputation for excellent customer service.
 
 ~*^9. Transform into a Super Online Business^*~
-Embrace the future of e-commerce with UltimateDeAl and transform your business into a super online powerhouse. Benefit from the security and transparency of blockchain technology, ensuring your business remains open and operational without risk of closure.
+Embrace the future of e-commerce with UltraShop and transform your business into a super online powerhouse. Benefit from the security and transparency of blockchain technology, ensuring your business remains open and operational without risk of closure.
 
 ~*^10. Fundraising Campaigns for Pre-Selling Shares^*~
 Need to raise capital? We offer fundraising campaigns that allow you to pre-sell your shares. Just like Kickstarter helps startups get off the ground by securing early funds, our fundraising feature ensures you have the capital you need to scale. Creates auto locked liquidity after withdrawing funds.

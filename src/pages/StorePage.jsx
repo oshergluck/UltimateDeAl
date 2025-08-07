@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { logoOfWebsite, leader, atom, LingureLogo,VerifiedIcon,done_desktop } from '../assets';
 import { CustomButton, Loader, CustomDropdownProducts, FormField, StarRatingForNewReview,ProductBox,ProductSearch,RewardBadge, Swapper } from '../components';
 import { Base } from "@thirdweb-dev/chains";
+import { base } from "thirdweb/chains";
 import { ethers } from 'ethers';
 import { useContract } from '@thirdweb-dev/react';
 import { fontSizes } from '../components/AccessibilityMenu';
@@ -66,14 +67,7 @@ const StorePage = () => {
         imageForReview: '',
     });
 
-    const storeContract = getContract({
-        client: client,
-        chain: {
-            id: 8453,
-            rpc: POLYRPC,
-        },
-        address: storeContractByURL,
-    });
+    
 
     const handleFormFieldChange = (fieldName, e) => {
         setForm({ ...form, [fieldName]: e.target.value });
@@ -350,6 +344,24 @@ const StorePage = () => {
         }
 
     }, [theStoreContract, storeRegistery,rewardContract,address]);
+
+    const [storeContract,setStoreContract] = useState(null);
+
+    useEffect(() => {
+        if (storeContractByURL && ethers.utils.isAddress(storeContractByURL)) {
+            const contract = getContract({
+                client: client,
+                chain: {
+                    id: 8453,
+                    rpc: POLYRPC,
+                },
+                address: storeContractByURL,
+            });
+            setStoreContract(contract);
+        } else {
+            setStoreContract(null);
+        }
+    }, [storeContractByURL]);
 
     const handleRemoveClient = async () => {
         try {

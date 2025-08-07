@@ -236,9 +236,9 @@ const VIPRegister = () => {
                     <h1 className='text-[#FFFFFF] font-semibold sm:text-[85px] text-[25px] sm:pt-[78px] text-center'>Success, Starts Here</h1>
 
                     <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[60px] mb-[10px] text-center'>Step 1</h3>
-                    <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Buy a little amount of ETH for GAS Fees.</p>
-                    <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Step 2</h3>
                     <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Connect your wallet to the platform.</p>
+                    <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Step 2</h3>
+                    <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>We cover your gas now.</p>
                     <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Step 3</h3>
                     <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Fill in your details and submit the form.</p>
                     

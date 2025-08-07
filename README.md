@@ -1,42 +1,74 @@
-## Getting Started
 
-Create a project using this example:
+🛍️ UltimateDeAl
+UltimateDeAl is a fully decentralized e-commerce and fundraising platform built on smart contracts. It allows any startup or individual to:
 
-```bash
-npx thirdweb create --template vite-javascript-starter
-```
+Launch a personal store (sale or rental)
 
-You can start editing the page by modifying `src/main.jsx`. The page auto-updates as you edit the file.
+Sell or rent products & services
 
-On `src/index.jsx`, you'll find our `ThirdwebProvider` wrapping your app,
-this is necessary for our [hooks](https://portal.thirdweb.com/react) and
-[UI Components](https://portal.thirdweb.com/ui-components) to work.
+Issue NFT-based invoices and access keys
 
-## Environment Variables
+Raise funding via a built-in crowdfunding system
 
-To run this project, you will need to add environment variables. Check the `.env.example` file for all the environment variables required and add it to `.env.local` file or set them up on your hosting provider.
+Distribute dividends through a decentralized governance token (ESH)
 
-### Deploy to IPFS
+Built on Base network – gas fees are near zero, and users can onboard without paying gas directly via smart account infrastructure.
 
-Deploy a copy of your application to IPFS using the following command:
+🚀 Features
+🛍 ESHStore – Sell or rent products, minting NFT receipts for each transaction
 
-```bash
-yarn deploy
-```
+🧾 NFT Invoice – Each purchase mints an NFT that can serve as a license, key, or proof-of-purchase
 
-## Learn More
+🪙 ESH Token – Your startup’s blockchain stock, with voting power and dividend distribution
 
-To learn more about thirdweb, Vite and React, take a look at the following resources:
+📊 Crowdfunding – Raise capital by selling equity tokens (ESH) directly to backers
 
-- [thirdweb React Documentation](https://docs.thirdweb.com/react) - learn about our React SDK.
-- [thirdweb JavaScript Documentation](https://docs.thirdweb.com/react) - learn about our JavaScript/TypeScript SDK.
-- [thirdweb Portal](https://docs.thirdweb.com/react) - check our guides and development resources.
-- [Vite Documentation](https://vitejs.dev/guide/) - learn about Vite features.
-- [React documentation](https://reactjs.org/) - learn React.
-- [Templates](https://thirdweb.com/templates)
+🗳 Governance – Let token holders vote on company decisions
 
-You can check out [the thirdweb GitHub organization](https://github.com/thirdweb-dev) - your feedback and contributions are welcome!
+📧 Auto Notifications – Email receipts sent to buyers and sellers
 
-## Join our Discord!
+🧠 Smart Contracts
+Contract	Description	Live
+ESH	Governance & Dividend Token	[View](https://thirdweb.com/ultimatedeal.eth/ESHVoting)
+ESHStoreSales	Sales Marketplace	[View](https://thirdweb.com/ultimatedeal.eth/ESHStoreSales)
+ESHStoreRentals	Rental Marketplace	[View](https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals)
+ESHInvoicesMinter	NFT Receipt Generator	[View](https://thirdweb.com/ultimatedeal.eth/ESHInvoicesMinter)
+ESHVoting	Voting & Governance	[View](https://thirdweb.com/ultimatedeal.eth/ESH)
 
-For any questions, suggestions, join our discord at [https://discord.gg/thirdweb](https://discord.gg/thirdweb).
+🛠 Tech Stack
+Frontend: React + Vite
+
+Blockchain: Solidity + Thirdweb SDK
+
+Web3 Wallets: Metamask, Smart Accounts (ERC-4337)
+
+Email API: AutoMail via server hooks (planned integration)
+
+📦 Installation
+bash
+Copy
+Edit
+git clone https://github.com/oshergluck/UltimateDeAl
+cd UltimateDeAl
+npm install
+npm run dev
+🌐 Live Demo
+You can test and explore the deployed dApp at:
+👉 https://ultrashop.tech/shop/UltraShop
+
+📚 How It Works
+Start a Store – Deploy a subdomain with a store contract (rent or sale)
+
+NFT Issuance – Each product is tied to an NFT with expiration/support features
+
+Crowdfund – Launch a funding campaign and distribute ESH tokens
+
+Distribute Profits – Use the smart dividend system to send USDC to holders
+
+Vote – Let your token holders decide on roadmap, changes, or payouts
+
+🤝 Contributing
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
+
+📄 License

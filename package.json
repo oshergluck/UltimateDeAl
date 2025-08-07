@@ -58,7 +58,7 @@
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.1",
     "stream-browserify": "^3.0.0",
-    "thirdweb": "^5.71.0",
+    "thirdweb": "^5.105.26",
     "util": "^0.12.5",
     "viem": "^2.21.2"
   },

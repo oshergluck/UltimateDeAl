@@ -33,7 +33,25 @@ const Product = () => {
   const base = defineChain({
     id: 8453,
   });
+  const socialWallet = inAppWallet({
+    auth: {
+      options: [
+        "google", 
+        "facebook", 
+        "apple", 
+        "email", 
+        "phone", 
+        "passkey"
+      ]
+    },
+    // enable gasless transactions for the wallet
+    executionMode: {
+      mode: "EIP7702",
+      sponsorGas: true,
+    },
+  });
 const wallets = [
+  socialWallet,
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
     walletConnect(),
@@ -87,7 +105,7 @@ const wallets = [
     const [receipt,setReceipt] = useState('');
     const [imagesOfProduct,setImagesOfProduct] = useState([]);
     let processedReviews = [];
-    const [paymentAddress,setPaymentAddress] = useState('');
+    const [paymentAddress,setPaymentAddress] = useState(import.meta.env.VITE_DEAL_COIN_ADDRESS);
     const [rewardAddress,setRewardAddress] = useState('');
     const [reward,setReward] = useState(0);
     const [moreInfo,setMoreInfo] = useState('');
@@ -120,14 +138,23 @@ const wallets = [
         },
         address: import.meta.env.VITE_STORE_REGISTERY,
       });
-      const storeContract1 = getContract({
-        client:client,
-        chain:{
-          id:8453,
-          rpc:POLYRPC,
-        },
-        address: storeContractByURL,
-      });
+      const [storeContract1,setStoreContract] = useState(null);
+
+    useEffect(() => {
+        if (storeContractByURL && ethers.utils.isAddress(storeContractByURL)) {
+            const contract = getContract({
+                client: client,
+                chain: {
+                    id: 8453,
+                    rpc: POLYRPC,
+                },
+                address: storeContractByURL,
+            });
+            setStoreContract(contract);
+        } else {
+            setStoreContract(null);
+        }
+    }, [storeContractByURL]);
 
       const PaymentContract = getContract({
         client:client,
@@ -138,14 +165,23 @@ const wallets = [
         address: paymentAddress,
       });
 
-      const RewardContract = getContract({
-        client:client,
-        chain:{
-          id:8453,
-          rpc:POLYRPC,
-        },
-        address: rewardAddress,
-      });
+      const [RewardContract,setRewardContract] = useState(null);
+
+    useEffect(() => {
+        if (rewardAddress && ethers.utils.isAddress(rewardAddress)) {
+            const contract = getContract({
+                client: client,
+                chain: {
+                    id: 8453,
+                    rpc: POLYRPC,
+                },
+                address: rewardAddress,
+            });
+            setRewardContract(contract);
+        } else {
+          setRewardContract(null);
+        }
+    }, [rewardAddress]);
 
       const approveCoinsForSmartContractPayment = async (amount,supersmartcontract) => {
         try {
@@ -722,7 +758,7 @@ useEffect(() => {
 
 
   return (
-    <div className="mx-auto p-8 mt-9 linear-gradient1 rounded-2xl">
+    <div className="mx-auto p-8 mt-9 linear-gradient1 rounded-2xl overflow-auto touch-auto">
   {isLoading && <Loader />}
   <div className='relative justify-center flex cursor-pointer' onClick={() => navigateToStore()}>
   <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />
@@ -1334,6 +1370,12 @@ useEffect(() => {
               },
 
               }}
+              accountAbstraction={{
+                sponsorGas:true,
+                chain: base,
+                gasless: true,
+                factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
+               }}
 
               />
       </>)}
@@ -1344,7 +1386,7 @@ useEffect(() => {
 
 <div className="flex gap-4 mt-[20px]">
       <input
-        className="flex-1 p-4 rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF] placeholder:text-[#FFFFFF]"
+        className="p-4 rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF] placeholder:text-[#FFFFFF]"
         type="text"
         placeholder="Enter Invoice Number"
         value={receipt}

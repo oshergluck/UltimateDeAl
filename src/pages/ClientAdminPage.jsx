@@ -56,14 +56,23 @@ const ClientAdminPage = () => {
     const [type,setType] = useState('');
     const {contract:contract} = useContract(userContract);
 
-    const adminContract = getContract({
-        client:client,
-        chain:{
-          id:8453,
-          rpc:POLYRPC,
-        },
-        address: userContract,
-      });
+      const [adminContract, setAdminContract] = useState(null);
+
+useEffect(() => {
+    if (userContract && ethers.utils.isAddress(userContract)) {
+        const contract = getContract({
+            client: client,
+            chain: {
+                id: 8453,
+                rpc: POLYRPC,
+            },
+            address: userContract,
+        });
+        setAdminContract(contract);
+    } else {
+        setAdminContract(null);
+    }
+}, [userContract]);
 
       const Hidden = getContract({
         client:client,
@@ -71,7 +80,7 @@ const ClientAdminPage = () => {
           id:8453,
           rpc:POLYRPC,
         },
-        address: '0x1D77BB9b27953ca21a1b7Bc408d090b6056632b9',
+        address: '0xCe5d3258b6dCDE1D1cB133956839a3c8571D9A5b',
       });
 
       
@@ -711,6 +720,27 @@ const ClientAdminPage = () => {
         }
     };
 
+    const handleContinueDistributeProfit = async () => {
+      try { setIsLoading(true);
+      const provider = new ethers.providers.JsonRpcProvider(POLYRPC, Base);
+      const gasPrice = await provider.getGasPrice();
+      const transaction =await prepareContractCall({
+          contract:adminContract,
+          method: "function continueDistribution(bytes32 distributionId, uint256 maxCalls) returns (bool)",
+          params: [distId, maxCall],
+          value: 0,
+          gasPrice: gasPrice,
+        });
+        sendTransaction(transaction);
+      //const data = await contract.call('distributeQuarterlyBalance',{ gasPrice : gasPrice , gasLimit:500000000});
+          setIsLoading(false);
+      }
+      catch (error) {
+          alert(error);
+          setIsLoading(false);
+      }
+  };
+
     const FInalyz = async () => {
         try { setIsLoading(true);
         const provider = new ethers.providers.JsonRpcProvider(POLYRPC, Base);
@@ -922,8 +952,17 @@ const ClientAdminPage = () => {
                   <input type="text" placeholder="Dividend %" value={dividend} onChange={e => setDividend(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
                   <input type="text" placeholder="Max Calls" value={maxCall} onChange={e => setMaxCall(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
                 </div>
+                <div className="flex gap-2">
+                <input type="text" placeholder="Dist. ID" value={distId} onChange={e => setDistId(e.target.value)} className="flex-1 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-xs sm:text-sm" />
+                <button onClick={handleContinueDistributeProfit} className="flex-1 px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                    Continue Distribution
+                  </button>
+                  <button onClick={FInalyz} className="flex-1 px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                    Finalize
+                  </button>
+                  
+                </div>
               </div>
-              
               <div className="space-y-3">
                 <h3 className="text-base sm:text-lg font-medium text-gray-200">Profit Status</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -933,12 +972,6 @@ const ClientAdminPage = () => {
                   <button onClick={handleTotal} className="px-2 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
                     Total Profit
                   </button>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={FInalyz} className="flex-1 px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                    Finalize
-                  </button>
-                  <input type="text" placeholder="Dist. ID" value={distId} onChange={e => setDistId(e.target.value)} className="flex-1 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-xs sm:text-sm" />
                 </div>
               </div>
             </div>

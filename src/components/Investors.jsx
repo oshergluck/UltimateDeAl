@@ -41,7 +41,7 @@ const Investors = ({ investors, websiteComment }) => {
               <a className="col-span-2 flex ml-[15px] font-epilogue font-semibold text-[12px] opacity-[40%] hover:opacity-[100%] duration-500 ease-in-out text-[#FFFFFF] drop-shadow-md hover:text-[#00FFFF] truncate" target="_blank" href={`https://base.blockscout.com/address/${item.address}`}>{item.address || 'Unknown'}</a>
               </div>
               
-              <p className="mt-[10px] col-span-2 flex ml-[65px] font-epilogue font-bold text-[18px] text-[#fc941c] font-bold drop-shadow-md">{HexToInteger(item?.investment._hex)/1e6 || 0}USDT Investment</p>
+              <p className="mt-[10px] col-span-2 flex ml-[65px] font-epilogue font-bold text-[18px] text-[#fc941c] font-bold drop-shadow-md">{HexToInteger(item?.investment._hex)/1e6 || 0}USD Coin Investment</p>
               <p className="font-epilogue col-span-2 flex ml-[65px] font-semibold text-[16px] text-[#FFFFFF] drop-shadow-md my-[10px]">{item?.comment || 'No comment'}</p>
            
               

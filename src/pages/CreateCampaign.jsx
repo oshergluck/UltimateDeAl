@@ -398,9 +398,9 @@ You can use all of the signs on the same texts or some of them.
         return;
       }
       const upload = await pinata.upload.json({
-        name: `UltimateDeAl Campaign Creation`,
+        name: `UltraShop Campaign Creation`,
         description: `Campaign created by ${address}`,
-        external_url: "https://ultimatedeal.net/",
+        external_url: "https://ultrashop.tech/",
         image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/QmP5kZ1SEiaETYnd6y4VC7qFkbQTjYiNwjUpgid1VCwgjq?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
         attributes: [
           { trait_type: "Creation Date", value: new Date().toISOString().substring(0,10) },
@@ -430,7 +430,7 @@ You can use all of the signs on the same texts or some of them.
       navigate('/my-campaigns');
     }}
     onError={(error) => {
-      alert("If need help contact support at support@ultimatedeal.net\nError:\n", error);
+      alert("If need help contact support at support@ultrashop.tech\nError:\n", error);
     }}
   >
     Send For Verification

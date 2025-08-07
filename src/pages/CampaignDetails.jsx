@@ -30,7 +30,25 @@ const CampaignDetails = () => {
   const base = defineChain({
     id: 8453,
   });
+  const socialWallet = inAppWallet({
+    auth: {
+      options: [
+        "google", 
+        "facebook", 
+        "apple", 
+        "email", 
+        "phone", 
+        "passkey"
+      ]
+    },
+    // enable gasless transactions for the wallet
+    executionMode: {
+      mode: "EIP7702",
+      sponsorGas: true,
+    },
+  });
   const wallets = [
+    socialWallet,
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
     walletConnect(),
@@ -384,6 +402,7 @@ const handleCommentChange = (e) => {
                   {symbol} address is {rewardAddress}
                 </p>
 </div>
+<Swapper ERCUltraAddress={rewardAddress} SYMBOL={symbol}/>
                 </div>
                    <div className='sm:flex sm:justify-items-center m-auto sm:items-center h-[720px] rounded-[15px] sm:w-11/12 w-full'>
                    <iframe className='rounded-[15px] h-[720px] mx-auto sm:w-[9/10] w-full' id="geckoterminal-embed" title="GeckoTerminal Embed" src={`https://www.geckoterminal.com/base/tokens/${rewardAddress}?embed=1&info=0&swaps=1`} frameborder="0" allow="clipboard-write" allowfullscreen></iframe>
@@ -486,7 +505,8 @@ const handleCommentChange = (e) => {
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` },
+        {trait_type : "Reward Address", value: rewardAddress}
       ]
     });
     
@@ -570,7 +590,12 @@ const handleCommentChange = (e) => {
         <ConnectButton
               client={client}
               wallets={wallets}
-
+              accountAbstraction={{
+                sponsorGas:true,
+                chain: base,
+                gasless: true,
+                factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
+               }}
               theme={"dark"}
 
               connectButton={{ label: "Connect" }}
@@ -732,7 +757,8 @@ const handleCommentChange = (e) => {
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` },
+        {trait_type : "Reward Address", value: rewardAddress}
       ]
     });
         // Create a transaction object and return it
@@ -970,6 +996,7 @@ const handleCommentChange = (e) => {
                   {symbol} address is {rewardAddress}
                 </p>
 </div>
+<Swapper ERCUltraAddress={rewardAddress} SYMBOL={symbol}/>
                    <div className='sm:flex sm:justify-items-center m-auto sm:items-center h-[720px] rounded-[15px] sm:w-11/12 w-full'>
                    <iframe height="80%" className='rounded-[15px] mx-auto sm:w-[9/10] w-full' id="geckoterminal-embed" title="GeckoTerminal Embed" src={`https://www.geckoterminal.com/base/tokens/${rewardAddress}?embed=1&info=0&swaps=1`} frameborder="0" allow="clipboard-write" allowfullscreen></iframe>
                    </div>
@@ -1073,7 +1100,8 @@ const handleCommentChange = (e) => {
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` },
+        {trait_type : "Reward Address", value: rewardAddress}
       ]
     });
         // Create a transaction object and return it
@@ -1316,7 +1344,8 @@ const handleCommentChange = (e) => {
         { trait_type: "Investment Date", value: new Date().toISOString().substring(0,10) },
         { trait_type: "Reward", value: symbol },
         { trait_type: "Reward Amount", value: ((amount/1)*(1/(rewardPrice/1e6))).toFixed(18).toString() },
-        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` }
+        { trait_type: "Reward Price", value: `${(rewardPrice/1e6).toFixed(3)} $USDC` },
+        {trait_type : "Reward Address", value: rewardAddress}
       ]
     });
         // Create a transaction object and return it
