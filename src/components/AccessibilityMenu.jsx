@@ -56,7 +56,7 @@ const AccessibilityMenu = () => {
 
   return (
     <div className="fixed bottom-4 left-0 z-50">
-      <button onClick={toggleMenu} className="accessibility-toggle sm:w-[60px] w-[13%] ">
+      <button onClick={toggleMenu} className="accessibility-toggle sm:w-[45px] w-[10%] ">
         <img src={accessibilityIcon} alt="Accessibility Options" className='opacity-[70%] duration-500 ease-in-out hover:opacity-[100%]'/>
       </button>
       {isOpen && (

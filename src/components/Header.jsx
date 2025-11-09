@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { logoOfWebsite, IL, search, tetherusdtlogo, Aicon, usdcoinusdclogo, WethLogo } from '../assets'
+import { logoOfWebsite, IL, search, tetherusdtlogo, Aicon, usdcoinusdclogo, WethLogo,QCoin } from '../assets'
 import { Search } from "./"
 import { ConnectWallet, useLogin, useTokenBalance, } from '@thirdweb-dev/react';
 import {
@@ -40,7 +40,6 @@ const Header = () => {
     });
 
     const wallets = [
-        socialWallet,
         createWallet("io.metamask"),
         createWallet("com.coinbase.wallet"),
         walletConnect(),
@@ -97,11 +96,11 @@ const Header = () => {
     const getTokenDetails = async (tokenAddress) => {
         try {
             const tokenContract = getContract({
-                client : client,
+                client: client,
                 chain: base,
                 address: tokenAddress,
             });
-
+    
             // Get symbol and name from the ERC20 contract
             const [symbol, name] = await Promise.all([
                 readContract({
@@ -115,19 +114,28 @@ const Header = () => {
                     params: []
                 })
             ]);
-
-            return {
-                address: tokenAddress,
-                name: name,
-                symbol: symbol,
-                icon: logoOfWebsite, // Default icon - you can customize this
-            };
+    
+            // Return object based on token address
+            if (tokenAddress === '0xD90B9dB989b83B5d112c3e9fABd1a964E463E197') {
+                return {
+                    address: tokenAddress,
+                    name: name,
+                    symbol: symbol,
+                    icon: logoOfWebsite,
+                };
+            } else {
+                return {
+                    address: tokenAddress,
+                    name: name,
+                    symbol: symbol,
+                    icon: QCoin,
+                };
+            }
         } catch (error) {
             console.error(`Error getting token details for ${tokenAddress}:`, error);
             return null;
         }
     };
-
     // Function to fetch all ERCUltra tokens
     const fetchERCUltraTokens = async () => {
         if (!Blockchain || tokensLoading) return;
@@ -314,7 +322,7 @@ const getCampaignRewardTokens = async () => {
 
     // Fetch ERCUltra tokens when component mounts or when storeRegistery changes
     useEffect(() => {
-        fetchERCUltraTokens();
+        //fetchERCUltraTokens();
     }, [storeRegistery]);
 
     // Combine static and dynamic tokens
@@ -331,7 +339,7 @@ const getCampaignRewardTokens = async () => {
   };
 
   useEffect(() => {
-    fetchCampaignRewardTokens();
+    //fetchCampaignRewardTokens();
 }, [CrowdFunding, address]);
   
   // Use it when combining all tokens
@@ -339,8 +347,12 @@ const getCampaignRewardTokens = async () => {
       [Base.chainId]: deduplicateTokens([...staticTokens, ...dynamicTokens])
   };
 
-    const handleHomeClick = () => {
+    const handleBlogNavigate = () => {
         navigate('/blog');
+    };
+
+    const handleAboutNavigate = () => {
+        navigate('/about');
     };
 
     const handleSearchClick = () => {
@@ -364,24 +376,27 @@ const getCampaignRewardTokens = async () => {
     }
 
     const naviateToMyCampaigns = () => {
-        navigate('/my-campaigns');
+        navigate('/my-coins');
     }
     const naviateToAllCampaigns = () => {
         navigate('/all-campaigns');
     }
     const naviateToCreateCampaign = () => {
-        navigate('/create-campaign');
+        navigate('/deploy-esh');
     }
     const naviateToVip = () => {
-        navigate('/register-vip');
+        navigate('/coin-launcher');
     }
     const naviateToAdmin = () => {
-        navigate('/dashboard');
+        navigate('/my-coins');
     }
     const naviateToNFTs = () => {
         navigate('/nfts');
     }
     const naviateToStoreVip = () => {
+        navigate('/shop/mainshop');
+    }
+    const naviateToStoreVip1 = () => {
         navigate('/');
     }
 
@@ -399,7 +414,7 @@ const getCampaignRewardTokens = async () => {
         <>
             <div className={`drop-shadow w-full relative linear-gradient1 border-b-[1px] border-[#FFDD00] pb-[20px] fixed-header ${address ? ('h-[75px]') : ('h-[75px]')}`}>
                 <div className='flex py-[5px]'>
-                    <div className='flex cursor-pointer' onClick={() => naviateToStoreVip()}>
+                    <div className='flex cursor-pointer' onClick={()=> naviateToStoreVip1()}>
                         <img src={logoOfWebsite} alt='logo' className='w-[50px] h-[50px] object-contain my-auto mx-[10px]' />
                         <h1 className='text-white font-epilogue font-semibold text-[18px] my-auto'>Ultra</h1>
                         <h1 className='text-[#FFDD00] font-epilogue font-semibold text-[18px] my-auto'>Shop</h1>
@@ -407,21 +422,19 @@ const getCampaignRewardTokens = async () => {
 
                     <div className='flex items-center justify-between h-full my-auto m-auto max-w-[1280px]'>
                         <div className='textcolor flex items-center gap-5'>
-                            <div className="lg:flex-1  bg-[#000000] flex flex-row pr-2 h-[52px] bg-transparent border-[1px] border-[#525252] duration-500 ease-in-out hover:border-[#FFFFFF] rounded-[15px]">
+                            {/* <div className="lg:flex-1  bg-[#000000] flex flex-row pr-2 h-[52px] bg-transparent border-[1px] border-[#525252] duration-500 ease-in-out hover:border-[#FFFFFF] rounded-[15px]">
                                 <div className=" w-[50px] h-full rounded-[2px] bg-transparent flex justify-center items-center cursor-pointer  duration-500 ease-in-out rounded-[16px]" onClick={() => handleSearchClick()}>
                                     <img src={search} alt="search" className="w-[15px] h-[15px] object-contain" />
                                 </div>
                                 <input type="text" placeholder="Search a Campaign" className="flex w-[220px] font-epilogue font-normal text-[16px] placeholder:text-[#ffffff] bg-transparent text-[#ffffff] outline-none ml-[15px]" value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)} />
-                            </div>
-                            <button onClick={naviateToStoreVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Home</button>
-                            <button onClick={handleHomeClick} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Blog</button>
-                            {address ? (<button onClick={naviateToMyCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My Campaigns</button>) : (<></>)}
-                            <button onClick={naviateToVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>VIP</button>
-                            <button onClick={naviateToAdmin} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Dashboard</button>
-                            <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Campaign</button>
-                            <button onClick={naviateToAllCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>All Campaigns</button>
-                            <button onClick={naviateToNFTs} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My NFTs</button>
+                            </div> */}
+                            <button onClick={naviateToStoreVip1} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Home</button>
+                            <button onClick={handleAboutNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>About</button>
+                            <button onClick={handleBlogNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Blog</button>
+                            {address ? (<button onClick={naviateToMyCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My Coins</button>) : (<></>)}
+                            <button onClick={naviateToVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Launch Coin</button>
+                            <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Coin</button>
                         </div>
                     </div>
                     <div className='mr-[20px] py-[5px] my-auto'>
@@ -438,7 +451,7 @@ const getCampaignRewardTokens = async () => {
                                 welcomeScreen: {
                                     title: "UltraShop",
                                     subtitle:
-                                        "Contribute to businesses anonymously and get shares in return and dividends. Launch your biz website and a stock just like in the stock market!\n",
+                                        "Create your coin or invest in other coins",
                                     img: {
                                         src: logoOfWebsite,
                                         width: 150,
@@ -450,12 +463,6 @@ const getCampaignRewardTokens = async () => {
                                 showThirdwebBranding: true,
                             }}
                             supportedTokens={allSupportedTokens}
-                            accountAbstraction={{
-                                sponsorGas: true,
-                                chain: base,
-                                gasless: true,
-                                factoryAddress: '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
-                            }}
                             detailsButton={{
                                 displayBalanceToken: {
                                     [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS,

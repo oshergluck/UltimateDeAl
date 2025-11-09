@@ -3,6 +3,7 @@ import { loader, VerifiedIcon, cashedout,done_mobile, done_desktop } from '../as
 import Loader from './Loader';
 import { useNavigate } from 'react-router-dom';
 import { calculateBarPercentage, daysLeft } from '../utils';
+import IPFSMediaViewer from './IPFSMediaViewer';
 
 const FeaturedCardMobile = ({ campaign,style }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -55,11 +56,10 @@ const FeaturedCardMobile = ({ campaign,style }) => {
             <div className=''>
             {isLoading && <Loader />}
                 <div className='w-full'>
-                    <video className='z-[2] relative' controls preload="metadata">
-                        <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/mp4"></source>
-                        <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/ogg"></source>
-                        Your browser does not support the video tag.
-                    </video>
+                    <IPFSMediaViewer
+                    ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                    className={'z-2 relative'}
+                    />
                     </div>
                     <div className='flex justify-streched'>
                     <div className='z-[1] relative justify-streched flex-initial h-[40px] my-[15px] w-9/12 ml-[15px] rounded-[5px] pb-[5px] pt-[5px] px-[25px] border-[1px] border-[#FFFFFF] bg-[#000000]'>

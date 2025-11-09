@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { logoOfWebsiteCoin,ESH ,logoOfWebsite,usdcoinusdclogo} from "./assets";
 import { Route, Routes,useParams,useLocation } from 'react-router-dom';
 import "./styles/Home.css";
-import {Header,BackgroundMusic,Footer, Loader,AccessibilityMenu,Search,HeaderMobile,FooterMobile ,SearchEngine} from './components';
+import {Header,BackgroundMusic,Footer,CookieAlert, Loader,AccessibilityMenu,Search,HeaderMobile,FooterMobile ,SearchEngine} from './components';
 import { useStateContext } from './context';
-import {ListingInfo,Swapper,QuantumBusinessInterface,EditStore,City,Extra, CreateCampaign,Profile,MyNFTs,CampaignDetails,AllCampaigns,EditCampaign,News, VIPRegister,Admin,ClientAdminPage,About,Terms,PrivacyPolicy,Post,NewPost,EditPost,StorePage,RegisterNewStore,SetOfficialStore,EditOfficialStore,Home,Product,TokenDistributorPage, LuckMachine, ESHVoting} from './pages';
+import {ListingInfo,Swapper,QuantumBusinessInterface,EditStore,City,Extra, CreateCampaign,Profile,CoinPage,MyNFTs,CampaignDetails,CoinLauncher,AllCampaigns,EditCampaign,News, VIPRegister,Admin,ClientAdminPage,About,Terms,PrivacyPolicy,Post,NewPost,EditPost,StorePage,RegisterNewStore,SetOfficialStore,EditOfficialStore,Home,Product,TokenDistributorPage,ContractDeployForm, LuckMachine, ESHVoting,DeployPublishedContractPage, MyCoins,DeployRentals,DeploySales,DeployInvoices,DeployVotes,RecentCoins} from './pages';
 import { useMediaQuery } from 'react-responsive';
 
 
 export default function App() {
+  const isShop = window.location.pathname.split('/')[1];
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const { term } = useParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +19,7 @@ export default function App() {
     setIsLoading(true);
     const data = await getTotal();
     setIsLoading(false);
-    setTotal(data*1e-6.toFixed(2));
+    setTotal(data*1e-6);
     return data;
   }
 
@@ -48,17 +49,18 @@ export default function App() {
 
   return (
     <>
+    <CookieAlert/>
     {isLoading && <Loader />}
     <div className="min-h-screen w-full bg-black linear-gradient1 bg-center bg-no-repeat ">
-    {isMobile ? 
+    {isMobile  ? 
     <HeaderMobile
     />
      : 
     <Header
      />}
      
-    <div className={`mx-auto min-h-[1400px] sm:mt-[50px] mt-[75px]`}>
-    <div className="mb-[25px] pt-[20px] mt-[10px]">
+    <div className={`mx-auto sm:mt-[50px]`}>
+    <div className="mb-[25px] mt-[10px]">
     <button 
         onClick={() => refreshPage()}
         className="rounded-[4px]"
@@ -76,7 +78,7 @@ export default function App() {
         </button>
         
         </div>
-        {Total ? (isMobile ? (<>
+        {Number(Total)>1000000 ? (isMobile ? (<>
         <h3 className='text-center text-white font-bold sm:text-5xl text-2xl drop-shadow-md'>UltraShop RAISED</h3>
         <h3 className='text-center font-bold sm:text-5xl text-2xl !text-[#4287f5]'>{Total}</h3>
         <img src={usdcoinusdclogo} className='h-[35px] w-[35px] mx-auto text-center text-[#FFDD00] font-bold text-2xl sm:text-5xl'/><h3 className='text-center text-white font-bold text-2xl sm:text-5xl'>UNTIL NOW</h3>
@@ -87,6 +89,14 @@ export default function App() {
         <img src={usdcoinusdclogo} className='h-[35px] w-[35px] mt-[10px] text-center text-[#FFDD00] font-bold text-2xl sm:text-5xl'/><h3 className='text-center text-white font-bold text-2xl sm:text-5xl'>UNTIL NOW</h3>
         </div>)):(<></>)}
         <Routes>
+        <Route path="/coin/:tokenAddress" element={<CoinPage />} />
+        <Route path="/coin-launcher" element={<CoinLauncher/>}/>
+          <Route path="/deploy-esh" element={<DeployPublishedContractPage/>}/>
+          <Route path="/deploy-rentals" element={<DeployRentals/>}/>
+          <Route path="/deploy-sales" element={<DeploySales/>}/>
+          <Route path="/deploy-votes" element={<DeployVotes/>}/>
+          <Route path="/deploy-invoices" element={<DeployInvoices/>}/>
+          <Route path="/bank" element={<ContractDeployForm/>}/>
           <Route path="/fight" element={<QuantumBusinessInterface />}/>
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/create-campaign" element={<CreateCampaign />} />
@@ -97,8 +107,9 @@ export default function App() {
           <Route path="/edit-campaign/:id" element={<EditCampaign />} />
           <Route path="/post/:id" element={<Post />} />
           <Route path="/search/:term" element={<Search key={term} />} />
-          <Route path="/register-vip" element={<VIPRegister />} />
-          <Route path="/" element={<Home />} />
+          <Route path="/vip" element={<VIPRegister />} />
+          <Route path="/" element={<RecentCoins />} />
+          <Route path="/my-coins" element={<MyCoins />} />
           <Route path="/super-admin" element={<Admin />} />
           <Route path="/dashboard" element={<ClientAdminPage />} />
           <Route path="/about" element={<About />} />

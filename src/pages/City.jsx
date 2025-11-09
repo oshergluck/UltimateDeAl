@@ -31,13 +31,13 @@ const City = () => {
     const [story, setStory] = useState('');
     const [mayor, setMayor] = useState('');
     const [high,setHighesBalance] = useState(0);
-    const {contract: highContract} = useContract('0x6EBAE1Fffa82B01C648370ca8765fb987ab70760');
+    const {contract: highContract} = useContract('0xD90B9dB989b83B5d112c3e9fABd1a964E463E197');
     const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
     const { contract: luckMachineContract3 } = useContract(import.meta.env.VITE_LUCKY);
     const { contract: invoicesContract } = useContract('0x8f0D68eA5542a09987d96926572259f03d799393');
     const [ownerShip,setOwnerShip] = useState(false);
     const navigateToDeAlStore = () => {
-        navigate('/shop/UltraShop/products/LOTERRY');
+        navigate('/shop/mainshop/products/LOTERRY');
         };
 
     const luckMachineContract2 = getContract({
@@ -50,7 +50,7 @@ const City = () => {
     const DEALShare = getContract({
         client: client,
         chain: { id: 8453, rpc: POLYRPC },
-        address: '0x6EBAE1Fffa82B01C648370ca8765fb987ab70760',
+        address: '0xD90B9dB989b83B5d112c3e9fABd1a964E463E197',
     });
 
     useEffect(() => {
@@ -303,12 +303,12 @@ const City = () => {
         if (!cityStartDate) return;
         const otherCitiesInfo = citiesAndMayors
         .filter(cm => cm.city.toLowerCase() !== cityName.toLowerCase())
-        .map(cm => `${cm.city} (Mayor: ${cm.mayor}, Balance: ${formatNumberWithCommas(Math.round(cm.balance*1e18))} $ULTI)`)
+        .map(cm => `${cm.city} (Mayor: ${cm.mayor}, Balance: ${formatNumberWithCommas(Math.round(cm.balance*1e18))} $ULSH)`)
         .join(', ');
         try {
             setIsLoading(true);
             const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-                model: "gpt-4o",
+                model: "gpt-4o", // or "gpt-4o-mini" for a more cost-effective option
                 messages: [{
                     role: "user",
                     content: `Rules:
@@ -331,45 +331,49 @@ const City = () => {
                     15. NEVER USE THE EXAMPLE ITSELF! GENERATE HEADLINES FROM YOUR IMAGINATION!
                     16. Include conflicts and interactions between ${cityName} and other cities. Here are the other cities and their mayors: ${otherCitiesInfo}. Create interesting storylines involving disputes, alliances, or competitions between these cities and their leaders.
                     17. Generate 23 news headlines for the city of ${cityName}. The city has ${participantsCount+1000000000} citizens, ${participantsCount} Humans and the others are creatures from all the Galaxy, including the following notable residents:
-
-                ${cityStores.map(store => store.name).join(', ')} those are stores which will be shown in the news and the surveys! never write negative news about those stores!
-
-                The mayor of the city is ${mayor} owns ${high}. Each headline represents events happening over a 24-hour period starting from ${dateOfGame}. Make the headlines engaging and varied, including the names of the citizens listed above as well as other imaginary names for people and places. Some citizens may have been involved in conflicts or passed away from old age, so feel free to incorporate these elements into the storyline.
-
-                Include interactions, conflicts, or collaborations with other cities and their mayors. Create engaging storylines that involve multiple cities and their leaders.
-
-                For each headline, include the time (in 24-hour format) and the date. Here's the format:
-                
-                [Cannel: Channel number]
-
-                [Date: ${dateOfGame}]
-
-                [Time] Headline
-
-                Example:
-                [Channel: 14]
-                [Date: October 7th, 2077]
-                make the hours randomized even the minutes.
-
-                00:14 - Mayor ${mayor} Announces Plans for New Skybridge
-                03:17 - Unexpected Meteor Shower Delights Night Owls at Celestial Park
-                06:28 - ${cityStores[1]?.contactInfo || 'Random Name'} Wins Intergalactic Cooking Competition
-                08:12 - A red dressed woman was found dead in the parking lot of center of ${cityName}
-                11:45 - ${cityName} and ${citiesAndMayors[0]?.city || 'Neighboring City'} Sign Historic Trade Agreement
-                13:27 - ${citiesAndMayors[0]?.city || 'Neighboring City'} Attacked ${cityName}
-                 
-                ...
-
-                Please generate 24 headlines following this format, covering a full 24-hour period, never generate more than 24 hours! Include at least one headline featuring the mayor's activities or decisions. Include at least one headline featuring each user's activities or decisions. Use creative elements fitting for the date ${dateOfGame}. Incorporate stories about conflicts, alliances, and significant events involving the listed citizens and other cities. All the people in the city can die except the users!`
+            
+                    ${cityStores.map(store => store.name).join(', ')} those are stores which will be shown in the news and the surveys! never write negative news about those stores!
+            
+                    The mayor of the city is ${mayor} owns ${high}. Each headline represents events happening over a 24-hour period starting from ${dateOfGame}. Make the headlines engaging and varied, including the names of the citizens listed above as well as other imaginary names for people and places. Some citizens may have been involved in conflicts or passed away from old age, so feel free to incorporate these elements into the storyline.
+            
+                    Include interactions, conflicts, or collaborations with other cities and their mayors. Create engaging storylines that involve multiple cities and their leaders.
+            
+                    For each headline, include the time (in 24-hour format) and the date. Here's the format:
+                    
+                    [Cannel: Channel number]
+            
+                    [Date: ${dateOfGame}]
+            
+                    [Time] Headline
+            
+                    Example:
+                    [Channel: 14]
+                    [Date: October 7th, 2077]
+                    make the hours randomized even the minutes.
+            
+                    00:14 - Mayor ${mayor} Announces Plans for New Skybridge
+                    03:17 - Unexpected Meteor Shower Delights Night Owls at Celestial Park
+                    06:28 - ${cityStores[1]?.contactInfo || 'Random Name'} Wins Intergalactic Cooking Competition
+                    08:12 - A red dressed woman was found dead in the parking lot of center of ${cityName}
+                    11:45 - ${cityName} and ${citiesAndMayors[0]?.city || 'Neighboring City'} Sign Historic Trade Agreement
+                    13:27 - ${citiesAndMayors[0]?.city || 'Neighboring City'} Attacked ${cityName}
+                     
+                    ...
+            
+                    Please generate 24 headlines following this format, covering a full 24-hour period, never generate more than 24 hours! Include at least one headline featuring the mayor's activities or decisions. Include at least one headline featuring each user's activities or decisions. Use creative elements fitting for the date ${dateOfGame}. Incorporate stories about conflicts, alliances, and significant events involving the listed citizens and other cities. All the people in the city can die except the users!`
                 }],
-                temperature: 0.7
+                temperature: 0.7,
+                max_tokens: 4000, // Add token limit for better control
+                top_p: 1,
+                frequency_penalty: 0,
+                presence_penalty: 0
             }, {
                 headers: {
                     'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
                     'Content-Type': 'application/json'
                 }
             });
-
+            
             setStory(response.data.choices[0].message.content);
             setIsLoading(false);
             updateDateOfGame1(num);
@@ -405,7 +409,7 @@ const City = () => {
             </p>
             <p className="text-white text-lg leading-relaxed mb-8">
                 In the bustling city of {cityName}, where magic and technology intertwine, 
-                the $ULTI Spinner stands as a beacon of hope and excitement. This mystical device, 
+                the $ULSH Spinner stands as a beacon of hope and excitement. This mystical device, 
                 powered by ancient runes and cutting-edge circuitry, offers citizens a chance to 
                 escape the daily grind and dream of a brighter future.
             </p>
@@ -415,11 +419,11 @@ const City = () => {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">Day Cost</h2>
-                            <p className="text-3xl font-semibold">{Math.round(registrationCost)} ULTI</p>
+                            <p className="text-3xl font-semibold">{Math.round(registrationCost)} ULSH</p>
                         </div>
                         <div className="bg-gradient-to-r from-blue-400 to-indigo-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">{cityName} has</h2>
-                            <p className="text-3xl font-semibold">{Math.round(totalDeposited)} ULTI</p>
+                            <p className="text-3xl font-semibold">{Math.round(totalDeposited)} ULSH</p>
                         </div>
                         <div className="bg-gradient-to-r from-green-400 to-teal-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">{cityName} Residents</h2>
@@ -516,10 +520,10 @@ const City = () => {
                                 <h2 className="text-xl font-bold text-white mb-4">Current Mayor:</h2>
                                 <h2 className="text-xl text-white mb-4"> {renderDescriptionWithBreaks(mayor)}</h2>
                                 <h2 className='text-[36px] text-yellow-400 mb-4'>Holding:</h2>
-                                <h2 className='text-[36px] text-yellow-400 mb-4'>{formatNumberWithCommas(Math.round(high))} $ULTI Stocks</h2>
+                                <h2 className='text-[36px] text-yellow-400 mb-4'>{formatNumberWithCommas(Math.round(high))} $ULSH Stocks</h2>
                             {story && (
                         <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-                            <h2 className="text-2xl font-bold text-white mb-4">City News</h2>
+                            <h2 className="text-2xl font-bold text-white mb-4">City Fake News</h2>
                             <p className="text-white whitespace-pre-line rtl">{story}</p>
                         </div>
                     )}
@@ -532,7 +536,7 @@ const City = () => {
                             <li>Get the daily news of {cityName}</li>
                             <li>Each city has its own raffle</li>
                             <li>Wait for more residents to join</li>
-                            <li>The owner of UltimateDeal MultiVerse will spin the luck when ready</li>
+                            <li>The owner of UltraShop MultiVerse will spin the luck when ready</li>
                             <li>The Timeline Of {cityName} will reset</li>
                             <li>A random winner gets 2/3 of the total pot!</li>
                             <li>The remaining 1/3 goes to the contract owner</li>

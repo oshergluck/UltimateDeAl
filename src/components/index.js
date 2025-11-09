@@ -40,3 +40,6 @@ export {default as SearchEngine} from './SearchEngine';
 export {default as IPFSMediaViewer} from './IPFSMediaViewer';
 export {default as RewardBadge} from './RewardBadge';
 export {default as Swap} from './Swap';
+export {default as CandleChart15mAdvanced} from "./Chart";
+export {default as CoinBox} from "./CoinBox";
+export {default as CookieAlert} from "./CookieAlert"

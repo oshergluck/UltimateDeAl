@@ -126,7 +126,7 @@ function processDescription(description, maxLength = 180)
                 <div className=" mx-auto py-6 sm:px-6 lg:px-8">
                     {/* Listing Button */}
                     <div className="opacity-[50%] hover:opacity-[100%] ease-in-out duration-500 sm:w-full w-[95%] mx-auto linear-gradient shadow-xl rounded-lg mb-8 cursor-pointer border-[1px] border-[#242424]"
-                    onClick={() => {navigate('/shop/UltraShop/products/LISTESH')}}
+                    onClick={() => {navigate('/shop/mainshop/products/LISTESH')}}
                     >
                         <h1 className='text-white font-epilogue font-semibold sm:text-[80px] text-4xl my-auto text-center py-[40px]'>Launch Your Online StartUp</h1>
                         <h1 className='text-[#FFDD00] font-epilogue font-semibold sm:text-[28px] text-[18px] my-auto text-center mt-[20px] pb-[20px] px-[10px]'>Buy/Sell Products And Earn From Almost Every Transaction</h1>

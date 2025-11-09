@@ -57,9 +57,11 @@ import ESH from './ESH.mp3';
 import IL from './IL.png';
 import UltimateDealStartUp from './UltimateDealStartUp1.png';
 import WethLogo from './ethereum-eth-logo.svg';
+import QCoin from './QCoin.png';
 
 
 export {menu,
+  QCoin,
   IL,
   WethLogo,
   ETHLogo,

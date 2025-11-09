@@ -1,581 +1,256 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom';
-import {logoOfWebsite, search, menu, tetherusdtlogo, IL, Aicon, usdcoinusdclogo, WethLogo} from '../assets'
-import { Search } from "./"
-import { ConnectWallet, useLogin, useTokenBalance} from '@thirdweb-dev/react';
-import {
-    ConnectButton
-} from "thirdweb/react";
-import {
-    createWallet,
-    walletConnect,
-    inAppWallet,
-} from "thirdweb/wallets";
-import { Base } from "@thirdweb-dev/chains";
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { logoOfWebsite, menu, usdcoinusdclogo, WethLogo, QCoin } from "../assets";
+import { createThirdwebClient, getContract, readContract } from "thirdweb";
 import { base } from "thirdweb/chains";
-import { useStateContext } from '../context';
-import { createThirdwebClient, defineChain, getContract, readContract } from "thirdweb";
+import { createWallet, walletConnect } from "thirdweb/wallets";
+import { ConnectButton } from "thirdweb/react";
+import { useStateContext } from "../context";
 
 const HeaderMobile = () => {
-  const [campaigns, setCampaigns] = useState([]);
-    const socialWallet = inAppWallet({
-        auth: {
-          options: [
-            "google", 
-            "facebook", 
-            "apple", 
-            "email", 
-            "phone", 
-            "passkey"
-          ]
-        },
-        // enable gasless transactions for the wallet
-        executionMode: {
-          mode: "EIP7702",
-          sponsorGas: true,
-        },
-      });
-    const wallets = [
-        socialWallet,
-        createWallet("io.metamask"),
-        createWallet("com.coinbase.wallet"),
-        walletConnect(),
-        createWallet("com.trustwallet.app"),
-        createWallet("io.zerion.wallet"),
-    ];
-    const client = createThirdwebClient({ clientId: import.meta.env.VITE_THIRDWEB_CLIENT });
-    const { address, getAllStoreOwners, storeRegistery, Blockchain, CrowdFunding } = useStateContext();
-    const [storeOwners, setStoreOwners] = useState([]);
-    const [toggleMenu, setToggleMenu] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [dynamicTokens, setDynamicTokens] = useState([]);
-    const [tokensLoading, setTokensLoading] = useState(false);
+  const navigate = useNavigate();
+  const { address, Blockchain, CrowdFunding } = useStateContext();
 
-    // Static tokens that are always available
-    const staticTokens = [
-        {
-            address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-            name: "USD Coin",
-            symbol: "USDC",
-            icon: usdcoinusdclogo,
-        },
-        {
-            address: "0x4200000000000000000000000000000000000006",
-            name: "Wrapped ETH",
-            symbol: "WETH",
-            icon: WethLogo,
-        },
-    ];
+  // --- UI state ---
+  const [open, setOpen] = useState(false);
 
-    // Function to get token details from contract address
-    const getTokenDetails = async (tokenAddress) => {
-        try {
-            const tokenContract = getContract({
-                client: client,
-                chain: base,
-                address: tokenAddress,
-            });
+  // prevent body scroll when menu is open
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => (document.body.style.overflow = "");
+  }, [open]);
 
-            // Get symbol and name from the ERC20 contract
-            const [symbol, name] = await Promise.all([
-                readContract({
-                    contract: tokenContract,
-                    method: "function symbol() view returns (string)",
-                    params: []
-                }),
-                readContract({
-                    contract: tokenContract,
-                    method: "function name() view returns (string)",
-                    params: []
-                })
-            ]);
+  const toggle = useCallback(() => setOpen((s) => !s), []);
+  const close = useCallback(() => setOpen(false), []);
 
-            return {
-                address: tokenAddress,
-                name: name,
-                symbol: symbol,
-                icon: logoOfWebsite, // Default icon - you can customize this
-            };
-        } catch (error) {
-            console.error(`Error getting token details for ${tokenAddress}:`, error);
-            return null;
-        }
-    };
+  // --- Wallets / client ---
+  const wallets = [
+    createWallet("io.metamask"),
+    createWallet("com.coinbase.wallet"),
+    walletConnect(),
+    createWallet("com.trustwallet.app"),
+    createWallet("io.zerion.wallet"),
+  ];
+  const client = createThirdwebClient({ clientId: import.meta.env.VITE_THIRDWEB_CLIENT });
 
-    // Function to fetch all ERCUltra tokens
-    const fetchERCUltraTokens = async () => {
-        if (!Blockchain || tokensLoading) return;
+  // --- Supported tokens (static + optional dynamic if you want to re-enable later) ---
+  const staticTokens = [
+    { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", name: "USD Coin", symbol: "USDC", icon: usdcoinusdclogo },
+    { address: "0x4200000000000000000000000000000000000006", name: "Wrapped ETH", symbol: "WETH", icon: WethLogo },
+  ];
+  const allSupportedTokens = { [base.chainId]: staticTokens }; // plug your dynamic list back here if desired
 
-        setTokensLoading(true);
-        try {
-            // Call getAllERCUltras function
-            const ercUltraAddresses = await readContract({
-                contract: Blockchain,
-                method: "function getAllERCUltras() view returns (address[])",
-                params: []
-            });
+  // --- Nav helpers ---
+  const go = (path, shouldClose = true) => () => {
+    if (shouldClose) close();
+    navigate(path);
+  };
 
-            console.log("ERCUltra addresses:", ercUltraAddresses);
+  // --- Icons (stroke inherits currentColor so they match text) ---
+  const IconWrap = ({ children }) => <span className="inline-flex w-6 h-6">{children}</span>;
+  const HomeIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M3 12l9-8 9 8v8a2 2 0 01-2 2h-3a2 2 0 01-2-2v-4H10v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </IconWrap>
+  );
+  const BlogIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M4 7h12M4 12h12M4 17h8M18 7v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </IconWrap>
+  );
+  const PlusIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </IconWrap>
+  );
+  const GridIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </IconWrap>
+  );
+  const StarIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M12 3l2.9 5.88 6.5.95-4.7 4.58 1.1 6.41L12 18.77 6.2 20.82l1.1-6.41L2.6 9.83l6.5-.95L12 3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </IconWrap>
+  );
+  const FolderIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M4 7h6l2 3h8v7a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </IconWrap>
+  );
 
-            // Get token details for each address
-            const tokenPromises = ercUltraAddresses.map(address => getTokenDetails(address));
-            const tokenDetails = await Promise.all(tokenPromises);
-            
-            // Filter out null results (failed token detail fetches)
-            const validTokens = tokenDetails.filter(token => token !== null);
-            
-            console.log("Valid tokens:", validTokens);
-            setDynamicTokens(validTokens);
-            
-        } catch (error) {
-            console.error("Error fetching ERCUltra tokens:", error);
-        } finally {
-            setTokensLoading(false);
-        }
-    };
+  // close on Esc
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && close();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [close]);
 
-    const fetchCampaignRewardTokens = async () => {
-        if (!CrowdFunding || tokensLoading) return;
-      
-        setTokensLoading(true);
-        try {
-            // Get the total number of campaigns
-            const numberOfCampaigns = await CrowdFunding.call('numberOfCampaigns');
-            console.log("Number of campaigns:", numberOfCampaigns);
-      
-            const newCampaignTokens = [];
-            
-            // Create a comprehensive set of existing addresses (normalize to lowercase)
-            const getAllExistingAddresses = () => {
-                const existingAddresses = new Set();
-                
-                // Add static tokens
-                staticTokens.forEach(token => {
-                    existingAddresses.add(token.address.toLowerCase());
-                });
-                
-                // Add dynamic tokens
-                dynamicTokens.forEach(token => {
-                    existingAddresses.add(token.address.toLowerCase());
-                });
-                
-                // Add any tokens we've already found in this session
-                newCampaignTokens.forEach(token => {
-                    existingAddresses.add(token.address.toLowerCase());
-                });
-                
-                return existingAddresses;
-            };
-      
-            // Loop through campaigns starting from 1
-            for (let i = 1; i <= numberOfCampaigns; i++) {
-                try {
-                    console.log(`Fetching reward for campaign ${i}`);
-                    
-                    // Get campaign rewards
-                    const reward = await CrowdFunding.call('campaignRewards', [i]);
-                    
-                    if (reward && reward[0]) {
-                        const tokenAddress = reward[0];
-                        const addressLower = tokenAddress.toLowerCase();
-                        
-                        // Get fresh set of existing addresses each time
-                        const existingAddresses = getAllExistingAddresses();
-                        
-                        // Check if this address already exists
-                        if (!existingAddresses.has(addressLower)) {
-                            console.log(`Getting token details for new address: ${tokenAddress}`);
-                            
-                            // Get token details using existing function
-                            const tokenDetails = await getTokenDetails(tokenAddress);
-                            
-                            if (tokenDetails) {
-                                // Ensure the address in tokenDetails is also normalized
-                                tokenDetails.address = tokenAddress; // Keep original case from contract
-                                newCampaignTokens.push(tokenDetails);
-                                console.log(`Added new token: ${tokenDetails.name} (${tokenDetails.symbol})`);
-                            }
-                        } else {
-                            console.log(`Token address ${tokenAddress} already exists, skipping`);
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error processing campaign ${i}:`, error);
-                    // Continue with next campaign even if this one fails
-                }
-            }
-      
-            console.log("New campaign reward tokens found:", newCampaignTokens);
-            
-            // Only add the new tokens that aren't already in dynamicTokens
-            if (newCampaignTokens.length > 0) {
-                setDynamicTokens(prevTokens => {
-                    // Double-check for duplicates before adding
-                    const existingAddresses = new Set(
-                        [...staticTokens, ...prevTokens].map(token => token.address.toLowerCase())
-                    );
-                    
-                    const uniqueNewTokens = newCampaignTokens.filter(token => 
-                        !existingAddresses.has(token.address.toLowerCase())
-                    );
-                    
-                    return [...prevTokens, ...uniqueNewTokens];
-                });
-            }
-            
-        } catch (error) {
-            console.error("Error fetching campaign reward tokens:", error);
-        } finally {
-            setTokensLoading(false);
-        }
-      };
-      
-      // Alternative version that returns the tokens instead of updating state
-      const getCampaignRewardTokens = async () => {
-        if (!CrowdFunding) return [];
-      
-        try {
-            const numberOfCampaigns = await CrowdFunding.call('numberOfCampaigns');
-            const campaignTokens = [];
-            const seenAddresses = new Set();
-      
-            // Add existing token addresses to avoid duplicates
-            [...staticTokens, ...dynamicTokens].forEach(token => {
-                seenAddresses.add(token.address.toLowerCase());
-            });
-      
-            for (let i = 1; i <= numberOfCampaigns; i++) {
-                try {
-                    const reward = await CrowdFunding.call('campaignRewards', [i]);
-                    
-                    if (reward && reward[0]) {
-                        const tokenAddress = reward[0];
-                        const addressLower = tokenAddress.toLowerCase();
-                        
-                        if (!seenAddresses.has(addressLower)) {
-                            const tokenDetails = await getTokenDetails(tokenAddress);
-                            
-                            if (tokenDetails) {
-                                campaignTokens.push(tokenDetails);
-                                seenAddresses.add(addressLower);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error processing campaign ${i}:`, error);
-                }
-            }
-      
-            return campaignTokens;
-        } catch (error) {
-            console.error("Error fetching campaign reward tokens:", error);
-            return [];
-        }
-      };
-
-    const deduplicateTokens = (tokens) => {
-        const seen = new Set();
-        return tokens.filter(token => {
-            const address = token.address.toLowerCase();
-            if (seen.has(address)) {
-                return false;
-            }
-            seen.add(address);
-            return true;
-        });
-    };
-  
-    useEffect(() => {
-      fetchCampaignRewardTokens();
-  }, [CrowdFunding, address]);
-
-    useEffect(() => {
-      async function getStoreOwners () {
-        const data = await getAllStoreOwners();
-        setStoreOwners(data.map(owner => owner.toLowerCase()))
-      }
-    
-      if(address && storeRegistery) {
-        getStoreOwners();
-      }
-    
-    }, [address, storeRegistery]);
-
-    // Fetch ERCUltra tokens when component mounts or when Blockchain changes
-    useEffect(() => {
-        fetchERCUltraTokens();
-    }, [Blockchain]);
-
-    // Combine static and dynamic tokens
-    const allSupportedTokens = {
-        [Base.chainId]: deduplicateTokens([...staticTokens, ...dynamicTokens])
-    };
-
-    const handleHomeClick = () => {
-        navigate('/blog');
-    };
-
-    const handleSearchClick = () => {
-        setCampaigns([]);
-        setToggleMenu(prev => !prev)
-        navigate(`/search/${searchTerm}`); 
-    };
-
-    const naviateToMyCampaigns = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/my-campaigns');
-    }
-    const naviateToAllCampaigns = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/all-campaigns');
-    }
-    const naviateToCreateCampaign = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/create-campaign');
-    }
-    const naviateToVip = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/register-vip');
-    }
-    const naviateToBlog = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/blog');
-    }
-    const naviateToAdmin = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/dashboard');
-    }
-    const naviateToStoreVip = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/');
-    }
-
-    const naviateToNFTs = () => {
-        setToggleMenu(prev => !prev);
-        navigate('/nfts');
-    }
-    const navigateToMiner = () => {
-        navigate('/miner');
-    }
-    const navigate = useNavigate();
-    async function handleLogin() {
-        try {
-            await login({
-                uri: "https://www.ultrashop.tech",
-                statement: "Kindly read our terms of service, by continue you agree to it.",
-                chainId: "8453",
-                nonce: "272",
-                version: "1.0.3",
-                resources: ["https://www.ultrashop.tech/terms", "https://www.ultrashop.tech/privacy-policy"],
-            });
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    // Icons as inline SVGs (replace with your preferred icon library)
-    const HomeIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-    );
-
-    const BlogIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-    );
-
-    const AllCampaignsIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-    );
-
-    const CreateCampaignIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-    );
-
-    const MyCampaignsIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-        </svg>
-    );
-
-    const VIPIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-        </svg>
-    );
-
-    const DashboardIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-    );
-
-    const MyNFTsIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            <rect x="2" y="3" width="6" height="6" rx="1" stroke="white" strokeWidth={2} fill="none" />
-            <rect x="16" y="3" width="6" height="6" rx="1" stroke="white" strokeWidth={2} fill="none" />
-            <rect x="2" y="15" width="6" height="6" rx="1" stroke="white" strokeWidth={2} fill="none" />
-        </svg>
-    );
-
-    return (
-        <>
-        <div className={`drop-shadow fixed-header ${address ? ('h-[87px]') : ('h-[75px]')}`}>
-
-            <div className='w-full relative linear-gradient1 h-[110px]'>
-                <div className='flex py-[5px]'>
-
-                    <div className='flex cursor-pointer' onClick={() => naviateToStoreVip()}>
-                        <img src={logoOfWebsite} alt='logo' className='w-[35px] h-[35px] object-contain my-auto mx-[10px]'/>
-                        <h1 className='text-white font-epilogue font-semibold text-[18px] my-auto'>Ultra</h1>
-                        <h1 className='text-[#FFDD00] font-epilogue font-semibold text-[18px] my-auto'>Shop</h1>
-                    </div>
-                    
-                    <div className='flex flex-1 !w-[35px] !h-[35px] justify justify-end self-end'>
-                        <img src={menu} alt='menu' className='w-[35px] h-[35px] relative z-9 object-contain my-auto mx-[10px]' onClick={() => setToggleMenu(prev => !prev)}/>
-                        <div className={` h-[844px] absolute inset-0 sm:w-[20%] mx-auto flex items-center justify-center linear-gradient z-10 drop-shadow py-4 transition-all duration-700 ${toggleMenu ? 'translate-y-0' : '-translate-y-full'}`}>
-                
-                
-                        <div className='w-full mt-[-430px]'>
-                            <p className={`text-[#FFFFFF] font-epilogue font-bold text-[30px] text-center absolute top-3 right-2 cursor-pointer`} onClick={() => setToggleMenu(prev => !prev)}>X</p>
-                            <div className="lg:flex-1 ml-[20px] flex flex-row pr-2 h-[52px] bg-transparent border-[1px] border-[#525252] duration-500 ease-in-out hover:border-[#FFFFFF] rounded-[5px] w-10/12">
-                                <div className="w-[50px] h-full rounded-[2px] flex justify-center items-center cursor-pointer duration-500 ease-in-out bg-[#FFFFFF] bg-opacity-[25%]" onClick={() => handleSearchClick()}>
-                                    <img src={search} alt="search" className="w-[15px] h-[15px] object-contain"/>
-                                </div>
-                                <input 
-                                    type="text" 
-                                    placeholder="Search a Campaign" 
-                                    className="flex w-[220px] font-epilogue font-normal text-[16px] placeholder:text-[#FFFFFF] text-[#FFFFFF] bg-transparent outline-none ml-[15px]" 
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)} 
-                                />
-                            </div>
-                            
-                            {/* Home Button with Icon */}
-                            <div className='w-full mt-[15px] h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={() => naviateToStoreVip()} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <HomeIcon />
-                                    <h2 className='text-[#FFFFFF] font-epilogue text-left font-semibold text-[24px] ml-3'>Home Page</h2>
-                                </div>
-                            </div>
-                            {/*My NFTs*/}
-                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={() => naviateToNFTs()} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <MyNFTsIcon />
-                                    <h2 className='text-[#FFFFFF] font-epilogue text-left font-semibold text-[24px] ml-3'>My NFTs</h2>
-                                </div>
-                            </div>
-                            
-                            {/* Blog Button with Icon */}
-                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={naviateToBlog} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <BlogIcon />
-                                    <h2 className='text-[#FFFFFF] font-epilogue text-left font-semibold text-[24px] ml-3'>Blog</h2>
-                                </div>
-                            </div>
-                            
-                            {/* All Campaigns Button with Icon */}
-                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={naviateToAllCampaigns} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <AllCampaignsIcon />
-                                    <h2 className='text-[#FFFFFF] block duration-500 text-left font-epilogue font-semibold text-[24px] ml-3'>All Campaigns</h2>
-                                </div>
-                            </div>
-                            
-                            {/* Create Campaign Button with Icon */}
-                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={naviateToCreateCampaign} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <CreateCampaignIcon />
-                                    <h2 className='text-[#FFFFFF] block text-left font-epilogue font-semibold text-[24px] ml-3'>Create Campaign</h2>
-                                </div>
-                            </div>
-                            
-                            {/* My Campaigns Button with Icon (only if address exists) */}
-                            {address && (
-                                <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                    <div onClick={naviateToMyCampaigns} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                        <MyCampaignsIcon />
-                                        <h2 className='text-[#FFFFFF] block text-left font-epilogue font-semibold text-[24px] ml-3'>My Campaigns</h2>
-                                    </div>
-                                </div>
-                            )}
-                            
-                            {/* VIP Button with Icon */}
-                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={naviateToVip} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <VIPIcon />
-                                    <h2 className='text-[#FFFFFF] block text-left font-epilogue font-semibold text-[24px] ml-3'>VIP</h2>
-                                </div>
-                            </div>
-                            
-                            {/* Dashboard Button with Icon */}
-                            <div className='w-full h-[42px] hover:bg-[#FFFFFF] hover:bg-opacity-[25%] duration-500 ease-in-out'>
-                                <div onClick={naviateToAdmin} className='ml-[20px] flex items-center py-[15px] cursor-pointer'>
-                                    <DashboardIcon />
-                                    <h2 className='text-[#FFFFFF] block text-left font-epilogue font-semibold text-[24px] ml-3'>Dashboard</h2>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
+  return (
+    <>
+      {/* Fixed header */}
+      <header className="fixed top-0 inset-x-0 z-50 shadow-lg">
+        <div className="linear-gradient1">
+          <div className="mx-auto max-w-6xl px-3 sm:px-4">
+            <div className="h-[64px] sm:h-[72px] flex items-center justify-between">
+              {/* Brand */}
+              <button
+                onClick={go("/")}
+                className="flex items-center gap-2 active:scale-95 transition"
+                aria-label="Go to home"
+              >
+                <img
+                  src={logoOfWebsite}
+                  alt="UltraShop logo"
+                  className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur object-contain"
+                />
+                <div className="flex items-baseline leading-none">
+                  <span className="text-white font-epilogue font-semibold sm:text-xl text-[16px] tracking-tight">Ultra</span>
+                  <span className="text-[#FFDD00] font-epilogue font-semibold sm:text-xl text-[16px] tracking-tight">Shop</span>
                 </div>
-                <div className='flex justify-center items-center mx-auto'>
-                    <ConnectButton
-                        client={client}
-                        wallets={wallets}
-                        theme={"dark"}
-                        connectButton={{ label: "Connect" }}
-                        connectModal={{
-                            size: "wide",
-                            title: "UltraShop",
-                            titleIcon: logoOfWebsite,
-                            welcomeScreen: {
-                                title: "UltraShop",
-                                subtitle: "Make your first step to the journey of your life. Contribute to businesses anonymously and get shares in return and dividends. Open a Crowdfunding campaign and issue your business shares to the public. Get started by connecting your wallet.",
-                                img: {
-                                    src: logoOfWebsite,
-                                    width: 150,
-                                    height: 150,
-                                },
-                            },
-                            termsOfServiceUrl: "https://ultrashop.tech/terms",
-                            privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
-                            showThirdwebBranding: true,
-                        }}
-                        supportedTokens={allSupportedTokens}
-                        detailsButton={{
-                            displayBalanceToken: {
-                                [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS,
-                            },
-                        }}
-                        chain={base}
-                        chains={[base]}
-                        switchButton={{
-                            label: "Switch Network",
-                            className: "my-custom-class",
-                            style: {
-                                backgroundColor: "red",
-                            },
-                        }}
-                        accountAbstraction={{
-                            sponsorGas:true,
-                            chain: base,
-                            gasless: true,
-                            factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
-                           }}
-                    />
-                </div>
+              </button>
+
+              {/* Wallet button (kept visible on mobile) */}
+              <div className="shrink-0">
+                <ConnectButton
+                  client={client}
+                  wallets={wallets}
+                  theme="dark"
+                  connectButton={{ label: "Connect" }}
+                  connectModal={{
+                    size: "wide",
+                    title: "UltraShop",
+                    titleIcon: logoOfWebsite,
+                    welcomeScreen: {
+                      title: "UltraShop",
+                      subtitle:
+                        "Create your own coin or invest in other coins",
+                      img: { src: logoOfWebsite, width: 150, height: 150 },
+                    },
+                    termsOfServiceUrl: "https://ultrashop.tech/terms",
+                    privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
+                    showThirdwebBranding: true,
+                  }}
+                  supportedTokens={allSupportedTokens}
+                  detailsButton={{
+                    displayBalanceToken: { [base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
+                  }}
+                  chain={base}
+                  chains={[base]}
+                />
+              </div>
+
+              {/* Menu button */}
+              <button
+                onClick={toggle}
+                className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-white/30"
+                aria-label="Open menu"
+                aria-expanded={open}
+              >
+                <img src={menu} alt="" className="w-6 h-6" />
+              </button>
             </div>
+          </div>
         </div>
-        </>
-    )
-}
+      </header>
 
-export default HeaderMobile
+      {/* Spacer so content doesn't hide under fixed header */}
+      <div className="h-[64px] sm:h-[72px]" />
+
+      {/* Backdrop */}
+      <div
+        onClick={close}
+        className={`fixed inset-0 z-40 transition ${
+          open ? "visible bg-black/50 backdrop-blur-sm" : "invisible bg-transparent"
+        } duration-200`}
+        aria-hidden={!open}
+      />
+
+      {/* Slide-in mobile menu (right drawer) */}
+      <aside
+        className={`fixed top-0 right-0 z-50 h-dvh w-[88%] max-w-sm linear-gradient1 border-l border-white/10 shadow-2xl
+        transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
+        role="dialog"
+        aria-label="Mobile navigation"
+      >
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-white/90 font-semibold">Menu</span>
+          </div>
+          <button
+            onClick={close}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
+            aria-label="Close menu"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Links */}
+        <nav className="px-3 pb-4">
+          <ul className="space-y-2">
+            <li>
+              <button onClick={go("/")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                <HomeIcon /> <span className="text-base font-medium">Home</span>
+              </button>
+            </li>
+            <li>
+              <button onClick={go("/about")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                <PlusIcon /> <span className="text-base font-medium">About</span>
+              </button>
+            </li>
+            <li>
+              <button onClick={go("/blog")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                <BlogIcon /> <span className="text-base font-medium">Blog</span>
+              </button>
+            </li>
+            <li>
+              <button onClick={go("/deploy-esh")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                <StarIcon /> <span className="text-base font-medium">Create Coin</span>
+              </button>
+            </li>
+            <li>
+              <button onClick={go("/coin-launcher")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                <GridIcon /> <span className="text-base font-medium">Launch Coin</span>
+              </button>
+            </li>
+            {address && (
+              <li>
+                <button onClick={go("/my-coins")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                  <FolderIcon /> <span className="text-base font-medium">My Coins</span>
+                </button>
+              </li>
+            )}
+          </ul>
+        </nav>
+
+        {/* Footer / tagline */}
+        <div className="mt-auto px-4 pb-6">
+          <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
+            <div className="text-white/90 font-semibold">UltraShop on Base</div>
+            <div className="text-white/70 text-sm mt-1">
+              Launch, invest, and trade coins. Simple UX, gas-efficient, and fast.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+export default HeaderMobile;

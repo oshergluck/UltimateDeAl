@@ -62,3 +62,4 @@ Pay yourself and your workers before dividend distribution to keep the business 
 ~Ability to buy or sell shares~ and see their price on the store page.
 ~Additional features~ to help your business grow.
 ~Admin dashboard~ for comprehensive management.
+~Encrypted files~ you can attach encrypted file to your products.

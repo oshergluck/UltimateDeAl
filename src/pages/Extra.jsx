@@ -23,7 +23,7 @@ const Extra = () => {
     const { address, getStoreDetails, storeRegistery, decryptIPFS,PokerLobby } = useStateContext();
     const [storeContractByURL, setStoreContractByURL] = useState('');
     const { contract: theStoreContract } = useContract(storeContractByURL);
-    const { contract: Curses } = useContract('0x3e148491A9132D47201626A7161e09ad897e5861');
+    const { contract: Curses } = useContract('0xCe5d3258b6dCDE1D1cB133956839a3c8571D9A5b');
 
     function decodeUrlString(str) {
         return decodeURIComponent(str);
@@ -128,19 +128,19 @@ const Extra = () => {
     }, [isInitialized,Curses]);
 
     const renderContent = () => {
-        if (StoreURL === 'UltraShop' && ProductURL === 'LISTESH') {
+        if (StoreURL === 'mainshop' && ProductURL === 'LISTESH') {
             return (<><div>
             <RegisterNewStore />
             </div>
             </>);
         }
-        if (StoreURL === 'UltraShop' && ProductURL === 'LOTERRY') {
+        if (StoreURL === 'mainshop' && ProductURL === 'LOTERRY') {
             return <City />;
         }
-        if (StoreURL === 'UltraShop' && ProductURL === 'PROS') {
+        if (StoreURL === 'mainshop' && ProductURL === 'PROS') {
             return <SnakeGame/>;
         }
-        if (StoreURL === 'UltraShop' && ProductURL === 'FUNDPROS') {
+        if (StoreURL === 'mainshop' && ProductURL === 'FUNDPROS') {
             return <MemoryGame/>;
         }
         return null;

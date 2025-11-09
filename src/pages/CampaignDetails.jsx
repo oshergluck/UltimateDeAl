@@ -2,15 +2,16 @@ import React, { useState, useEffect , useCallback} from 'react'
 import { useLocation, useNavigate, useParams  } from 'react-router-dom';
 import { useStateContext } from '../context';
 import { VerifiedIcon,loader ,copylink,email, done_desktop,dis_mobile,done_mobile,dis_desktop,usdcoinusdclogo,logoOfWebsite} from '../assets'
-import {Loader,FormField,Investors,CustomButton,Featured,FeaturedMobile,Swapper} from '../components';
+import {Loader,FormField,Investors,CustomButton,Featured,FeaturedMobile,Swapper, IPFSMediaViewer} from '../components';
 import { calculateBarPercentage, daysLeft } from '../utils';
 import { Base } from "@thirdweb-dev/chains";
 import {fontSizes} from '../components/AccessibilityMenu';
 import {TelegramShare} from 'react-share-kit';
 import copy from 'clipboard-copy';
 import { useMediaQuery } from 'react-responsive';
-import { prepareContractCall,createThirdwebClient,defineChain } from 'thirdweb';
-import {TransactionButton,ConnectButton} from 'thirdweb/react';
+import { prepareContractCall,createThirdwebClient,defineChain, getContract } from 'thirdweb';
+import {TransactionButton,ConnectButton,useReadContract} from 'thirdweb/react';
+import { useContract } from '@thirdweb-dev/react';
 import {ethers} from 'ethers';
 import {
   createWallet,
@@ -20,6 +21,9 @@ import {
 import { PinataSDK } from "pinata";
 
 const CampaignDetails = () => {
+  const ThirdWEBAPI = import.meta.env.VITE_THIRDWEB_CLIENT;
+    const POLYRPC = `https://8453.rpc.thirdweb.com/${ThirdWEBAPI}`
+    
   const formatNumberWithCommas = (number) => {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
@@ -27,6 +31,72 @@ const CampaignDetails = () => {
     pinataJwt: import.meta.env.VITE_PINATA_JWT,
     pinataGateway: "bronze-sticky-guanaco-654.mypinata.cloud",
   });
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const UploadAnimation = ({ progress, isUploading, file, type }) => (
+    <div className="mb-4 p-4 border border-gray-600 rounded-lg bg-gray-800">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-white font-medium">
+          {type === 'video' ? 'Video' : 'Image'} Upload
+        </span>
+        {isUploading && (
+          <span className="text-yellow-400 text-sm">
+            Uploading... {progress}%
+          </span>
+        )}
+        {!isUploading && profilePic && (
+          <span className="text-green-400 text-sm">✓ Uploaded</span>
+        )}
+      </div>
+      
+      {file && (
+        <div className="text-gray-300 text-sm mb-2">
+          File: {file.name}
+        </div>
+      )}
+      
+      {isUploading && (
+        <div className="w-full bg-gray-700 rounded-full h-2.5">
+          <div 
+            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      )}
+      
+      {!isUploading && profilePic && (
+        <div className="text-green-400 text-sm break-all">
+          CID: {profilePic}
+        </div>
+      )}
+    </div>
+  );
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    setIsUploadingImage(true);
+    setImageUploadProgress(0);
+    setSelectedImageFile(file);
+
+    try {
+      const upload = await pinata.upload.file(file, {
+        onProgress: (progress) => {
+          const percent = Math.round((progress.bytes / progress.totalBytes) * 100);
+          setImageUploadProgress(percent);
+        }
+      });
+      
+      setProfilePic(upload.IpfsHash);
+      console.log('Image uploaded to IPFS:', upload.IpfsHash);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+      setImageUploadProgress(0);
+    }
+  };
   const base = defineChain({
     id: 8453,
   });
@@ -48,7 +118,6 @@ const CampaignDetails = () => {
     },
   });
   const wallets = [
-    socialWallet,
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
     walletConnect(),
@@ -76,6 +145,9 @@ const CampaignDetails = () => {
   const [symbol,setSymbol] = useState('');
   const [rewardPrice,setRewardPrice] = useState(0);
   const [rewardAddress,setRewardAddress] = useState('');
+  const [min,setMin] = useState();
+  const [totalSupply,setTotalSupply] = useState('');
+  const {contract:rewardContract} = useContract(rewardAddress);
   
   
   
@@ -87,8 +159,28 @@ const CampaignDetails = () => {
       setSymbol(data);
       const data1 = await getRewardPrice(campaignId);
       setRewardPrice(data1);
+      
+      console.log(data1);
       const data2 = await getRewardAddress(campaignId);
-      setRewardAddress(data2);
+    setRewardAddress(data2);
+      
+    }
+
+    async function fetchTotalSupply() {
+      try {
+        const data5 = await rewardContract.call('totalSupply');
+        const data6 = data5._hex;
+        const data7 = await rewardContract.call('decimals');
+        
+        // Convert hex to integer, then divide by 10^decimals
+        const totalSupplyInteger = HexToInteger(data6);
+        const totalSupplyFormatted = totalSupplyInteger / (10 ** data7);
+        
+        setTotalSupply(totalSupplyFormatted);
+        console.log(data5);
+      } catch (error) {
+        console.error('Error fetching total supply:', error);
+      }
     }
 
     async function fetchCampaignDetails() {
@@ -97,6 +189,7 @@ const CampaignDetails = () => {
             const fetchedCampaign = await getThisCampaign(campaignId);
             if (fetchedCampaign) {
                 setCampaign(fetchedCampaign);
+                console.log(fetchedCampaign)
                 const data = await fetchInvestors();
                 setInvestors(data);
                 setIsLoading(false);
@@ -108,15 +201,20 @@ const CampaignDetails = () => {
       const data = await getDonations(campaignId);
       if(data)
        setTotal(HexToInteger(data.totalDonations._hex));
+      
      }
      if(CrowdFunding) {
       fetchTotalDonations();
       fetchCampaignDetails();
       fetchRewards();
+      
+     }
+     if (rewardContract) {
+      fetchTotalSupply();
      }
      document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-}, [campaignId, CrowdFunding]);
+}, [campaignId, CrowdFunding,rewardContract]);
 
 function extractNumberFromString(str) {
   const matches = str.match(/(\d+(\.\d+)?)/);
@@ -334,12 +432,13 @@ const handleCommentChange = (e) => {
         {campaign?.websiteComment === "Refunded because of illegal activity" ? (
         <video className=' w-full rounded-[15px] my-[50px]' controls>
            </video>
-         ) : ( 
-         <video className='w-full rounded-[15px] my-[50px]' controls preload="metadata">
-          <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/mp4"></source>
-          <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/ogg"></source>
-          Your browser does not support the video tag.
-        </video>  )}
+         ) : (<>
+         {campaign?.videoLinkFromPinata && (<IPFSMediaViewer
+        ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+        className={'w-full rounded-[15px] my-[50px]'}/>)}
+        
+        </>
+        )}
         <div className="relative w-10/12 mx-auto h-[5px] linear-gradient2 mt-2 rounded-xl" >
           {campaign?.iscashedout==false ? (
             <>
@@ -373,6 +472,10 @@ const handleCommentChange = (e) => {
             <div>
             <h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{campaign?.iscashedout ?('Yes'):('Runing')}</h2>
             <h2 className='text-[#FFFFFF] text-[12px] text-center'>Done?</h2>
+            </div>
+            <div>
+            <h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{formatNumberWithCommas(totalSupply)}</h2>
+            <h2 className='text-[#FFFFFF] text-[12px] text-center'>Total Supply</h2>
             </div>
             <div className='items-center justify-center'>
             {campaign?.isCheckedByWebsite&&!campaign?.iscashedout ? (<img src={VerifiedIcon} className='w-[32px] h-[32px] mx-auto'/>):(<></>)}
@@ -421,13 +524,15 @@ const handleCommentChange = (e) => {
                       <>
                       {address?(<div className={`w-full min-h-[780px] ${campaign?.iscashedout? ('hidden'):('block')} rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]`} >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
+                          {campaign? (<>
+                            <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder='Minimum 0.5 $USDC'
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
-                        />
+                        /></>):(<></>)}
+                        
                         
                         </div>
                         <div className='justify-center flex'>
@@ -477,13 +582,22 @@ const handleCommentChange = (e) => {
                         />
                         </div>
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
-                        labelName='Profile Image Hash From IPFS*'
-                        inputType="text"
-                        placeholder='Optional'
-                        value={profilePic}
-                        handleChange={handleProfilePic}
-                        />
+                        <label className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFFFFF] mb-[10px] block">
+                Profile Picture Optional*
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isUploadingImage}
+              />
+              <UploadAnimation 
+                progress={imageUploadProgress}
+                isUploading={isUploadingImage}
+                file={selectedImageFile}
+                type="image"
+              />
                         </div>
                         <div className='h-[40px] mt-[20px] w-[85%] mx-[auto] !text-[16px]'>
                         <TransactionButton
@@ -588,14 +702,9 @@ const handleCommentChange = (e) => {
                     </div>):(<>
                     <div className='ml-[20px]'>
         <ConnectButton
+
               client={client}
               wallets={wallets}
-              accountAbstraction={{
-                sponsorGas:true,
-                chain: base,
-                gasless: true,
-                factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
-               }}
               theme={"dark"}
 
               connectButton={{ label: "Connect" }}
@@ -701,13 +810,14 @@ const handleCommentChange = (e) => {
                     <img src={loader} alt='loader' className='absolute z-[2] top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[150px] h-[150px] object-contain'/>     
                       <div className='w-full min-h-[780px] rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]' >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
+                        {campaign? (<>
+                            <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder='Minimum 0.5 $USDC'
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
-                        />
+                        /></>):(<></>)}
                         </div>
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
                         <FormField
@@ -729,13 +839,22 @@ const handleCommentChange = (e) => {
                         />
                         </div>
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
-                        labelName='Profile Image Hash From IPFS*'
-                        inputType="text"
-                        placeholder='Optional'
-                        value={profilePic}
-                        handleChange={handleProfilePic}
-                        />
+                        <label className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFFFFF] mb-[10px] block">
+                Profile Picture Optional*
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isUploadingImage}
+              />
+              <UploadAnimation 
+                progress={imageUploadProgress}
+                isUploading={isUploadingImage}
+                file={selectedImageFile}
+                type="image"
+              />
                         </div>
                         <div className='h-[40px] mt-[20px] w-[85%] mx-[auto] !text-[16px]'>
                         <TransactionButton
@@ -899,7 +1018,7 @@ const handleCommentChange = (e) => {
                         <p className='text-[#FFFFFF] font-epilogue font-semi text-[14px] py-[15px] px-[20px] mx-auto text-center'>{campaign?.websiteComment}</p>
                     </div>
                     <h1 className='text-[#FFFFFF] font-epilogue font-semibold text-[20px] py-[5px] px-[20px] mt-[25px]'>Supporters</h1>
-                    <div className='w-full h-[250px] overflow-auto touch-auto'>
+                    <div className='w-full h-[450x] overflow-auto touch-auto'>
                     {investors !== undefined && ( <Investors investors={investors} websiteComment={campaign?.websiteComment} />)}
                     </div>
                 </div>
@@ -929,12 +1048,11 @@ const handleCommentChange = (e) => {
         {campaign?.websiteComment === "Refunded because of illegal activity" ? (
         <video className=' w-full rounded-[15px] my-[50px]' controls>
            </video>
-         ) : ( 
-         <video className='w-11/12 mx-auto rounded-[15px] my-[50px]' controls preload="metadata">
-          <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/mp4"></source>
-          <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/ogg"></source>
-          Your browser does not support the video tag.
-        </video>  )}
+         ) : ( <>
+      <IPFSMediaViewer
+      ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+      className={'!w-7/12 mx-auto rounded-[15px] my-[50px]'}/>
+      </>  )}
         <div className="relative h-[5px]  w-10/12 mx-auto linear-gradient2 mt-2 rounded-xl" >
           {campaign?.iscashedout==false ? (
             <>
@@ -968,6 +1086,10 @@ const handleCommentChange = (e) => {
             <div>
             <h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{campaign?.iscashedout ?('Yes'):('Runing')}</h2>
             <h2 className='text-[#FFFFFF] text-[12px] text-center'>Done?</h2>
+            </div>
+            <div>
+            <h2 className='text-[#fc941c] text-center text-[20px] font-bold'>{formatNumberWithCommas(totalSupply)}</h2>
+            <h2 className='text-[#FFFFFF] text-[12px] text-center'>Total Supply</h2>
             </div>
             <div className='items-center justify-center'>
             {campaign?.isCheckedByWebsite&&!campaign?.iscashedout ? (<img src={VerifiedIcon} className='w-[32px] h-[32px] mx-auto'/>):(<></>)}
@@ -1017,13 +1139,14 @@ const handleCommentChange = (e) => {
                       <>
                       {address?(<div className={`w-full ${campaign?.iscashedout? ('hidden'):('block')} min-h-[780px] rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]`} >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
+                        {campaign? (<>
+                            <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder='Minimum 0.5 $USDC'
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
-                        />
+                        /></>):(<></>)}
                         </div>
                         <div className='justify-center flex'>
                         <TransactionButton
@@ -1072,13 +1195,22 @@ const handleCommentChange = (e) => {
                         />
                         </div>
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
-                        labelName='Profile Image Hash From IPFS*'
-                        inputType="text"
-                        placeholder='Optional'
-                        value={profilePic}
-                        handleChange={handleProfilePic}
-                        />
+                        <label className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFFFFF] mb-[10px] block">
+                Profile Picture Optional*
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isUploadingImage}
+              />
+              <UploadAnimation 
+                progress={imageUploadProgress}
+                isUploading={isUploadingImage}
+                file={selectedImageFile}
+                type="image"
+              />
                         </div>
                         <div className='h-[40px] mt-[20px] w-[85%] mx-[auto] !text-[16px]'>
                         <TransactionButton
@@ -1182,6 +1314,12 @@ const handleCommentChange = (e) => {
                     </div>):(<>
                     <div className='ml-[20px]'>
         <ConnectButton
+        accountAbstraction={{
+          sponsorGas:true,
+          chain: base,
+          gasless: true,
+          factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
+         }}
               client={client}
               wallets={wallets}
 
@@ -1289,13 +1427,14 @@ const handleCommentChange = (e) => {
                     <img src={loader} alt='loader' className='absolute z-[2] top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[150px] h-[150px] object-contain'/>     
                       <div className='w-full min-h-[780px] rounded-[10px] border-[1px] bg-[#000000] border-[#FFDD00]' >
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
+                        {campaign? (<>
+                            <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder='Minimum 0.5 $USDC'
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
-                        />
+                        /></>):(<></>)}
                         </div>
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
                         <FormField
@@ -1317,13 +1456,22 @@ const handleCommentChange = (e) => {
                         />
                         </div>
                         <div className='mb-[10px] mt-[35px] w-[85%] mx-[auto] !text-[14px]'>
-                        <FormField
-                        labelName='Profile Image Hash From IPFS*'
-                        inputType="text"
-                        placeholder='Optional'
-                        value={profilePic}
-                        handleChange={handleProfilePic}
-                        />
+                        <label className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFFFFF] mb-[10px] block">
+                Profile Picture Optional*
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isUploadingImage}
+              />
+              <UploadAnimation 
+                progress={imageUploadProgress}
+                isUploading={isUploadingImage}
+                file={selectedImageFile}
+                type="image"
+              />
                         </div>
                         <div className='h-[40px] mt-[20px] w-[85%] mx-[auto] !text-[16px]'>
                         <TransactionButton

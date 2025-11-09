@@ -10,9 +10,15 @@ import { Chart, registerables } from 'chart.js';
 import {createThirdwebClient,prepareContractCall, getContract } from "thirdweb";
 import { useSendTransaction,TransactionButton } from 'thirdweb/react';
 import { format, addDays } from 'date-fns';
-
+import { PinataSDK } from "pinata";
 
 const ClientAdminPage = () => {
+const [isUploadingImages, setIsUploadingImages] = useState([false]);
+const [imageUploadProgress, setImageUploadProgress] = useState([0]);
+  const pinata = new PinataSDK({
+    pinataJwt: import.meta.env.VITE_PINATA_JWT,
+    pinataGateway: "bronze-sticky-guanaco-654.mypinata.cloud",
+  });
     const client = createThirdwebClient({clientId:import.meta.env.VITE_THIRDWEB_CLIENT})
     const { mutate: sendTransaction, isPending } = useSendTransaction();
     const [userPass,setUserPass] = useState('');
@@ -22,6 +28,7 @@ const ClientAdminPage = () => {
     const defaultFontSizeIndex = fontSizes.indexOf('sm');
     const defaultSize = fontSizes[defaultFontSizeIndex-2];
     const [amountForPayment, setAmountForPayment] = useState('');
+    const [setstoring, setsetstoring] = useState('');
     const [distId,setDistId] = useState('');
     const [workerAddress, setWorkerAddress] = useState('');
     const [workerIndex, setWorkerIndex] = useState('');
@@ -54,11 +61,29 @@ const ClientAdminPage = () => {
     const [receipts,setReceipts] = useState([]);
     const [hiddenIPFS,setHiddenIPFS] = useState('');
     const [type,setType] = useState('');
+    const [inv,setInvoices] = useState();
+    const [invoicesaddress,setinvoiceaddress] = useState('');
     const {contract:contract} = useContract(userContract);
 
       const [adminContract, setAdminContract] = useState(null);
 
+      async function getInvoices(data) {
+        const data2 = await contract.call('invoices');
+        console.log(data);
+        setinvoiceaddress(data);
+              const theData = getContract({
+                client:client,
+                chain:{
+                  id:8453,
+                  rpc:POLYRPC,
+                },
+                address: data
+              });
+              setInvoices(theData);
+      } 
+      
 useEffect(() => {
+
     if (userContract && ethers.utils.isAddress(userContract)) {
         const contract = getContract({
             client: client,
@@ -68,7 +93,10 @@ useEffect(() => {
             },
             address: userContract,
         });
+        
         setAdminContract(contract);
+        getInvoices();
+          
     } else {
         setAdminContract(null);
     }
@@ -99,6 +127,9 @@ useEffect(() => {
             if (contract) {
                 const data = await contract.call('typeOfContract');
                 setType(data);
+                const data2 = await contract.call('invoices');
+                getInvoices(data2);
+                setInvoices(data2);
                 const data1 = await contract.call('contractOwner');
                 setContractOwner(data1);
             }
@@ -209,7 +240,9 @@ useEffect(() => {
         try {
             await waitWithTimeout(() => adminContract);
             await waitWithTimeout(() => contract);
+            
             await waitWithTimeout(() => getAllReceipts());
+            await waitWithTimeout(() => inv);
             const data = await login(userContract,userPass)
             setConnectedto(data);
         } catch (error) {
@@ -220,9 +253,7 @@ useEffect(() => {
         }
     };
 
-      const handleAddImage = () => {
-        setImages(prevImages => [...prevImages, '']);
-      };
+      
 
       const handleImageChange = (index, value) => {
         setImages(prevImages => {
@@ -745,15 +776,9 @@ useEffect(() => {
         try { setIsLoading(true);
         const provider = new ethers.providers.JsonRpcProvider(POLYRPC, Base);
         const gasPrice = await provider.getGasPrice();
-        if(dividend=='')
-            {
-                alert('Must Put a number in Dividend Precentage\nIf you dont want to share dividends put 0');
-                setIsLoading(false);
-                return;
-            }
         const transaction =await prepareContractCall({
             contract:adminContract,
-            method: "finalizeDistribution(bytes32 distributionId) returns (bool)",
+            method: "function finalizeDistribution(bytes32 distributionId) nonReentrant onlyOwner public returns(bool)",
             params: [distId],
             value: 0,
             gasPrice: gasPrice,
@@ -788,6 +813,54 @@ useEffect(() => {
             setIsLoading(false);
         }
     };
+
+    const handleImageUpload = async (index, file) => {
+      if (!file) return;
+    
+      const newUploadingStates = [...isUploadingImages];
+      const newProgressStates = [...imageUploadProgress];
+      
+      newUploadingStates[index] = true;
+      newProgressStates[index] = 0;
+      
+      setIsUploadingImages(newUploadingStates);
+      setImageUploadProgress(newProgressStates);
+    
+      try {
+        const upload = await pinata.upload.file(file, {
+          onProgress: (progress) => {
+            const percent = Math.round((progress.bytes / progress.totalBytes) * 100);
+            newProgressStates[index] = percent;
+            setImageUploadProgress([...newProgressStates]);
+          }
+        });
+    
+        // Update the specific image at index with the CID
+        const newImages = [...images];
+        newImages[index] = upload.IpfsHash;
+        setImages(newImages);
+    
+        console.log(`Image ${index + 1} uploaded to IPFS:`, upload.IpfsHash);
+      } catch (error) {
+        console.error(`Error uploading image ${index + 1}:`, error);
+        alert(`Failed to upload image ${index + 1}. Please try again.`);
+      } finally {
+        newUploadingStates[index] = false;
+        newProgressStates[index] = 0;
+        setIsUploadingImages(newUploadingStates);
+        setImageUploadProgress(newProgressStates);
+      }
+    };
+    
+    const handleRemoveImage = (index) => {
+      const newImages = images.filter((_, i) => i !== index);
+      setImages(newImages);
+    };
+    
+    const handleAddImage = () => {
+      setImages([...images, '']);
+    };
+    
     
 
     const HandleRefund = async (addressOfClient,ReceiptID) => {
@@ -954,13 +1027,55 @@ useEffect(() => {
                 </div>
                 <div className="flex gap-2">
                 <input type="text" placeholder="Dist. ID" value={distId} onChange={e => setDistId(e.target.value)} className="flex-1 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-xs sm:text-sm" />
-                <button onClick={handleContinueDistributeProfit} className="flex-1 px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                    Continue Distribution
-                  </button>
-                  <button onClick={FInalyz} className="flex-1 px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                    Finalize
-                  </button>
-                  
+                <div>
+                <TransactionButton
+                  className={"!flex-1 !px-2 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm"}
+                  transaction={async () => {
+                    const tx = prepareContractCall({
+                      contract: adminContract,
+                      method: "function continueDistribution(bytes32 distributionId, uint256 maxCalls) returns (bool)",
+                      params: [distId, maxCall],
+                    });
+                    return tx;    
+                  }}
+                  onTransactionSent={(result) => {
+                    console.log("Transaction submitted", result.transactionHash);
+                  }}
+                  onTransactionConfirmed={(receipt) => {
+                    console.log("Transaction confirmed", receipt.transactionHash);
+                  }}
+                  onError={(error) => {
+                    console.error("Transaction error", error);
+                  }}
+                >
+                  Continue Distribution
+                </TransactionButton>
+                </div>
+                
+                </div>
+                <div>
+                  <TransactionButton
+                  className={"!px-2 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm"}
+                  transaction={async () => {
+                    const tx = prepareContractCall({
+                      contract: adminContract,
+                      method : "function finalizeDistribution(bytes32 distributionId) public returns(bool)",
+                      params: [distId],
+                    });
+                    return tx;    
+                  }}
+                  onTransactionSent={(result) => {
+                    console.log("Transaction submitted", result.transactionHash);
+                  }}
+                  onTransactionConfirmed={(receipt) => {
+                    console.log("Transaction confirmed", receipt.transactionHash);
+                  }}
+                  onError={(error) => {
+                    console.error("Transaction error", error);
+                  }}
+                >
+                  Finish Distribution
+                </TransactionButton>
                 </div>
               </div>
               <div className="space-y-3">
@@ -1016,6 +1131,7 @@ useEffect(() => {
                   Deposit USDC
                 </TransactionButton>
               </div>
+             
               <TransactionButton
                 className={"!w-full !px-3 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-sm"}
                 transaction={async () => {
@@ -1071,24 +1187,74 @@ useEffect(() => {
             
             {/* Product Images */}
             {showImageInputs && (
-              <div className="mb-4 space-y-2">
-                {images.map((image, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={image}
-                    onChange={(e) => handleImageChange(index, e.target.value)}
-                    placeholder={`Image CID ${index + 1}`}
-                    className="w-full p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm"
-                  />
-                ))}
-                <button onClick={handleAddImage} className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
-                  Add Product Image
-                </button>
-              </div>
-            )}
+  <div className="mb-4 space-y-2">
+    {/* Image Upload Inputs */}
+    {images.map((image, index) => (
+      <div key={index} className="mb-4 p-4 border border-gray-600 rounded-lg bg-gray-800">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-white font-medium">
+            Product Image {index + 1}
+          </span>
+          {isUploadingImages[index] && (
+            <span className="text-yellow-400 text-sm">
+              Uploading... {imageUploadProgress[index]}%
+            </span>
+          )}
+          {!isUploadingImages[index] && image && (
+            <span className="text-green-400 text-sm">✓ Uploaded</span>
+          )}
+        </div>
+
+        {/* File Input */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleImageUpload(index, e.target.files[0])}
+          disabled={isUploadingImages[index]}
+          className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"
+        />
+
+        {/* Upload Progress Bar */}
+        {isUploadingImages[index] && (
+          <div className="w-full bg-gray-700 rounded-full h-2.5">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${imageUploadProgress[index]}%` }}
+            ></div>
+          </div>
+        )}
+
+        {/* Display CID if uploaded */}
+        {!isUploadingImages[index] && image && (
+          <div className="text-green-400 text-sm break-all mt-2">
+            CID: {image}
+          </div>
+        )}
+
+        {/* Remove Image Button */}
+        {image && (
+          <button
+            onClick={() => handleRemoveImage(index)}
+            className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 text-xs"
+          >
+            Remove Image
+          </button>
+        )}
+      </div>
+    ))}
+
+    {/* Add Product Image Button */}
+    <button
+      onClick={handleAddImage}
+      className="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm"
+    >
+      Add Product Image
+    </button>
+  </div>
+)}
             
             {/* Product Action Buttons */}
+            
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
               <TransactionButton
                 className={`!py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm`}
@@ -1207,7 +1373,31 @@ useEffect(() => {
                 Update Discount
               </button>
             </div>
-            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+                <input type="text" placeholder="Store Contract" value={setstoring} onChange={e => setsetstoring(e.target.value)} className="sm:col-span-2 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
+                <TransactionButton
+                  className={"!px-3 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-sm"}
+                  transaction={async () => {
+                    const tx = prepareContractCall({
+                      contract: inv,
+                      method: "function setStore(address _ERCUltraStore)",
+                      params: [setstoring]
+                    });
+                    return tx;    
+                  }}
+                  onTransactionSent={(result) => {
+                    console.log("Transaction submitted", result.transactionHash);
+                  }}
+                  onTransactionConfirmed={(receipt) => {
+                    console.log("Transaction confirmed", receipt.transactionHash);
+                  }}
+                  onError={(error) => {
+                    console.error("Transaction error", error);
+                  }}
+                >
+                  SetStore
+                </TransactionButton>
+              </div>
             {/* Hidden Media Section */}
             <div className="bg-slate-700/50 rounded-lg p-3 sm:p-4 mb-4">
               <h3 className="text-base sm:text-lg font-medium mb-3 text-gray-200">Hidden Media Management</h3>

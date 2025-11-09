@@ -51,7 +51,6 @@ const Product = () => {
     },
   });
 const wallets = [
-  socialWallet,
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
     walletConnect(),
@@ -399,10 +398,12 @@ const wallets = [
               if(type=="Rentals") {
                   const data = await theStoreContract.call('rewardsPool');
                   setReward(data*2/100000);
+                  setAmountOfProduct(30);
               }
               if(type=="Renting") {
                   const data = await theStoreContract.call('rewardsPool');
                   setReward(data*2/10000);
+                  setAmountOfProduct(30);
               }
               if(type=="Sales") {
                   const data = await theStoreContract.call('rewardsPool');
@@ -787,8 +788,16 @@ useEffect(() => {
   </div>
   {product ? (
     <div className="space-y-8">
+     
+      
         <h3 className="sm:text-6xl text-4xl text-[#FFDD00] font-bold text-center">{product?.name}</h3>
         {storeContractByURL=='0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d'|| storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD'? (<></>) : (<>
+          {ownerShip ? (<>   <div className='mt-[20px] ml-[25px] sm:mb-[90px]'>
+          <img src={VerifiedIcon} className='mx-auto w-[70px] h-[70px] sm:w-[35px] sm:h-[35px]'></img>
+          <h2 className='text-[12px] text-white font-bold text-center'>Owned</h2>
+          <button onClick={async() => await navigateToReactJS()} className='w-[250px] h-[35px] flex justify-center items-center z-5 font-bold text-[#FFFFF2] !mx-auto rounded-[15px] bg-[#00FFFF]'>Click Here</button>
+      </div>
+    </>):(<></>)}
           {reward!==0 ? (<>
                     <RewardBadge
                 type={type}
@@ -797,6 +806,7 @@ useEffect(() => {
                 />
                 </>):(<></>)}
       </>)}
+      
       {/* Price, Discount, and Quantity Tags */}
       <div className="flex flex-wrap justify-center items-center gap-6 my-8">
        {/* Price Tag */}
@@ -1204,13 +1214,7 @@ useEffect(() => {
       </>
     ):(<></>)}
     
-    {ownerShip ? (<>
-      <div className='mt-[20px] ml-[25px] sm:mb-[90px]'>
-          <img src={VerifiedIcon} className='mx-auto w-[70px] h-[70px] sm:w-[35px] sm:h-[35px]'></img>
-          <h2 className='text-[12px] text-white font-bold text-center'>Owned</h2>
-          <button onClick={async() => await navigateToReactJS()} className='w-[250px] h-[35px] flex justify-center items-center z-5 font-bold text-[#FFFFF2] !mx-auto rounded-[15px] bg-[#00FFFF]'>Click Here</button>
-      </div>
-    </>):(<></>)}
+    
     </>):(<>
         {address? (<> <h2 className="text-2xl font-semibold text-white">Register as a client of this store</h2>
                 <p className="text-gray-300 mt-[10px]">All details are encrypted by the website</p>
@@ -1370,12 +1374,6 @@ useEffect(() => {
               },
 
               }}
-              accountAbstraction={{
-                sponsorGas:true,
-                chain: base,
-                gasless: true,
-                factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
-               }}
 
               />
       </>)}

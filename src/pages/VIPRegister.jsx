@@ -69,7 +69,7 @@ const VIPRegister = () => {
 
   return (
     <>{isLoading && <Loader />}
-      <div className='rounded-[15px] linear-gradient py-10 w-full mt-[50px]'>
+      <div className='rounded-t-[15px] linear-gradient py-10 w-full mt-[50px]'>
       <div className='sm:w-10/12 w-full mx-auto mt-[50px]'>
       <h1 className='text-[#FFFFFF] text-[25px] font-semibold sm:ml-[0] ml-[25px]'>VIP Register</h1>
       <div className="flex-1">  
@@ -156,6 +156,26 @@ const VIPRegister = () => {
               />)}
               </div>
       </div>
+      {/* ✨ New Intro Section ✨ */}
+      <section className="bg-gradient-to-b from-[#000000] via-[#111111] to-[#1a1a1a] py-20 text-center px-6 sm:px-20 rounded-b-[40px] shadow-xl border-b border-[#333]">
+        <h1 className="text-[#FFDD00] text-4xl sm:text-6xl font-bold mb-6">Welcome to UltraShop.tech</h1>
+        <p className="text-white text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed mb-8">
+          UltraShop.tech is the next generation of <span className="text-[#FFDD00] font-semibold">crypto-based crowdfunding</span> — 
+          where every campaign token can <span className="text-[#00FFFF] font-semibold">automatically distribute dividends</span> if needed.
+        </p>
+
+        <div className="max-w-5xl mx-auto text-left sm:text-center space-y-4">
+          <p className="text-gray-200">💎 <strong>VIP Members</strong> enjoy <span className="text-[#FFDD00] font-semibold">{discount}% discount</span> on campaign creation fees.</p>
+          <p className="text-gray-200">⚙️ Launch your own crowdfunding campaign instantly with <strong>auto-deployed smart contracts</strong>.</p>
+          <p className="text-gray-200">🌐 8.25% of both raised funds and tokens are locked in <span className="text-[#00FFFF]">secure liquidity</span> for stability.</p>
+          <p className="text-gray-200">💰 Campaign creators receive <span className="text-[#FFDD00] font-semibold">90%</span> of raised funds — the rest supports platform sustainability.</p>
+          <p className="text-gray-200">🛍️ Advanced users can open a <strong>Web3 Store</strong> — managing software keys or digital items with <span className="text-[#00FFFF]">NFT barcode validation</span>.</p>
+          <p className="text-gray-200">📜 Each purchase mints a <span className="text-[#FFDD00] font-semibold">unique NFT receipt</span> showing all transaction details.</p>
+          <p className="text-gray-300 italic mt-4">
+            Powered by <span className="text-[#00FFFF]">Base Network</span> — experience <strong>low gas, high speed, and true decentralization.</strong>
+          </p>
+        </div>
+      </section>
                 <div className='sm:w-10/12 w-full mx-auto sm:mt-[50px] mt-[50px] rounded-[15px]'>
       <h1 className='text-[#FFFFFF] font-semibold sm:text-[100px] text-[25px] text-center sm:pt-[90px]'>UltraShop</h1>
       <h1 className='text-[#FFFFFF] font-semibold sm:text-[100px] text-[25px] text-center sm:pt-[90px]'>Where Your Business</h1>
@@ -238,7 +258,7 @@ const VIPRegister = () => {
                     <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[60px] mb-[10px] text-center'>Step 1</h3>
                     <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Connect your wallet to the platform.</p>
                     <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Step 2</h3>
-                    <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>We cover your gas now.</p>
+                    <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Enter a little amount of ETH, The website works on Base blockchain</p>
                     <h3 className='text-[#FFDD00] text-[25px] font-semibold mt-[30px] mb-[10px] text-center'>Step 3</h3>
                     <p className='text-[#FFFFFF] font-epilogue text-[15px] px-[20px] text-center'>Fill in your details and submit the form.</p>
                     

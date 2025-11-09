@@ -153,7 +153,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
     const {address} = useStateContext();
     
     // Replace this with your deployed comprehensive aggregator contract address
-    const AGGREGATOR_CONTRACT_ADDRESS = '0xf51C1d9BDaAA12046e81102fc129E2B59280EdDe';
+    const AGGREGATOR_CONTRACT_ADDRESS = '0x19c494f6bd08f1f9811A09ffdB9BC9a1cb8f5F81';
     const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
     const USDTAddress = '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2';
     const USDCAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
@@ -198,8 +198,27 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
 
     const handleFormFieldChange = (fieldName, e) => {
         const value = e.target.value;
-        if (value.toString().length <= 8) {
-            setForm({ ...form, [fieldName]: value });
+        
+        if (fieldName === 'sellAmount') {
+            // Allow only numbers and one decimal point
+            const decimalRegex = /^\d*\.?\d*$/;
+            
+            // Check if input matches decimal format
+            if (value === '' || decimalRegex.test(value)) {
+                // Count decimal places
+                const decimalParts = value.split('.');
+                const decimalPlaces = decimalParts[1] ? decimalParts[1].length : 0;
+                
+                // Allow up to 6 decimal places
+                if (decimalPlaces <= 6) {
+                    setForm({ ...form, [fieldName]: value });
+                }
+            }
+        } else {
+            // For other fields, keep existing logic
+            if (value.toString().length <= 8) {
+                setForm({ ...form, [fieldName]: value });
+            }
         }
     };
 
@@ -208,6 +227,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
             ...prev,
             sellToken: prev.buyToken,
             buyToken: prev.sellToken,
+            sellAmount: '0'
         }));
     };
 
@@ -229,11 +249,17 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
               ...prev,
               sellToken: prev.buyToken,
               buyToken: prev.sellToken,
+              sellAmount: '0' // Reset to 0 when swapping tokens
             };
           }
-          return { ...prev, sellToken: address };
+          return { 
+            ...prev, 
+            sellToken: address,
+            sellAmount: '0' // Reset to 0 when selecting new token
+          };
         });
         setShowTokenPopup(false);
+
     };
 
     const getETHBalance = async () => {
@@ -415,14 +441,14 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
                 </div>
                 <FormField
                     labelName="Amount"
-                    inputType="number"
-                    maxLength={6}
+                    inputType="text" // Changed from "number" to "text" for better decimal control
+                    placeholder="0.000000"
                     value={form.sellAmount}
                     handleChange={(e) => handleFormFieldChange('sellAmount', e)}
                     style={`mx-[15px] my-[5px] ${form.sellAmount > theBalance ? 'bg-red-500' : ''}`}
                 />
             </div>
-                <span className='text-white cursor-pointer' onClick={() => setForm({ ...form, sellAmount: String(theBalance).substring(0,8) })}>
+                <span className='text-white cursor-pointer' onClick={() => setForm({ ...form, sellAmount: String(theBalance)})}>
                     Balance: {theBalance}
                 </span>
 
@@ -588,8 +614,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
                                 }
                             }}
                             className={`!bg-gradient-to-r !from-green-500 !to-green-600 !text-white !font-bold ${
-                                (!isETH && (Number(allowance) < ethers.utils.parseUnits(form.sellAmount, decimals) || 
-                                form.sellAmount > theBalance)) ? '!hidden' : ''
+                                !isETH && (Number(allowance) < ethers.utils.parseUnits(form.sellAmount, decimals)) ? '!hidden' : ''
                             }`}
                         >
                             🚀 Swap via {bestRouter} (Best Price)

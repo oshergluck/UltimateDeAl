@@ -10,9 +10,6 @@ const News = () => {
   return (
     <div>
       {isLoading && <Loader />}
-    <div className="linear-gradient mx-auto">
-        {isMobile ? <FeaturedMobile /> : <Featured/>}
-        </div>
         <h1 className='text-white font-epilogue font-semibold text-[20px] my-[20px] ml-[30px]'>Blog</h1>
 
         <div className='flex min-h-[1000px]'>

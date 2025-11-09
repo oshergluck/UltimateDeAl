@@ -3,6 +3,7 @@ import { loader, VerifiedIcon, cashedout,done_desktop } from '../assets';
 import Loader from './Loader';
 import { useNavigate } from 'react-router-dom';
 import { calculateBarPercentage, daysLeft } from '../utils';
+import IPFSMediaViewer from './IPFSMediaViewer';
 
 const FeaturedCard = ({ campaign,style }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -53,13 +54,13 @@ const FeaturedCard = ({ campaign,style }) => {
         <div>
         <>  <div className={`${style}`}>
             {isLoading && <Loader />}
-            <div className='flex justify-center grid grid-flow-col mb-[200px] '>
+            <div className='flex justify-center grid grid-flow-col mb-[200px]'>
                 <div className='w-full mx-[30px]'>
-                    <video className='flex-1 rounded-[15px] w-11/12 mb-[20px] row-span-3' controls preload="metadata">
-                        <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/mp4"></source>
-                        <source src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}#t=0.001`} crossOrigin='anonymous' type="video/ogg"></source>
-                        Your browser does not support the video tag.
-                    </video>
+
+                    <IPFSMediaViewer
+                    ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${campaign?.videoLinkFromPinata}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                    className={'flex-1 rounded-[15px] w-11/12 mb-[20px] row-span-3'}
+                    />
                     </div>
                 <div className='justify-self-end flex-1 flex-initial'>
                 <div className='flex w-8/12 mt-[10px] ml-[150px] justify-between grid grid-cols-2'>

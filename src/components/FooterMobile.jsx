@@ -41,17 +41,11 @@ export const FooterMobile = () => {
         <br />
         <button onClick={handleNavigateToPrivacyPolicy} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]'>Privacy Policy</button>
         <br />
-        <button onClick={handleNavigateToAbout} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px] mr-[4px]'>About Us</button>
-        <br />
         <button onClick={() => contactUsEmail()} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]'>Contact Us</button>
-        <br />
-        <button onClick={() => handleNavigateToInfo()} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]'>White Paper</button>
-        <br />
-        <button onClick={handleNaigateToVIP} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]'>Become VIP Client</button>
       </div>
         <div className="mb-6 flex justify-center space-x-2 overflow-auto touch-auto">
         <a
-            href="https://twitter.com/ultimatedeal__"
+            href="https://twitter.com/ultrashoptech"
             type="button"
             target='_blank'
             className="rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"
@@ -68,52 +62,7 @@ export const FooterMobile = () => {
             </span>
           </a>
           <a
-            href="https://www.facebook.com/profile.php?id=61560392245458"
-            type="button"
-            target='_blank'
-            className="rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"
-            data-twe-ripple-init>
-            <span className="[&>svg]:h-5 [&>svg]:w-5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="#7d7d7d"
-                viewBox="0 0 320 512">
-                <path
-                  d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z" />
-              </svg>
-            </span>
-          </a>
-          <a
-            href="https://www.instagram.com/UltimateDeal.net/"
-            type="button"
-            target='_blank'
-            className="hidden rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"
-            data-twe-ripple-init>
-            <span className="mx-auto [&>svg]:h-5 [&>svg]:w-5">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="#7d7d7d"
-                viewBox="0 0 448 512">
-                <path
-                  d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
-              </svg>
-            </span>
-          </a>
-          <a
-            href="https://chat.whatsapp.com/KIfMtgmEf0PASAsn9MUnTk"
-            type="button"
-            target='_blank'
-            className="rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"
-            data-twe-ripple-init>
-            <span className="mx-auto [&>svg]:h-5 [&>svg]:w-5">
-              <svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6.014 8.00613C6.12827 7.1024 7.30277 5.87414 8.23488 6.01043L8.23339 6.00894C9.14051 6.18132 9.85859 7.74261 10.2635 8.44465C10.5504 8.95402 10.3641 9.4701 10.0965 9.68787C9.7355 9.97883 9.17099 10.3803 9.28943 10.7834C9.5 11.5 12 14 13.2296 14.7107C13.695 14.9797 14.0325 14.2702 14.3207 13.9067C14.5301 13.6271 15.0466 13.46 15.5548 13.736C16.3138 14.178 17.0288 14.6917 17.69 15.27C18.0202 15.546 18.0977 15.9539 17.8689 16.385C17.4659 17.1443 16.3003 18.1456 15.4542 17.9421C13.9764 17.5868 8 15.27 6.08033 8.55801C5.97237 8.24048 5.99955 8.12044 6.014 8.00613Z" fill="#7d7d7d"/>
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 23C10.7764 23 10.0994 22.8687 9 22.5L6.89443 23.5528C5.56462 24.2177 4 23.2507 4 21.7639V19.5C1.84655 17.492 1 15.1767 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12C23 18.0751 18.0751 23 12 23ZM6 18.6303L5.36395 18.0372C3.69087 16.4772 3 14.7331 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C11.0143 21 10.552 20.911 9.63595 20.6038L8.84847 20.3397L6 21.7639V18.6303Z" fill="#7d7d7d"/>
-              </svg>
-            </span>
-          </a>
-          <a
-            href="https://t.me/UltimateDealNet"
+            href="https://t.me/ultrashoptech"
             type="button"
             target='_blank'
             className="rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"
@@ -126,20 +75,7 @@ export const FooterMobile = () => {
             </span>
           </a>
           <a
-            href="https://www.tiktok.com/@the_money.time"
-            type="button"
-            target='_blank'
-            className="rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"
-            data-twe-ripple-init>
-            <span className="mx-auto [&>svg]:h-5 [&>svg]:w-5">
-              <svg fill="#7d7d7d" width="800px" height="800px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
-              <title>tiktok</title>
-              <path d="M16.656 1.029c1.637-0.025 3.262-0.012 4.886-0.025 0.054 2.031 0.878 3.859 2.189 5.213l-0.002-0.002c1.411 1.271 3.247 2.095 5.271 2.235l0.028 0.002v5.036c-1.912-0.048-3.71-0.489-5.331-1.247l0.082 0.034c-0.784-0.377-1.447-0.764-2.077-1.196l0.052 0.034c-0.012 3.649 0.012 7.298-0.025 10.934-0.103 1.853-0.719 3.543-1.707 4.954l0.020-0.031c-1.652 2.366-4.328 3.919-7.371 4.011l-0.014 0c-0.123 0.006-0.268 0.009-0.414 0.009-1.73 0-3.347-0.482-4.725-1.319l0.040 0.023c-2.508-1.509-4.238-4.091-4.558-7.094l-0.004-0.041c-0.025-0.625-0.037-1.25-0.012-1.862 0.49-4.779 4.494-8.476 9.361-8.476 0.547 0 1.083 0.047 1.604 0.136l-0.056-0.008c0.025 1.849-0.050 3.699-0.050 5.548-0.423-0.153-0.911-0.242-1.42-0.242-1.868 0-3.457 1.194-4.045 2.861l-0.009 0.030c-0.133 0.427-0.21 0.918-0.21 1.426 0 0.206 0.013 0.41 0.037 0.61l-0.002-0.024c0.332 2.046 2.086 3.59 4.201 3.59 0.061 0 0.121-0.001 0.181-0.004l-0.009 0c1.463-0.044 2.733-0.831 3.451-1.994l0.010-0.018c0.267-0.372 0.45-0.822 0.511-1.311l0.001-0.014c0.125-2.237 0.075-4.461 0.087-6.698 0.012-5.036-0.012-10.060 0.025-15.083z"></path>
-              </svg>
-            </span>
-          </a>
-          <a
-            href={`https://base.blockscout.com/address/${import.meta.env.VITE_CROWDFUNDING}`}
+            href={`https://base.blockscout.com/address/${import.meta.env.VITE_DEX_ADDRESS}`}
             type="button"
             target='_blank'
             className="rounded-full bg-transparent p-3 font-medium uppercase leading-normal text-surface transition duration-500 ease-in-out hover:bg-[#ff8000] focus:outline-none focus:ring-0 dark:text-white dark:hover:bg-secondary-900"

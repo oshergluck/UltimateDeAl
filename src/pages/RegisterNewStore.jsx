@@ -5,9 +5,17 @@ import { createThirdwebClient, prepareContractCall, getContract } from "thirdweb
 import { useSendTransaction, TransactionButton } from 'thirdweb/react';
 import { useStateContext } from '../context';
 import { CustomButton, FormField, Loader } from '../components';
-
+import { PinataSDK } from "pinata";
 const RegisterNewStore = () => {
   const navigate = useNavigate();
+  const pinata = new PinataSDK({
+    pinataJwt: import.meta.env.VITE_PINATA_JWT,
+    pinataGateway: "bronze-sticky-guanaco-654.mypinata.cloud",
+  });
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [pop, setPopUp] = useState(false);
   const [pass, setPass] = useState('');
@@ -27,6 +35,69 @@ const RegisterNewStore = () => {
     voting: '',
     ercultra: '',
   });
+  const UploadAnimation = ({ progress, isUploading, file, type }) => (
+    <div className="mb-4 p-4 border border-gray-600 rounded-lg bg-gray-800">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-white font-medium">
+          {type === 'video' ? 'Video' : 'Image'} Upload
+        </span>
+        {isUploading && (
+          <span className="text-yellow-400 text-sm">
+            Uploading... {progress}%
+          </span>
+        )}
+        {!isUploading && form[type === 'video' ? 'videoLinkFromPinata' : '_picture'] && (
+          <span className="text-green-400 text-sm">✓ Uploaded</span>
+        )}
+      </div>
+      
+      {file && (
+        <div className="text-gray-300 text-sm mb-2">
+          File: {file.name}
+        </div>
+      )}
+      
+      {isUploading && (
+        <div className="w-full bg-gray-700 rounded-full h-2.5">
+          <div 
+            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      )}
+      
+      {!isUploading && form[type === 'video' ? 'videoLinkFromPinata' : '_picture'] && (
+        <div className="text-green-400 text-sm break-all">
+          CID: {form[type === 'video' ? 'videoLinkFromPinata' : '_picture']}
+        </div>
+      )}
+    </div>
+  );
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    setIsUploadingImage(true);
+    setImageUploadProgress(0);
+    setSelectedImageFile(file);
+
+    try {
+      const upload = await pinata.upload.file(file, {
+        onProgress: (progress) => {
+          const percent = Math.round((progress.bytes / progress.totalBytes) * 100);
+          setImageUploadProgress(percent);
+        }
+      });
+      
+      setForm({ ...form, _picture: upload.IpfsHash });
+      console.log('Image uploaded to IPFS:', upload.IpfsHash);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+      setImageUploadProgress(0);
+    }
+  };
 
   const handleFormFieldChange = (fieldName, e) => {
     setForm({ ...form, [fieldName]: e.target.value });
@@ -118,11 +189,12 @@ const RegisterNewStore = () => {
       </h1>
 
       {address ? (
-        <div className="w-full mt-[30px] flex flex-col gap-[30px]">
+        <div className="sm:w-7/12 w-full mt-[30px] flex flex-col gap-[30px] sm:border-[1px] sm:border-gray sm:p-20 sm:rounded-[15px]">
           <div className="flex flex-wrap gap-[40px]">
             <FormField
-              labelName="ESH Token Address"
-              placeholder="Address Cannot be Changed"
+              style={''}
+              labelName="Token"
+              placeholder="0x..."
               inputType="text"
               value={form.ercultra}
               handleChange={(e) => handleFormFieldChange('ercultra', e)}
@@ -134,29 +206,42 @@ const RegisterNewStore = () => {
               value={form._urlPath}
               handleChange={(e) => handleFormFieldChange('_urlPath', e)}
             />
+                      </div>
+                      <div className="flex flex-wrap gap-[40px]">
             <FormField
-              labelName="Store Contract *"
-              placeholder="Address Cannot Be Changed"
+              labelName="Shop Contract *"
+              placeholder="0x..."
               inputType="text"
               value={form._smartContractAddress}
               handleChange={(e) => handleFormFieldChange('_smartContractAddress', e)}
             />
+          
           </div>
-
+          <label className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFFFFF] mb-[10px] block">
+                Logo 1:1 Ratio*
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isUploadingImage}
+              />
+              <UploadAnimation 
+                progress={imageUploadProgress}
+                isUploading={isUploadingImage}
+                file={selectedImageFile}
+                type="image"
+              />
           <FormField
-            labelName="Logo (CID from IPFS) *"
-            placeholder="CID"
-            inputType="text"
-            value={form._picture}
-            handleChange={(e) => handleFormFieldChange('_picture', e)}
-          />
-          <FormField
-            labelName="Store Name *"
+            labelName="Shop Name *"
             placeholder="Name"
             inputType="text"
             value={form._name}
             handleChange={(e) => handleFormFieldChange('_name', e)}
           />
+          <div className="flex flex-wrap gap-[40px]">
+          
           <FormField
             labelName="Description *"
             placeholder="Description"
@@ -164,6 +249,8 @@ const RegisterNewStore = () => {
             value={form._description}
             handleChange={(e) => handleFormFieldChange('_description', e)}
           />
+          </div>
+          <div className="flex flex-wrap gap-[40px]">
           <FormField
             labelName="Category *"
             placeholder="Category"
@@ -178,7 +265,10 @@ const RegisterNewStore = () => {
             value={form._contactInfo}
             handleChange={(e) => handleFormFieldChange('_contactInfo', e)}
           />
+          </div>
+          <div className="flex flex-wrap gap-[40px]">
           <FormField
+          style={'sm:w-5/12'}
             labelName="Invoice Number*"
             placeholder="Number"
             inputType="number"
@@ -186,15 +276,17 @@ const RegisterNewStore = () => {
             handleChange={(e) => handleFormFieldChange('_receiptId', e)}
           />
           <FormField
-            labelName="MetaVerse City"
+            labelName="MetaVerse City*"
             placeholder="Name"
             inputType="text"
             value={form._city}
             handleChange={(e) => handleFormFieldChange('_city', e)}
           />
+          </div>
+          <div className="flex flex-wrap gap-[40px]">
           <FormField
-            labelName="Voting System"
-            placeholder="Address Cannot Be Changed"
+            labelName="Voting System*"
+            placeholder="0x..."
             inputType="text"
             value={form.voting}
             handleChange={(e) => handleFormFieldChange('voting', e)}
@@ -207,7 +299,7 @@ const RegisterNewStore = () => {
                 const tx = prepareContractCall({
                   contract: Stores,
                   method: "function registerStore(string _urlPath, address _smartContractAddress, string _picture, string _name, string _description, string _category, string _contactInfo, uint256 _receiptId, string _city, address _votingSystemAddress, address _ERCUltra)",
-                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId)+1, form._city, form.voting, form.ercultra],
+                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId)+13, form._city, form.voting, form.ercultra],
                 });
                 return tx;
               }}
@@ -226,6 +318,7 @@ const RegisterNewStore = () => {
             >
               Register New Shop
             </TransactionButton>
+          </div>
           </div>
         </div>
       ) : (

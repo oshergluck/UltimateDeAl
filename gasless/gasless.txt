@@ -1,0 +1,6 @@
+ accountAbstraction={{
+                            sponsorGas:true,
+                            chain: base,
+                            gasless: true,
+                            factoryAddress : '0x54164f8b6e7f8e3584cc6d7e15d54297ec0fa6e3',
+                           }}

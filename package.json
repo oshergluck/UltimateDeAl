@@ -41,6 +41,7 @@
     "flatted": "^3.3.1",
     "googletrans": "^1.0.21",
     "jsonp": "^0.2.1",
+    "lightweight-charts": "^5.0.9",
     "lucide-react": "^0.454.0",
     "pinata": "^0.1.10",
     "process": "^0.11.10",

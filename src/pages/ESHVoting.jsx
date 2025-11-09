@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useContract } from '@thirdweb-dev/react';
 import { useStateContext } from '../context';
 import { TransactionButton } from 'thirdweb/react';
+import { ethers } from 'ethers';
 import { prepareContractCall, createThirdwebClient, getContract } from 'thirdweb';
 
 const ESHVoting = () => {
@@ -105,14 +106,25 @@ const ESHVoting = () => {
   const { contract: votingContract } = useContract(votingAddress);
   const { contract: tokenContract } = useContract("YOUR_TOKEN_ADDRESS");
 
-  const votingContract1 = getContract({
-    client: client,
-    chain: {
-      id: 8453,
-      rpc: POLYRPC,
-    },
-    address: votingAddress,
-  });
+  
+
+  const [votingContract1,setvotingContract1] = useState(null);
+
+    useEffect(() => {
+        if (votingAddress && ethers.utils.isAddress(votingAddress)) {
+          const contract = getContract({
+            client: client,
+            chain: {
+              id: 8453,
+              rpc: POLYRPC,
+            },
+            address: votingAddress,
+          });
+          setvotingContract1(contract);
+        } else {
+          setvotingContract1(null);
+        }
+    }, [votingAddress]);
 
   const fetchProposals = async () => {
     try {

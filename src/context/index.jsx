@@ -345,7 +345,7 @@ export const StateContextProvider = ({ children }) => {
 
           const transaction = prepareContractCall({
             contract:CrowdFunding1,
-            method: "function createCampaign(string memory _profilePic,string memory _phoneNumber, string memory _title, string memory _description, uint256 _target, uint256 _endDate, string memory _videoLinkFromPinata, string memory _type) returns (uint256)",
+            method: "function createCampaign(string _profilePic, string _phoneNumber, string _title, string _description, uint256 _target, uint256 _endDate, string _videoLinkFromPinata, string _type, address _rewardTokenAddress, uint256 _initialRewardDeposit, uint256 _basePrice, uint256 _maxPrice, bool _useBondingCurve, string tokenURI) returns (uint256)",
             params: [form.profileImageLinkFromPinata,form.email, form.title, form.description, form.target*1e6, timestampInSeconds, form.videoLinkFromPinata, form.typeOfCampaign],
             value: 0,
             gasPrice: gasPrice,
@@ -1191,6 +1191,7 @@ const Featured = async () => {
         investments: null,  // Array of donation amounts
         comments: null,  // Array of comments from donators
         totalInvested: 0,  // Total amount invested in the campaign
+        minimum: campaign[12]
       }
     }
     else {
