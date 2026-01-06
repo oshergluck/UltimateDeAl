@@ -15,7 +15,7 @@ const formatUnits = (value, decimals, maxDecimals = 6) => {
 
 const formatCurrency = (value, decimals = 6) => {
   const num = Number(formatUnits(value, decimals, 8))
-  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 }).format(
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(
     Number.isFinite(num) ? num : 0
   )
 }
@@ -115,11 +115,11 @@ export default function CoinBox({
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3 mt-3">
             <div>
-              <div className="text-white/50 text-xs">USDC Reserve</div>
+              <div className="text-white/50 text-xs">Reserve</div>
               <div className="text-white text-sm">${formatCurrency(usdcReserve, 6)}</div>
             </div>
             <div>
-              <div className="text-white/50 text-xs">24h/Total Vol</div>
+              <div className="text-white/50 text-xs">Total Vol</div>
               <div className="text-white text-sm">${formatCurrency(totalVolume || 0n, 6)}</div>
             </div>
           </div>

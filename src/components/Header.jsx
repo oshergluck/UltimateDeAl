@@ -412,7 +412,7 @@ const getCampaignRewardTokens = async () => {
 
     return (
         <>
-            <div className={`drop-shadow w-full relative linear-gradient1 border-b-[1px] border-[#FFDD00] pb-[20px] fixed-header ${address ? ('h-[75px]') : ('h-[75px]')}`}>
+            <div className={`drop-shadow w-full relative  border-b-[1px] border-[#FFDD00] pb-[20px] fixed-header ${address ? ('h-[75px]') : ('h-[75px]')}`}>
                 <div className='flex py-[5px]'>
                     <div className='flex cursor-pointer' onClick={()=> naviateToStoreVip1()}>
                         <img src={logoOfWebsite} alt='logo' className='w-[50px] h-[50px] object-contain my-auto mx-[10px]' />
@@ -431,7 +431,6 @@ const getCampaignRewardTokens = async () => {
                             </div> */}
                             <button onClick={naviateToStoreVip1} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Home</button>
                             <button onClick={handleAboutNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>About</button>
-                            <button onClick={handleBlogNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Blog</button>
                             {address ? (<button onClick={naviateToMyCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My Coins</button>) : (<></>)}
                             <button onClick={naviateToVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Launch Coin</button>
                             <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Coin</button>
@@ -439,7 +438,7 @@ const getCampaignRewardTokens = async () => {
                     </div>
                     <div className='mr-[20px] py-[5px] my-auto'>
                         <ConnectButton
-                            className={'!z-[100000000001]'}
+                            autoConnect={false}
                             client={client}
                             wallets={wallets}
                             theme={"dark"}
@@ -460,7 +459,7 @@ const getCampaignRewardTokens = async () => {
                                 },
                                 termsOfServiceUrl: "https://ultrashop.tech/terms",
                                 privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
-                                showThirdwebBranding: true,
+                                showThirdwebBranding: false,
                             }}
                             supportedTokens={allSupportedTokens}
                             detailsButton={{

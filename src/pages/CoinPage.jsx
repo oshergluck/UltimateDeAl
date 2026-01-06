@@ -72,6 +72,16 @@ const CoinPage = () => {
     x: '',
     telegram: '',
   })
+  // ---- price change helpers ----
+
+  const [bucketSeconds, setBucketSeconds] = useState(900);
+  const timeframes = [
+    { label: "1m", seconds: 60 },
+    { label: "5m", seconds: 300 },
+    { label: "15m", seconds: 900 },
+    { label: "1h", seconds: 3600 },
+    { label: "4h", seconds: 14400 },
+  ];
   const [transactions, setTransactions] = useState([])
   const [holders, setHolders] = useState([])
 
@@ -180,6 +190,15 @@ const CoinPage = () => {
 
     setTransactions(parsed)
   }
+
+  const chartTransactions = useMemo(() => {
+    return (transactions ?? [])
+      .map((t) => ({
+        ...t,
+        timestamp: Number.isFinite(Number(t.timestamp)) ? Number(t.timestamp) : 0,
+      }))
+      .filter((t) => t.timestamp > 0)
+  }, [transactions])
 
   const fetchHolders = async () => {
     try {
@@ -418,19 +437,116 @@ useEffect(() => {
   }, [sellAmount, tokenAddress, tokenInfo.decimals, dex, coinData.virtualTokenReserve, coinData.virtualUSDCReserve])
   
   // ---------- derived for chart (MUST be BEFORE any early return) ----------
-  const chartTransactions = useMemo(() => {
-    return (transactions ?? [])
-      .map((t) => ({
-        ...t,
-        timestamp: Number.isFinite(Number(t.timestamp)) ? Number(t.timestamp) : 0,
-      }))
-      .filter((t) => t.timestamp > 0)
-  }, [transactions])
+  
+  // --- helpers: keep values as BigInt in 12d, format only for UI ---
+// --- normalize any input to 12d BigInt (price * 1e12) ---
+// constants – adjust if your token/USDC decimals differ
+// --- constants (adjust if needed) ---
+// txs must be ASC by timestamp (seconds)
 
-  const chartStartUnix = useMemo(() => {
-    if (chartTransactions.length === 0) return Math.floor(Date.now() / 1000)
-    return Math.min(...chartTransactions.map((t) => t.timestamp))
-  }, [chartTransactions])
+// price at-or-before cutoff (floor), built to 12d from tx amounts.
+// usdcAmount: 6d, tokenAAmount: 18d  -> price12 = (usdc * 1e24) / token
+// 12-decimals price from a tx (USDC has 6d, tokenA 18d ⇒ scale by 1e24)
+// 12-decimal price (USDC 6d, token 18d)
+// 12d price from amounts (USDC 6d, token 18d)
+const price12FromTx = (tx) => {
+    const usdc = BigInt(tx.usdcAmount ?? 0);
+    const tok  = BigInt(tx.tokenAAmount ?? 0);
+    if (usdc === 0n || tok === 0n) return null; // Return null instead of 0n
+    return (usdc * 10n**24n) / tok;
+  };
+  
+  // Remove all validation - accept all transactions
+  const isValidTx = (tx) => {
+    const usdc = BigInt(tx.usdcAmount ?? 0);
+    const tok  = BigInt(tx.tokenAAmount ?? 0);
+    return usdc > 0n && tok > 0n; // Just check they're not zero
+  };
+  
+  // last valid trade at/before cutoff on ASC array
+  const priceAtOrBeforeCutoff12 = (txsAsc, cutoffSec) => {
+    if (!txsAsc?.length) return null;
+  
+    // upper_bound for cutoff
+    let lo = 0, hi = txsAsc.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      const ts = Number(txsAsc[mid].timestamp);
+      if (ts <= cutoffSec) lo = mid + 1; else hi = mid;
+    }
+    let idx = lo - 1;
+    
+    // If no transaction at or before cutoff, use the first valid transaction
+    if (idx < 0) {
+      idx = 0;
+      while (idx < txsAsc.length && !isValidTx(txsAsc[idx])) idx++;
+      if (idx >= txsAsc.length) return null;
+      return price12FromTx(txsAsc[idx]);
+    }
+  
+    // walk left until a valid trade
+    while (idx >= 0 && !isValidTx(txsAsc[idx])) idx--;
+    if (idx < 0) return null;
+  
+    return price12FromTx(txsAsc[idx]);
+  };
+  
+  const pctChangeBig = (past12, curr12) => {
+    if (past12 == null || curr12 == null || past12 === 0n) return null;
+    const bp = ((curr12 - past12) * 10000n) / past12;
+    const pct = Number(bp) / 100;
+    return Number.isFinite(pct) ? pct : null;
+  };
+  
+  const priceChanges = useMemo(() => {
+    try {
+      const nowSec = Math.floor(Date.now() / 1000);
+      
+      // 1) drop future trades
+      const txsFiltered = chartTransactions.filter(t => Number(t.timestamp) <= nowSec);
+  
+      // 2) sort ASC
+      const txsAsc = txsFiltered.sort((a,b) => Number(a.timestamp) - Number(b.timestamp));
+  
+      // 3) get current price
+      const lastValid = [...txsAsc].reverse().find(isValidTx);
+      let curr12 = lastValid ? price12FromTx(lastValid) : null;
+      
+      if (curr12 === null) {
+        return { h1: null, h6: null, h24: null };
+      }
+  
+      const p1h  = priceAtOrBeforeCutoff12(txsAsc, nowSec -  3600);
+      const p6h  = priceAtOrBeforeCutoff12(txsAsc, nowSec -  6*3600);
+      const p24h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 24*3600);
+  
+      return {
+        h1:  pctChangeBig(p1h,  curr12),
+        h6:  pctChangeBig(p6h,  curr12),
+        h24: pctChangeBig(p24h, curr12),
+      };
+    } catch {
+      return { h1: null, h6: null, h24: null };
+    }
+  }, [chartTransactions, coinData?.currentPrice]);
+  
+  
+console.log(chartTransactions);
+
+// your render helpers unchanged:
+const formatSignedPct = (v) => (v == null ? '—' : (v >= 0 ? `+${v.toFixed(2)}%` : `${v.toFixed(2)}%`));
+const upDownSymbol    = (v) => (v == null ? '' : (v >= 0 ? '▲' : '▼'));
+const valueColorClass = (v) => (v == null ? 'text-white/70' : (v >= 0 ? 'text-emerald-400' : 'text-red-400'));
+
+
+  
+
+// chartStartUnix stays as you had:
+const chartStartUnix = useMemo(() => {
+  if (chartTransactions.length === 0) return Math.floor(Date.now() / 1000);
+  return Math.min(...chartTransactions.map(t => Number(t.timestamp)));
+}, [chartTransactions]);
+
 
   const coinCreationUnix =
     chartTransactions.length > 0 ? chartTransactions[0].timestamp : Math.floor(Date.now() / 1000)
@@ -476,17 +592,6 @@ useEffect(() => {
       maximumFractionDigits: 8,
     })}`;
   }
-  
-  
-
-  const buildBuyTokens = () => {
-    const amount = ethers.utils.parseUnits(buyAmount || '0', 6)
-    return prepareContractCall({
-      contract: dex,
-      method: 'function buyTokens(address tokenA, uint256 usdcAmount)',
-      params: [tokenAddress, amount],
-    })
-  }
 
   const buildApproveToken = () => {
     const amount = ethers.utils.parseUnits(sellAmount || '0', tokenInfo.decimals)
@@ -497,14 +602,34 @@ useEffect(() => {
     })
   }
 
-  const buildSellTokens = () => {
-    const amount = ethers.utils.parseUnits(sellAmount || '0', tokenInfo.decimals)
+  // BUY
+const buildBuyTokens = async () => {
+    const usdcIn = ethers.utils.parseUnits(buyAmount || "0", 6);
+    const minTokenAOut = buyQuote?.tokenOut
+  ? applyNegSlippage(buyQuote.tokenOut, slippagePct)
+  : 0n; // USDC-6
+    const minOut = minTokenAOut;                    // BigInt
     return prepareContractCall({
       contract: dex,
-      method: 'function sellTokens(address tokenA, uint256 tokenAmount)',
-      params: [tokenAddress, amount],
-    })
-  }
+      method: "function buyTokens(address tokenA, uint256 usdcAmount, uint256 minTokenAReceived)",
+      params: [tokenAddress, usdcIn, minOut],
+    });
+  };
+  
+  // SELL
+  const buildSellTokens = async () => {
+    const tIn = ethers.utils.parseUnits(sellAmount || "0", 18);
+    const minUSDCOut = sellQuote?.usdcNet
+  ? applyNegSlippage(sellQuote.usdcNet, slippagePct)
+  : 0n; // tokenA-18
+    const minOutUSDC = minUSDCOut;
+    return prepareContractCall({
+      contract: dex,
+      method: "function sellTokens(address tokenA, uint256 tokenAmount, uint256 minUSDCReceived)",
+      params: [tokenAddress, tIn, minOutUSDC],
+    });
+  };
+  
 
   const calculateHolderPercentage = (balance) => {
     try {
@@ -529,20 +654,31 @@ useEffect(() => {
   
     return () => clearInterval(id)
   }, [])
+  // state
+const [slippagePct, setSlippagePct] = useState(0.5); // default 0.5%
+
+// helpers (BigInt-safe percent math)
+const pctToBps = (p) => Math.round(Number(p) * 100); // 0.1 -> 10 bps
+const applyNegSlippage = (amountBig, percent) => {
+  // returns floor(amount * (100 - percent)/100)
+  const bps = BigInt(Math.round((100 - Number(percent)) * 100)); // (100 - p) in bps
+  return (amountBig * bps) / 10000n;
+};
+
 
   useEffect(() => { if (infoTick > 0) fetchCoinInfo() }, [infoTick])
     useEffect(() => { if (txTick > 0) fetchTransactions() }, [txTick])
   // ---------- early return AFTER all hooks/derived ----------
   if (loading) {
     return (
-      <div className="min-h-screen linear-gradient1 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-white text-xl">Loading token data...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen linear-gradient1 py-6 md:py-10">
+    <div className="min-h-screen py-6 md:py-10">
       <div className="sm:max-w-7xl mx-auto px-4 md:px-6">
         {/* Header */}
 <div className="relative rounded-3xl overflow-hidden bg-white/5 backdrop-blur mb-8">
@@ -667,15 +803,33 @@ useEffect(() => {
           <div className="lg:col-span-2 space-y-6">
             {chartTransactions.length > 0 && chartStartUnix && (
               <div className="bg-white/5 backdrop-blur rounded-2xl p-4 border border-white/10">
-                <CandleChart15mAdvanced
-                  key={tokenAddress}
-                  transactions={chartTransactions}
-                  currentPrice={formatPriceFull(coinData.currentPrice, 12, 18)}
-                  height={420}
-                  bucketSeconds={900}
-                  startUnix={chartStartUnix}
-                />
+              {/* Timeframe menu */}
+              <div className="flex justify-end mb-3 gap-2">
+                {timeframes.map((t) => (
+                  <button
+                    key={t.label}
+                    onClick={() => setBucketSeconds(t.seconds)}
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                      bucketSeconds === t.seconds
+                        ? "bg-blue-500 text-white"
+                        : "bg-white/10 text-white/70 hover:bg-white/20"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
+        
+              {/* Chart */}
+              <CandleChart15mAdvanced
+                key={`${tokenAddress}-${bucketSeconds}`} // re-render when timeframe changes
+                transactions={chartTransactions}
+                currentPrice={formatPriceFull(coinData.currentPrice, 12, 18)}
+                height={420}
+                bucketSeconds={bucketSeconds}
+                startUnix={chartStartUnix}
+              />
+            </div>
             )}
 
             {/* Stats */}
@@ -691,6 +845,47 @@ useEffect(() => {
                   )}`}
                 </div>
               </div>
+              {/* Price Δ 1h */}
+<div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+  <div className="text-white/60 text-sm">Price Δ 1h</div>
+  <div className="text-white text-lg font-semibold mt-1">
+    {priceChanges.h1 === null ? (
+      <span className="text-white/40">—</span>
+    ) : (
+      <span className={valueColorClass(priceChanges.h1)}>
+        {upDownSymbol(priceChanges.h1)} {formatSignedPct(priceChanges.h1)}
+      </span>
+    )}
+  </div>
+</div>
+
+{/* Price Δ 6h */}
+<div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+  <div className="text-white/60 text-sm">Price Δ 6h</div>
+  <div className="text-white text-lg font-semibold mt-1">
+    {priceChanges.h6 === null ? (
+      <span className="text-white/40">—</span>
+    ) : (
+      <span className={valueColorClass(priceChanges.h6)}>
+        {upDownSymbol(priceChanges.h6)} {formatSignedPct(priceChanges.h6)}
+      </span>
+    )}
+  </div>
+</div>
+
+{/* Price Δ 24h */}
+<div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+  <div className="text-white/60 text-sm">Price Δ 24h</div>
+  <div className="text-white text-lg font-semibold mt-1">
+    {priceChanges.h24 === null ? (
+      <span className="text-white/40">—</span>
+    ) : (
+      <span className={valueColorClass(priceChanges.h24)}>
+        {upDownSymbol(priceChanges.h24)} {formatSignedPct(priceChanges.h24)}
+      </span>
+    )}
+  </div>
+</div>
               <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
                 <div className="text-white/60 text-sm">Liquidity</div>
                 <div className="text-white text-lg font-semibold">
@@ -837,6 +1032,23 @@ useEffect(() => {
     )}
   </div>
 </div>
+<div className="mt-2">
+  <div className="flex items-center justify-between mb-1">
+    <label className="text-white/60 text-sm">Slippage tolerance</label>
+    <span className="text-white text-sm">{slippagePct}%</span>
+  </div>
+  <input
+    type="range"
+    min={0}
+    max={50}
+    step={0.1}
+    value={slippagePct}
+    onChange={(e) => setSlippagePct(e.target.value)}
+    className="w-full accent-emerald-500"
+  />
+  <div className="text-white/40 text-xs mt-1">Max 50%</div>
+</div>
+
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <TransactionButton
@@ -899,6 +1111,22 @@ useEffect(() => {
     )}
   </div>
 </div>
+<div className="mt-2">
+  <div className="flex items-center justify-between mb-1">
+    <label className="text-white/60 text-sm">Slippage tolerance</label>
+    <span className="text-white text-sm">{slippagePct}%</span>
+  </div>
+  <input
+    type="range"
+    min={0}
+    max={50}
+    step={0.1}
+    value={slippagePct}
+    onChange={(e) => setSlippagePct(e.target.value)}
+    className="w-full accent-emerald-500"
+  />
+  <div className="text-white/40 text-xs mt-1">Max 50%</div>
+</div>
 
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -958,7 +1186,7 @@ useEffect(() => {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-white/60">Progress</span>
-                  <span className="text-white">{coinData.percentagePurchased}% / 50%</span>
+                  <span className="text-white">{coinData.percentagePurchased}% / 30%</span>
                 </div>
                 <div className="w-full bg-black/40 rounded-full h-3">
                   <div
@@ -967,7 +1195,7 @@ useEffect(() => {
                   />
                 </div>
                 <p className="text-white/50 text-xs">
-                  Liquidity pool will be created automatically when 50% of tokens are purchased
+                  Liquidity pool will be created automatically when 30% of tokens are purchased
                 </p>
               </div>
             </div>

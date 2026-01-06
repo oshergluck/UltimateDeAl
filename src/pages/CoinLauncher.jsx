@@ -385,7 +385,7 @@ const CoinLauncher = () => {
 
   // -------------------- UI --------------------
   return (
-    <div className='w-full min-h-screen linear-gradient1 py-6 md:py-10'>
+    <div className='w-full min-h-screen py-6 md:py-10'>
       <div className='mx-auto px-4 md:px-6'>
 
         {/* Header */}

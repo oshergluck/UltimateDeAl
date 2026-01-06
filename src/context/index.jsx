@@ -1305,8 +1305,8 @@ const Featured = async () => {
 
   const emailUsAbout = async () => {
     const emailRecipient = "support@ultrashop.tech"; // Change to the desired email recipient
-    const subject = `I Have A Question About UltimateDeal`;
-    const body = `I have a question about UltimateDeal My question is:`;
+    const subject = `I Have A Question About UltraShop`;
+    const body = `I have a question about UltraShop My question is:`;
 
     // Construct the mailto link
     const mailtoLink = `mailto:${emailRecipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

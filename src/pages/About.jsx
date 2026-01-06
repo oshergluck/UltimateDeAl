@@ -16,7 +16,7 @@ const About = () => {
   return (
     <>
       {/* HERO */}
-      <section className="w-full linear-gradient1 rounded-t-[12px] px-4 sm:px-6 md:px-10 py-10 mt-5">
+      <section className="w-full rounded-t-[12px] px-4 sm:px-6 md:px-10 py-10 mt-5">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-white text-3xl sm:text-5xl font-extrabold tracking-tight">
             UltraShop — Bonding Curve Launch
@@ -55,7 +55,7 @@ const About = () => {
       </section>
 
       {/* QUICK STATS */}
-      <section className="px-4 sm:px-6 md:px-10 py-8 linear-gradient1">
+      <section className="px-4 sm:px-6 md:px-10 py-8 ">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-2xl border border-white/10 bg-black/30 p-5 backdrop-blur">
             <div className="text-white/60 text-sm">Virtual Liquidity</div>
@@ -81,7 +81,7 @@ const About = () => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="px-4 sm:px-6 md:px-10 py-10 linear-gradient1">
+      <section className="px-4 sm:px-6 md:px-10 py-10 ">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-white text-2xl sm:text-4xl font-bold text-center">How It Works</h2>
 
@@ -125,7 +125,7 @@ const About = () => {
       </section>
 
       {/* KEY MECHANICS */}
-      <section className="px-4 sm:px-6 md:px-10 py-10 linear-gradient1">
+      <section className="px-4 sm:px-6 md:px-10 py-10 ">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-white text-2xl sm:text-4xl font-bold text-center">Key Mechanics</h2>
 
@@ -153,7 +153,7 @@ const About = () => {
       </section>
 
       {/* DEV SPECS (Collapsible) */}
-      <section className="px-4 sm:px-6 md:px-10 pb-4 linear-gradient1">
+      <section className="px-4 sm:px-6 md:px-10 pb-4 ">
         <div className="max-w-6xl mx-auto">
           <button
             onClick={() => setShowSpecs((v) => !v)}
@@ -171,7 +171,7 @@ const About = () => {
                   <li><span className="text-white/60">USDC:</span> 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913</li>
                   <li><span className="text-white/60">Router (BaseSwap):</span> 0x327Df1E6de05895d2ab08513aaDD9313Fe505d86</li>
                   <li><span className="text-white/60">Factory (BaseSwap):</span> 0xFDa619b6d20975be80A10332cD39b9a4b0FAa8BB</li>
-                  <li><span className="text-white/60">UltraShop:</span> 0x978cCF0a4fBa58b6af4da9Ed5836e52e6a5f2e05</li>
+                  <li><span className="text-white/60">UltraShop:</span> 0xd05d21870Ce6E57254aA15b5055bE91e2dd0a7eC</li>
                 </ul>
               </div>
 
@@ -208,7 +208,7 @@ const About = () => {
       </section>
 
       {/* FAQ */}
-      <section className="w-full linear-gradient1 px-4 sm:px-6 md:px-10 py-12 rounded-b-[12px]">
+      <section className="w-full  px-4 sm:px-6 md:px-10 py-12 rounded-b-[12px]">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-white text-2xl sm:text-4xl font-bold text-center">FAQ</h2>
 

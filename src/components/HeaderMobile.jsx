@@ -6,6 +6,7 @@ import { base } from "thirdweb/chains";
 import { createWallet, walletConnect } from "thirdweb/wallets";
 import { ConnectButton } from "thirdweb/react";
 import { useStateContext } from "../context";
+import { Base } from "@thirdweb-dev/chains";
 
 const HeaderMobile = () => {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ const HeaderMobile = () => {
     <>
       {/* Fixed header */}
       <header className="fixed top-0 inset-x-0 z-50 shadow-lg">
-        <div className="linear-gradient1">
+        <div className="bg-black">
           <div className="mx-auto max-w-6xl px-3 sm:px-4">
             <div className="h-[64px] sm:h-[72px] flex items-center justify-between">
               {/* Brand */}
@@ -126,6 +127,7 @@ const HeaderMobile = () => {
               {/* Wallet button (kept visible on mobile) */}
               <div className="shrink-0">
                 <ConnectButton
+                    autoConnect={false}
                   client={client}
                   wallets={wallets}
                   theme="dark"
@@ -146,7 +148,7 @@ const HeaderMobile = () => {
                   }}
                   supportedTokens={allSupportedTokens}
                   detailsButton={{
-                    displayBalanceToken: { [base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
+                    displayBalanceToken: { [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
                   }}
                   chain={base}
                   chains={[base]}
@@ -211,12 +213,7 @@ const HeaderMobile = () => {
             </li>
             <li>
               <button onClick={go("/about")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <PlusIcon /> <span className="text-base font-medium">About</span>
-              </button>
-            </li>
-            <li>
-              <button onClick={go("/blog")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <BlogIcon /> <span className="text-base font-medium">Blog</span>
+                <GridIcon /> <span className="text-base font-medium">About</span>
               </button>
             </li>
             <li>
@@ -226,7 +223,7 @@ const HeaderMobile = () => {
             </li>
             <li>
               <button onClick={go("/coin-launcher")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <GridIcon /> <span className="text-base font-medium">Launch Coin</span>
+              <PlusIcon /> <span className="text-base font-medium">Launch Coin</span>
               </button>
             </li>
             {address && (

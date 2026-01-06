@@ -12,7 +12,7 @@ const PrivacyPolicy = () => {
   return (
     <div className="w-full mx-auto mt-[40px] mb-[80px]">
       {/* Hero */}
-      <section className="linear-gradient1 rounded-[15px] px-4 sm:px-6 md:px-10 pt-10 pb-6">
+      <section className=" rounded-[15px] px-4 sm:px-6 md:px-10 pt-10 pb-6">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-white font-epilogue font-extrabold text-[28px] sm:text-[42px] leading-tight">
             Privacy Policy
@@ -31,7 +31,7 @@ const PrivacyPolicy = () => {
       </section>
 
       {/* Body */}
-      <section className="linear-gradient1 rounded-b-[15px] px-4 sm:px-6 md:px-10 pb-8 pt-6 border-t border-white/10">
+      <section className=" rounded-b-[15px] px-4 sm:px-6 md:px-10 pb-8 pt-6 border-t border-white/10">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* 1. Intro */}
           <div className="rounded-2xl border border-white/15 bg-white/5 p-6">

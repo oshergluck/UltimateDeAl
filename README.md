@@ -71,4 +71,6 @@ Vote – Let your token holders decide on roadmap, changes, or payouts
 Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
 
+For a deep dive into the Solidity Architecture and the Bonding Curve logic, check out the core protocol repository: https://github.com/oshergluck/ESH-Protocol-SmartContracts
+
 📄 License

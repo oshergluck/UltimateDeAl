@@ -41,6 +41,7 @@ export const FooterMobile = () => {
         <br />
         <button onClick={handleNavigateToPrivacyPolicy} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]'>Privacy Policy</button>
         <br />
+        <a className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]' href='https://docs.google.com/document/d/e/2PACX-1vS7V-H4Eu92Nz00918mf1DZJoNBwkGAJA1CRW8Od-v_qX3LK0rIAhSjNwXfsNi6B_MEs78ue8wpegRw/pub' target='_blank'>White Paper</a><br/>
         <button onClick={() => contactUsEmail()} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out text-[12px]'>Contact Us</button>
       </div>
         <div className="mb-6 flex justify-center space-x-2 overflow-auto touch-auto">

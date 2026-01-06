@@ -3,12 +3,12 @@ import { ethers } from 'ethers'
 import { createChart, CandlestickSeries, HistogramSeries } from 'lightweight-charts'
 
 /**
- * CandleChart15mRolling
+ * CandleChart15mRolling (mobile-first)
  *
  * Props:
- *   transactions : [{ timestamp: bigint|number, tokenAAmount: bigint(18d), usdcAmount: bigint(6d) }]
- *   bucketSeconds: number = 900  // 15 minutes
- *   windowHours  : number = 24   // rolling time window
+ *   transactions : [{ timestamp, tokenAAmount, usdcAmount }]
+ *   bucketSeconds: number = 900   // 15 minutes
+ *   windowHours  : number = 24
  *   height       : number = 420
  */
 export default function CandleChart15mRolling({
@@ -23,14 +23,32 @@ export default function CandleChart15mRolling({
   const volumeSeriesRef = useRef(null)
   const resizeObsRef = useRef(null)
 
-  // Heartbeat to keep the “current bucket” alive and sliding
+  // Keep “now bucket” alive
   const [heartbeat, setHeartbeat] = useState(0)
   useEffect(() => {
     const id = setInterval(() => setHeartbeat(h => h + 1), 5000)
     return () => clearInterval(id)
   }, [])
 
-  // ---- Normalize + sort tx rows (price = USDC / token); fix ms→sec ----
+  // ---------- Tiny price formatter: 0.000005678 -> "0.0⁵678"
+  const formatTinyPrice = (p) => {
+    if (p == null || !Number.isFinite(p) || p <= 0) return '0'
+    const str = Number(p).toFixed(12) // enough precision for micro prices
+    if (!str.includes('.')) return str
+    const [intPart, decPart] = str.split('.')
+    const m = decPart.match(/^(0+)(\d+)/)
+    if (m && m[1].length >= 3) {
+      const zeros = m[1].length - 1 // keep one visible 0 after dot
+      const rest = m[2].slice(0, 3) // next significant digits
+      const superscripts = ['⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹']
+      const sup = String(zeros).split('').map(d => superscripts[d] ?? d).join('')
+      return `0.0${sup}${rest}`
+    }
+    // fallback for “normal” smalls
+    return Number(p).toPrecision(6)
+  }
+
+  // ---------- Normalize incoming transactions
   const txRows = useMemo(() => {
     const rows = (Array.isArray(transactions) ? transactions : [])
       .map((tx) => {
@@ -39,43 +57,40 @@ export default function CandleChart15mRolling({
           if (t > 1e12) t = Math.floor(t / 1000) // ms -> sec
           if (!Number.isFinite(t) || t <= 0) return null
 
-          // NOTE: using ethers v5 utils style here (as in your snippet)
-          const usdc = parseFloat(
-            ethers.utils.formatUnits(String(tx.usdcAmount ?? 0n), 6)
-          )
-          const token = parseFloat(
-            ethers.utils.formatUnits(String(tx.tokenAAmount ?? 0n), 18)
-          )
+          const usdc = parseFloat(ethers.utils.formatUnits(String(tx.usdcAmount ?? 0n), 6))
+          const token = parseFloat(ethers.utils.formatUnits(String(tx.tokenAAmount ?? 0n), 18))
           if (!Number.isFinite(usdc) || !Number.isFinite(token) || token <= 0) return null
 
-          const p = usdc / token
-          const v = Math.abs(usdc)
-          if (!Number.isFinite(p) || p <= 0) return null
-          return { time: t, price: p, vol: Number.isFinite(v) ? v : 0 }
-        } catch {
-          return null
-        }
+          const price = usdc / token
+          const vol = Math.abs(usdc)
+          if (!Number.isFinite(price) || price <= 0) return null
+          return { time: t, price, vol: Number.isFinite(vol) ? vol : 0 }
+        } catch { return null }
       })
       .filter(Boolean)
       .sort((a, b) => a.time - b.time)
     return rows
   }, [transactions])
 
-  // ---- Rolling window [start, end] aligned to bucket; ALWAYS include NOW bucket ----
+  // ---------- Window anchoring (first tx -> now)
   const { windowStartAligned, windowEndAligned } = useMemo(() => {
     const nowSec = Math.floor(Date.now() / 1000)
-    const endAligned = Math.floor(nowSec / bucketSeconds) * bucketSeconds  // pin to *current* bucket
-    const winSec = Math.max(1, windowHours) * 3600
-    const startAligned = Math.floor((endAligned - winSec) / bucketSeconds) * bucketSeconds
-    return { windowStartAligned: startAligned, windowEndAligned: endAligned }
-  }, [bucketSeconds, windowHours, heartbeat])
+    const endAligned = Math.floor(nowSec / bucketSeconds) * bucketSeconds
 
-  // ---- Build continuous 15m candles; last bucket mirrors most recent price (true “now”) ----
+    if (txRows.length === 0) {
+      const winSec = Math.max(1, windowHours) * 3600
+      const startAligned = Math.floor((endAligned - winSec) / bucketSeconds) * bucketSeconds
+      return { windowStartAligned: startAligned, windowEndAligned: endAligned }
+    }
+
+    const firstTxBucket = Math.floor(txRows[0].time / bucketSeconds) * bucketSeconds
+    return { windowStartAligned: firstTxBucket, windowEndAligned: endAligned }
+  }, [txRows, bucketSeconds, windowHours, heartbeat])
+
+  // ---------- Build candles (carry-forward open) + volumes
   const { candles, volumes, nowPrice } = useMemo(() => {
     const outC = []
     const outV = []
-
-    // Map tx by bucket
     const byBucket = new Map()
     for (const r of txRows) {
       if (r.time < windowStartAligned) continue
@@ -84,55 +99,30 @@ export default function CandleChart15mRolling({
       byBucket.get(k).push(r)
     }
 
-    // Find the latest known trade price up to (and including) end
-    let lastKnownPrice = 0
-    if (txRows.length) {
-      const last = txRows[txRows.length - 1]
-      lastKnownPrice = last.price
-    }
-
-    // Seed prevClose as last price <= windowStart, else first inside window, else lastKnownPrice
+    const lastKnownPrice = txRows.length ? txRows[txRows.length - 1].price : 0
     let prevClose = 0
     if (txRows.length) {
-      for (let i = txRows.length - 1; i >= 0; i--) {
-        if (txRows[i].time <= windowStartAligned) {
-          prevClose = txRows[i].price
-          break
-        }
-      }
-      if (prevClose === 0) {
-        const firstIn = txRows.find(r => r.time >= windowStartAligned)
-        prevClose = firstIn ? firstIn.price : (lastKnownPrice || 0)
-      }
+      const firstIn = txRows.find(r => r.time >= windowStartAligned)
+      prevClose = firstIn ? firstIn.price : lastKnownPrice
     }
-
+    const safeCarry = (x) => (Number.isFinite(x) && x > 0 ? x : (lastKnownPrice > 0 ? lastKnownPrice : 0))
     const eps = 1e-12
 
     for (let t = windowStartAligned; t <= windowEndAligned; t += bucketSeconds) {
       const arr = byBucket.get(t) || []
-      let open, high, low, close, volSum
 
+      let open = safeCarry(prevClose), high = open, low = open, close = open, volSum = 0
       if (arr.length) {
-        open = arr[0].price
-        close = arr[arr.length - 1].price
-        high = open
-        low = open
-        volSum = 0
         for (const a of arr) {
           if (a.price > high) high = a.price
-          if (a.price < low) low = a.price
+          if (a.price < low ) low  = a.price
           volSum += a.vol
         }
-        prevClose = close
-      } else {
-        // No trades this bucket → carry forward last price we knew
-        const carry = prevClose || lastKnownPrice || 0
-        open = carry
-        high = carry
-        low  = carry
-        close = carry
-        volSum = 0
+        close = arr[arr.length - 1].price
       }
+
+      // Skip pre-first-trade empty bucket
+      if (outC.length === 0 && arr.length === 0) continue
 
       outC.push({ time: t, open, high, low, close })
       outV.push({
@@ -141,57 +131,66 @@ export default function CandleChart15mRolling({
         color:
           volSum > 0
             ? (close - open > eps
-                ? 'rgba(8,153,129,0.65)'
-                : (close - open < -eps ? 'rgba(242,54,69,0.65)' : 'rgba(160,160,160,0.55)'))
+                ? 'rgba(16,185,129,0.70)'
+                : (close - open < -eps ? 'rgba(239,68,68,0.70)' : 'rgba(160,160,160,0.55)'))
             : 'rgba(128,128,128,0.35)',
       })
-    }
-
-    // Ensure at least 2 bars (lib likes a bit of history)
-    if (outC.length === 1) {
-      const only = outC[0]
-      const padT = only.time - bucketSeconds
-      outC.unshift({ time: padT, open: only.open, high: only.open, low: only.open, close: only.open })
-      outV.unshift({ time: padT, value: 0, color: 'rgba(128,128,128,0.35)' })
+      prevClose = close
     }
 
     const lastBar = outC[outC.length - 1]
     const currentPrice = lastBar ? lastBar.close : (lastKnownPrice || 0)
-
     return { candles: outC, volumes: outV, nowPrice: currentPrice }
   }, [txRows, bucketSeconds, windowStartAligned, windowEndAligned])
 
-  // ---- Init chart once ----
+  // ---------- INIT CHART (mobile-first) ----------
   useEffect(() => {
     if (!containerRef.current) return
     if (chartRef.current?.remove) chartRef.current.remove()
 
+    const width = containerRef.current.clientWidth
+    const isMobile = width <= 640
     const chart = createChart(containerRef.current, {
-      width: containerRef.current.clientWidth,
+      width,
       height: containerRef.current.clientHeight || height,
-      layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#d1d4dc' },
+      layout: {
+        background: { type: 'solid', color: 'transparent' },
+        textColor: '#e5e7eb',
+        fontSize: isMobile ? 11 : 12,
+      },
       grid: {
         vertLines: { color: 'rgba(255,255,255,0.06)' },
         horzLines: { color: 'rgba(255,255,255,0.06)' },
       },
+      rightPriceScale: {
+        borderColor: 'rgba(255,255,255,0.08)',
+        scaleMargins: isMobile ? { top: 0.03, bottom: 0.22 } : { top: 0.05, bottom: 0.2 },
+      },
       timeScale: {
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'rgba(255,255,255,0.08)',
         timeVisible: true,
         secondsVisible: false,
+        tickMarkMaxCharacterLength: isMobile ? 6 : 8,
+        rightOffset: 2,
       },
-      rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
       crosshair: { mode: 1 },
+      // Apply tiny-price formatting globally (price scale & crosshair price labels)
+      localization: { priceFormatter: formatTinyPrice },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, touch: true },
+      handleScale:  { axisPressedMouseMove: true, pinch: true, mouseWheel: true },
     })
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#089981',
-      downColor: '#F23645',
-      borderUpColor: '#089981',
-      borderDownColor: '#F23645',
-      wickUpColor: '#089981',
-      wickDownColor: '#F23645',
-      // Higher precision so “now” isn’t rounded away
-      priceFormat: { type: 'price', precision: 10, minMove: 0.0000000001 },
+      upColor: '#10b981',
+      downColor: '#ef4444',
+      borderUpColor: '#10b981',
+      borderDownColor: '#ef4444',
+      wickUpColor: '#10b981',
+      wickDownColor: '#ef4444',
+      borderVisible: !isMobile ? true : false, // chunkier bodies on mobile
+      wickVisible: true,
+      // Custom formatter also for series values
+      priceFormat: { type: 'custom', formatter: formatTinyPrice, minMove: 0.00000001 },
       lastValueVisible: true,
       priceLineVisible: true,
     })
@@ -202,34 +201,40 @@ export default function CandleChart15mRolling({
       lastValueVisible: false,
     })
 
-    // 80% candles, 20% volume
-    chart.priceScale('right').applyOptions({ scaleMargins: { top: 0.05, bottom: 0.2 } })
+    // Give volume a bit more room on mobile
     chart.priceScale('left').applyOptions({
-      scaleMargins: { top: 0.8, bottom: 0 },
-      borderColor: 'rgba(255,255,255,0.1)',
+      scaleMargins: isMobile ? { top: 0.78, bottom: 0 } : { top: 0.8, bottom: 0 },
+      borderColor: 'rgba(255,255,255,0.08)',
     })
 
-    // Responsive
+    chartRef.current = chart
+    candleSeriesRef.current = candleSeries
+    volumeSeriesRef.current = volumeSeries
+
+    // Responsive: show MORE bars on mobile with thicker candles
+    const applyResponsiveBarSpacing = () => {
+      if (!containerRef.current || !chartRef.current) return
+      const w = containerRef.current.clientWidth
+      const mobile = w <= 640
+      const targetBars = mobile ? 110 : 120 // more bars on phones
+      const spacing = Math.max(6, Math.min(14, Math.floor(w / targetBars))) // 6–14 px per bar
+      chartRef.current.timeScale().applyOptions({ barSpacing: spacing })
+    }
+    applyResponsiveBarSpacing()
+
     const ro = new ResizeObserver(() => {
       if (!containerRef.current || !chartRef.current) return
       chartRef.current.applyOptions({
         width: containerRef.current.clientWidth,
         height: containerRef.current.clientHeight || height,
       })
+      applyResponsiveBarSpacing()
     })
     ro.observe(containerRef.current)
-
-    chartRef.current = chart
-    candleSeriesRef.current = candleSeries
-    volumeSeriesRef.current = volumeSeries
     resizeObsRef.current = ro
 
     return () => {
-      try {
-        if (resizeObsRef.current && containerRef.current) {
-          resizeObsRef.current.unobserve(containerRef.current)
-        }
-      } catch {}
+      try { resizeObsRef.current && containerRef.current && resizeObsRef.current.unobserve(containerRef.current) } catch {}
       resizeObsRef.current = null
       try { chartRef.current?.remove() } catch {}
       chartRef.current = null
@@ -238,7 +243,7 @@ export default function CandleChart15mRolling({
     }
   }, [height])
 
-  // ---- Seed + update series (includes current bucket) ----
+  // ---------- Seed & live update ----------
   useEffect(() => {
     const cs = candleSeriesRef.current
     const vs = volumeSeriesRef.current
@@ -246,22 +251,14 @@ export default function CandleChart15mRolling({
     if (!cs || !vs || !ch) return
 
     const n = candles.length
-    const spacing = n <= 30 ? 18 : n <= 100 ? 12 : n <= 300 ? 8 : 6
-    ch.timeScale().applyOptions({ barSpacing: spacing })
-
     if (!cs._seededOnce) {
       cs.setData(candles)
       vs.setData(volumes)
       cs._seededOnce = true
       cs._lastTime = n ? candles[n - 1].time : undefined
       ch.timeScale().fitContent()
-      // draw a price line for “now”
       if (Number.isFinite(nowPrice) && nowPrice > 0) {
-        cs.applyOptions({
-          priceLineColor: '#ffffff',
-          priceLineWidth: 1,
-          priceLineStyle: 1,
-        })
+        cs.applyOptions({ priceLineColor: '#ffffff', priceLineWidth: 1, priceLineStyle: 1 })
       }
       return
     }
@@ -272,24 +269,20 @@ export default function CandleChart15mRolling({
     const lastTime = cs._lastTime
 
     if (lastTime === undefined) {
-      cs.setData(candles)
-      vs.setData(volumes)
+      cs.setData(candles); vs.setData(volumes)
       cs._lastTime = latestC.time
+      ch.timeScale().fitContent()
       return
     }
 
-    // Same-bucket tick → update; next bucket → append via update(newer time)
     if (latestC.time === lastTime) {
-      cs.update(latestC)
-      vs.update(latestV)
+      cs.update(latestC); vs.update(latestV)
     } else if (latestC.time > lastTime) {
-      cs.update(latestC) // appends when time is newer
-      vs.update(latestV)
+      cs.update(latestC); vs.update(latestV)
       cs._lastTime = latestC.time
     } else {
-      // Out-of-order safety fallback
-      cs.setData(candles)
-      vs.setData(volumes)
+      // Out-of-order: reset
+      cs.setData(candles); vs.setData(volumes)
       cs._lastTime = latestC.time
     }
   }, [candles, volumes, nowPrice])
@@ -298,6 +291,7 @@ export default function CandleChart15mRolling({
     <div
       ref={containerRef}
       style={{ width: '100%', height, minHeight: height, position: 'relative' }}
+      className="rounded-2xl overflow-hidden"
     />
   )
 }

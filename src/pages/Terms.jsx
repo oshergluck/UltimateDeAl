@@ -12,7 +12,7 @@ const Terms = () => {
   return (
     <div className="w-full mx-auto mt-[15px] mb-[100px]">
       {/* HERO */}
-      <section className="linear-gradient1 rounded-t-[12px] px-4 sm:px-6 md:px-10 pt-10 pb-8">
+      <section className="rounded-t-[12px] px-4 sm:px-6 md:px-10 pt-10 pb-8">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-white text-3xl sm:text-5xl font-extrabold tracking-tight">
             Terms of Service — UltraShop
@@ -35,7 +35,7 @@ const Terms = () => {
       </section>
 
       {/* QUICK INFO STRIP */}
-      <section className="px-4 sm:px-6 md:px-10 py-6 linear-gradient1 border-t border-white/10">
+      <section className="px-4 sm:px-6 md:px-10 py-6 border-t border-white/10">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-2xl border border-white/10 bg-black/30 p-5 backdrop-blur">
             <div className="text-white/60 text-sm">Virtual Liquidity</div>
@@ -61,7 +61,7 @@ const Terms = () => {
       </section>
 
       {/* TERMS BODY */}
-      <section className="linear-gradient1 px-4 sm:px-6 md:px-10 py-10 rounded-b-[12px]">
+      <section className=" px-4 sm:px-6 md:px-10 py-10 rounded-b-[12px]">
         <div className="max-w-6xl mx-auto">
           {/* 1. Introduction */}
           <div className="rounded-2xl border border-white/15 bg-white/5 p-6 mb-5">
@@ -109,7 +109,7 @@ const Terms = () => {
               </div>
               <div className="rounded-xl border border-white/10 bg-black/30 p-4">
                 <div className="text-white/60 text-xs uppercase">UltraShop (BondingCurveDEX)</div>
-                <code className="mt-1 block">0x978cCF0a4fBa58b6af4da9Ed5836e52e6a5f2e05</code>
+                <code className="mt-1 block">0xd05d21870Ce6E57254aA15b5055bE91e2dd0a7eC</code>
               </div>
             </div>
             <p className="text-white/70 text-xs mt-3">
@@ -251,11 +251,11 @@ const Terms = () => {
           {/* Footer strip */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-8">
             <p className="text-white/60 text-xs sm:text-sm">Last updated: 09/11/2025</p>
-            <div className="flex justify-center">
+            <div className="">
               <CustomButton
                 btnType="button"
                 title="Email Us"
-                styles="sm:w-3/12 w-8/12 bg-transparent border-[#FFDD00] border-[1px] text-[white] drop-shadow-md"
+                styles="w-10/12 bg-transparent border-[#FFDD00] border-[1px] text-[white] drop-shadow-md"
                 handleClick={() => emailUsAboutTerms()}
               />
             </div>

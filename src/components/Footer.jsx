@@ -39,6 +39,8 @@ export const Footer = () => {
         <br />
         <button onClick={handleNavigateToTerms} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out'>Terms of Use</button>
         <br />
+        <a className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out' href='https://docs.google.com/document/d/e/2PACX-1vS7V-H4Eu92Nz00918mf1DZJoNBwkGAJA1CRW8Od-v_qX3LK0rIAhSjNwXfsNi6B_MEs78ue8wpegRw/pub' target='_blank'>White Paper</a>
+        <br />
         <button onClick={handleNavigateToPrivacyPolicy} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out'>Privacy Policy</button>
         <br />
         <button onClick={() => contactUsEmail()} className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out'>Contact Us</button>
