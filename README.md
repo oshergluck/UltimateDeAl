@@ -54,7 +54,7 @@ npm install
 npm run dev
 🌐 Live Demo
 You can test and explore the deployed dApp at:
-👉 https://ultrashop.tech/shop/UltraShop
+👉 https://ultrashop.tech/shop/mainshop
 
 📚 How It Works
 Start a Store – Deploy a subdomain with a store contract (rent or sale)
