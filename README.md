@@ -73,4 +73,7 @@ to discuss what you would like to change.
 
 For a deep dive into the Solidity Architecture and the Bonding Curve logic, check out the core protocol repository: https://github.com/oshergluck/ESH-Protocol-SmartContracts
 
-📄 License
+## Backend & Infrastructure
+This protocol is supported by a hybrid off-chain architecture for privacy and notifications:
+* **[Encryption Server](https://github.com/oshergluck/ESH-BACKEND-ENC-SERVER):** Secure key management and PII encryption/decryption service.
+* **[Event Indexer & Notification Service](https://github.com/oshergluck/ESH-Emails-Server):** Node.js worker that listens to on-chain events and handles email notifications.
