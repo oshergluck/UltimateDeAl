@@ -46,7 +46,6 @@ import {
   EditOfficialStore,
   Home,
   Product,
-  TokenDistributorPage,
   ContractDeployForm,
   LuckMachine,
   ESHVoting,
@@ -221,7 +220,6 @@ export default function App() {
                   path="/shop/:storepath/products/:productBarCode/extra"
                   element={<Extra />}
                 />
-                <Route path="/distributer" element={<TokenDistributorPage />} />
                 <Route path="/bonus" element={<LuckMachine />} />
                 <Route path="/city/:cityofuser" element={<City />} />
                 <Route path="/ListingInfo" element={<ListingInfo />} />

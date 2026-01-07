@@ -31,7 +31,7 @@ export {default as FallingBlocksContainer} from './FallingBlocksContainer';
 export {default as FallingBlock} from './FallingBlock';
 export {default as StoreBox} from './StoreBox';
 export {default as Swapper} from './Swapper';
-export {default as Swapper2} from './Swapper2';
+//export {default as Swapper2} from './Swapper2';
 export {default as CustomDropdownTokens} from './CustomDropdownTokens';
 export {default as BackgroundMusic} from './BackgroundMusic';
 export {default as SalesDashboard} from './SalesDashboard';

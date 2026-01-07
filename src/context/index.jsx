@@ -14,8 +14,6 @@ export const StateContextProvider = ({ children }) => {
   const API_KEY = import.meta.env.VITE_API_KEYENC;
   const client = createThirdwebClient({clientId:import.meta.env.VITE_THIRDWEB_CLIENT});
   const { mutate: sendTransaction, isPending } = useSendTransaction();
-  const apiKey = import.meta.env.VITE_INFURA_API_KEY;
-  const apiKeyAlchemy = import.meta.env.VITE_ALCHEMY_API_KEY;
   const ThirdWEBAPI = import.meta.env.VITE_THIRDWEB_CLIENT;
   const apiKeyINFURA = import.meta.env.VITE_INFURA_API_KEY;
   const { contract:Blog } = useContract('0xC37EB7D011727EDE9306E1eD03d519E8e4847e6b');
@@ -1615,8 +1613,7 @@ const decryptData = async (encryptedData,secretKey,address1,address2) => {
       return encryptedData;
     }
 
-    let encryptionKey = import.meta.env.VITE_ULTIMATEDEAL_STORE_SECRETKEY;
-    const t = await generateKey(address1.toLowerCase(),address2.toLowerCase(),encryptionKey.toLowerCase());
+    const t = await generateKey(address1.toLowerCase(),address2.toLowerCase(),"");
     const rawData = CryptoJS.enc.Base64.parse(encryptedData).toString(CryptoJS.enc.Utf8);
     const bytes = CryptoJS.AES.decrypt(rawData, t);
     const originalData = bytes.toString(CryptoJS.enc.Utf8);
@@ -1715,42 +1712,6 @@ const Decryption = (encryptedData, secretKey) => {
   }
 };
 
-async function secretKeys (userContract) {
-  //Oshers Store
-  const Contract1 = import.meta.env.VITE_ULTIMATEDEAL_STORE.toString();
-  if (userContract === Contract1.toString()) {
-    const secretKey = import.meta.env.VITE_ULTIMATEDEAL_STORE_SECRETKEY.toString();
-    return secretKey;
-  } 
-  //Gil Store
-  const Contract3 = import.meta.env.VITE_SCARSHELI_STORE.toString();
-  if (userContract === Contract3.toString()) {
-    const secretKey = import.meta.env.VITE_SCARSHELI_STORE_SECRETKEY.toString();
-    return secretKey;
-  }
-  //The Store Of Noam
-  const Contract2 = import.meta.env.VITE_NOAM_STORE.toString();
-  if (userContract === Contract2.toString()) {
-    const secretKey = import.meta.env.VITE_NOAM_STORE_KEY.toString();
-    return secretKey;
-  }
-  //The Store Of Igal
-  const Contract4 = import.meta.env.VITE_APPLE_CRYPTOEYE.toString();
-  if (userContract === Contract4.toString()) {
-    const secretKey = import.meta.env.VITE_APPLE_CRYPTOEYE_ENCRYPTION.toString();
-    return secretKey;
-  }
-
-  const Contract5 = import.meta.env.VITE_ULTRA.toString();
-  if (userContract === Contract5.toString()) {
-    const secretKey = import.meta.env.VITE_ULTRA_KEY.toString();
-    return secretKey;
-  }
-  else {
-    return "NOKEY";
-  }
-  
-}
 
 async function getDiscountRatePrencentage () {
   try{
@@ -1821,7 +1782,6 @@ async function getDiscountRatePrencentage () {
         Deposit,
         encrypt,
         approveCoinsForSmartContractUSDT,
-        secretKeys,
         LoadMoreCampaigns,
         getTotalDonations,
         LoadMoreUserCampaigns,

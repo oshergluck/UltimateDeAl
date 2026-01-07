@@ -31,10 +31,9 @@ const City = () => {
     const [story, setStory] = useState('');
     const [mayor, setMayor] = useState('');
     const [high,setHighesBalance] = useState(0);
-    const {contract: highContract} = useContract('0xD90B9dB989b83B5d112c3e9fABd1a964E463E197');
+    const {contract: highContract} = useContract('0xD90B9dB989b83B5d112c3e9fABd1a964E463E197'); //Main platform token
     const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
-    const { contract: luckMachineContract3 } = useContract(import.meta.env.VITE_LUCKY);
-    const { contract: invoicesContract } = useContract('0x8f0D68eA5542a09987d96926572259f03d799393');
+    const { contract: invoicesContract } = useContract('0x8f0D68eA5542a09987d96926572259f03d799393'); //invoices contract address of the main shop to check NFT approves ownership
     const [ownerShip,setOwnerShip] = useState(false);
     const navigateToDeAlStore = () => {
         navigate('/shop/mainshop/products/LOTERRY');

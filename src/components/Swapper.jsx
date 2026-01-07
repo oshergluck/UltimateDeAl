@@ -153,7 +153,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
     const {address} = useStateContext();
     
     // Replace this with your deployed comprehensive aggregator contract address
-    const AGGREGATOR_CONTRACT_ADDRESS = '0x19c494f6bd08f1f9811A09ffdB9BC9a1cb8f5F81';
+    const AGGREGATOR_CONTRACT_ADDRESS = import.meta.env.VITE_FULLDEX;
     const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
     const USDTAddress = '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2';
     const USDCAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';

@@ -20,7 +20,7 @@ export {default as EditOfficialStore} from './EditOfficialStore';
 export {default as EditStore} from './EditStore';
 export {default as Home} from './Home';
 export {default as Product} from './Product';
-export {default as TokenDistributorPage} from './TokenDistributorPage';
+//export {default as TokenDistributorPage} from './TokenDistributorPage';
 export {default as LuckMachine} from './LuckMachine';
 export {default as City} from './City';
 export {default as SearchProductsPage} from './SearchProductsPage';

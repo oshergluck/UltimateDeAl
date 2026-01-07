@@ -28,7 +28,6 @@
     "bignumber.js": "^9.1.2",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
-    "caniuse-lite": "^1.0.30001727",
     "chart.js": "^4.4.3",
     "clipboard-copy": "^4.0.1",
     "components": "^0.1.0",
