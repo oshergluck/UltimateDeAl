@@ -205,12 +205,12 @@ const ESHVoting = () => {
   };
 
   return (
-    <div className="rounded-[15px] min-h-screen linear-gradient text-white p-6">
+    <div className="rounded-[15px] min-h-screen  text-white p-6">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">{StoreURL} Voting System</h1>
         
         {/* Create Proposal Form */}
-        <div className="linear-gradient1 rounded-lg p-6 mb-8">
+        <div className=" rounded-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4">Create New Proposal</h2>
           <div className="space-y-4">
             <input
@@ -325,7 +325,7 @@ const ESHVoting = () => {
             
             {hasMore && (
               <button
-                className="w-full linear-gradient1 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4"
+                className="w-full hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-4"
                 onClick={() => setPage(prev => prev + 1)}
               >
                 Show More

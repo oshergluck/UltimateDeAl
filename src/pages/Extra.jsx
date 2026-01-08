@@ -154,7 +154,7 @@ const Extra = () => {
             {error && (
                 <div className="text-red-500 text-center mt-4">
                     {error}
-                    <div className="min-h-screen linear-gradient rounded-[15px] mt-[40px] pb-[15px] ">
+                    <div className="min-h-screen rounded-[15px] mt-[40px] pb-[15px] ">
                     <h2 className='text-center font-bold text-[#00FFFF] text-[24px] my-[15px] pt-[20px]'>
                         NFT Hidden Media
                     </h2>
@@ -164,7 +164,7 @@ const Extra = () => {
                 
             )}
             {ownerShip && media && (
-                <div className="min-h-screen linear-gradient rounded-[15px] mt-[40px] pb-[15px] ">
+                <div className="min-h-screen rounded-[15px] mt-[40px] pb-[15px] ">
                     <h2 className='text-center font-bold text-[#00FFFF] text-[24px] my-[15px] pt-[20px]'>
                         NFT Hidden Media
                     </h2>

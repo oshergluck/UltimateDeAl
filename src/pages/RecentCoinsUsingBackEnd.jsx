@@ -64,6 +64,13 @@ const fetchJSON = async (url) => {
 /* ---------------------------- Component -------------------------- */
 
 export default function RecentCoins() {
+  // פונקציית עזר להגבלת זמן המתנה
+const withTimeout = (promise, ms = 3000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+  ])
+}
   const navigate = useNavigate()
   const { address } = useStateContext()
 
@@ -124,6 +131,9 @@ export default function RecentCoins() {
   /* -------------------------- EVM helpers ------------------------- */
 
   const getTokenBasics = async (tokenAddr) => {
+    // אם הכתובת לא תקינה, דלג מיד
+    if (!ethers.utils.isAddress(tokenAddr)) return { name: '', symbol: '', decimals: 18 }
+
     const erc20 = new ethers.Contract(
       tokenAddr,
       [
@@ -133,19 +143,23 @@ export default function RecentCoins() {
       ],
       provider
     )
+    
     try {
-      const [name, symbol, decimals] = await Promise.all([
-        erc20.name(),
-        erc20.symbol(),
-        erc20.decimals(),
-      ])
+      // מגביל את זמן ההמתנה ל-3 שניות בלבד לקריאות בלוקצ'יין
+      const [name, symbol, decimals] = await withTimeout(
+        Promise.all([
+          erc20.name().catch(() => ''), // הגנה מפני קריסה של פונקציה בודדת
+          erc20.symbol().catch(() => ''),
+          erc20.decimals().catch(() => 18),
+        ]), 
+        4000 // Timeout של 4 שניות
+      )
       return { name, symbol, decimals: Number(decimals) }
     } catch (e) {
-      console.warn('Failed to get token basics for', tokenAddr)
+      console.warn(`⚠️ RPC failed/timeout for ${tokenAddr}:`, e.message)
       return { name: '', symbol: '', decimals: 18 }
     }
   }
-
   /* ----------------------- Enrich coin data ----------------------- */
 
   const enrichCoin = async (apiCoin) => {
@@ -245,18 +259,41 @@ export default function RecentCoins() {
       })
 
       // Enrich coins with token metadata (in parallel batches)
-      const BATCH_SIZE = 5
+      // Enrich coins with token metadata (in parallel batches)
+      const BATCH_SIZE = 3 // הקטנתי מ-5 ל-3 כדי למנוע עומס על ה-RPC
       const enriched = []
       
       for (let i = 0; i < data.coins.length; i += BATCH_SIZE) {
         const batch = data.coins.slice(i, i + BATCH_SIZE)
+        
+        // מבצעים את הבקשות במקביל
         const batchResults = await Promise.all(
-          batch.map((c) => enrichCoin(c).catch((e) => {
-            console.error('Error enriching coin:', c.address, e.message)
-            return null
-          }))
+          batch.map(async (c) => {
+            try {
+              // נותנים לכל מטבע ניסיון העשרה
+              return await enrichCoin(c)
+            } catch (e) {
+              console.error('Error enriching coin, using raw data:', c.address)
+              // במקרה של שגיאה קריטית, מחזירים אובייקט בסיסי כדי לא לאבד את המטבע
+              return {
+                address: c.address,
+                name: 'Unknown',
+                symbol: '???',
+                decimals: 18,
+                price: BigInt(c.currentPrice || '0'),
+                priceDecimals: 18,
+                usdcReserve: BigInt(c.usdcReserve || '0'),
+                tokenReserve: BigInt(c.tokenAReserve || '0'),
+                percentagePurchased: c.percentagePurchased || 0,
+                lpCreated: c.lpCreated || false,
+                createdAt: c.createdAt || 0,
+                totalVolume: BigInt(c.totalVolume || '0'),
+                logo: ''
+              }
+            }
+          })
         )
-        enriched.push(...batchResults.filter(Boolean))
+        enriched.push(...batchResults)
       }
 
       setCoins(enriched)

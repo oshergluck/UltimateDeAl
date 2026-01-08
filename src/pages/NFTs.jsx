@@ -93,7 +93,7 @@ function NFTDetail({ nft, onBack }) {
       });
 
   return (
-    <div className="min-h-screen linear-gradient1">
+    <div className="min-h-screen">
       <div className=" mx-auto px-4 py-8">
         {/* Back Button */}
         <button
@@ -119,7 +119,7 @@ function NFTDetail({ nft, onBack }) {
           </button>
         </div>
 
-        <div className="linear-gradient1 p-4 rounded-2xl shadow-xl overflow-hidden">
+        <div className=" p-4 rounded-2xl shadow-xl overflow-hidden">
           {showOnlyAttributes ? (
             // Attributes Only View
             <div className="space-y-6">
@@ -353,7 +353,7 @@ function NFTCollection({ onNFTClick }) {
   // Show connection prompt if no address
   if (!address) {
     return (
-      <div className="min-h-screen linear-gradient1">
+      <div className="min-h-screen ">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
@@ -386,7 +386,7 @@ function NFTCollection({ onNFTClick }) {
   }
 
   return (
-    <div className="min-h-screen linear-gradient1">
+    <div className="min-h-screen ">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">

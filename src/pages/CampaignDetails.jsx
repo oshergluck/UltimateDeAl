@@ -401,7 +401,7 @@ const handleCommentChange = (e) => {
 
   return (
     <>{isLoading && <Loader />}
-    <div className='linear-gradient'>
+    <div className=''>
     <div className="mx-auto">
         {isMobile ? <FeaturedMobile /> : <Featured/>}
         </div>
@@ -439,7 +439,7 @@ const handleCommentChange = (e) => {
         
         </>
         )}
-        <div className="relative w-10/12 mx-auto h-[5px] linear-gradient2 mt-2 rounded-xl" >
+        <div className="relative w-10/12 mx-auto h-[5px] mt-2 rounded-xl" >
           {campaign?.iscashedout==false ? (
             <>
             <div className="absolute relative h-full bg-[#fc941c] rounded-xl" style={{ width: `${calculateBarPercentage(campaign?.target*1e-6, total*1e-6)}%`, maxWidth: '100%'}}>
@@ -486,7 +486,7 @@ const handleCommentChange = (e) => {
             </div>
             </div>
 
-            <div className='mt-[10px] linear-gradient rounded-[13px] overflow-auto touch-auto'>
+            <div className='mt-[10px]  rounded-[13px] overflow-auto touch-auto'>
                 <div className='w-full sm:ml-[20px] mt-[10px]'>
                 <div>
                     <div className='pt-[30px]'>
@@ -1100,7 +1100,7 @@ const handleCommentChange = (e) => {
             </div>
             </div>
 
-            <div className='flex justify-center mt-[30px] linear-gradient rounded-[13px] overflow-auto touch-auto'>
+            <div className='flex justify-center mt-[30px]  rounded-[13px] overflow-auto touch-auto'>
                 <div className='w-[65%] ml-[20px] mt-[50px]'>
                 <div>
                     <div className='flex justify-between'>

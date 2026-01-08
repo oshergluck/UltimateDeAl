@@ -17,7 +17,7 @@ const SearchEngine = ({ searchEngineAddress, listingContractAddress }) => {
     setSearchTerm('');
     setResults([]);
     setHasSearched(false);
-    navigate("shop/"+storeUrl+"/products/"+barcode)
+    navigate("/shop/"+storeUrl+"/products/"+barcode)
   }
 
   const cleanDescription = (text) => {

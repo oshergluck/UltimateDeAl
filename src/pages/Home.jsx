@@ -111,12 +111,12 @@ function processDescription(description, maxLength = 180)
         <div>
         <SearchEngine searchEngineAddress={'0x3646F77A96A1eBb0e04eE494053e38599eE66FC4'} listingContractAddress={import.meta.env.VITE_STORE_REGISTERY}/>
         </div>
-        <div className='linear-gradient'>
+        <div className=''>
         <div className=" mx-auto">
         {isMobile ? <FeaturedMobile /> : <Featured/>}
         </div>
         </div>
-        <div className="min-h-screen linear-gradient">
+        <div className="min-h-screen ">
             {isLoading && <Loader />}
             
             <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -125,7 +125,7 @@ function processDescription(description, maxLength = 180)
                 </div>
                 <div className=" mx-auto py-6 sm:px-6 lg:px-8">
                     {/* Listing Button */}
-                    <div className="opacity-[50%] hover:opacity-[100%] ease-in-out duration-500 sm:w-full w-[95%] mx-auto linear-gradient shadow-xl rounded-lg mb-8 cursor-pointer border-[1px] border-[#242424]"
+                    <div className="opacity-[50%] hover:opacity-[100%] ease-in-out duration-500 sm:w-full w-[95%] mx-auto  shadow-xl rounded-lg mb-8 cursor-pointer border-[1px] border-[#242424]"
                     onClick={() => {navigate('/shop/mainshop/products/LISTESH')}}
                     >
                         <h1 className='text-white font-epilogue font-semibold sm:text-[80px] text-4xl my-auto text-center py-[40px]'>Launch Your Online StartUp</h1>
@@ -138,7 +138,7 @@ function processDescription(description, maxLength = 180)
                             {getUniqueCities().map((city, index) => (
                                 <div 
                                     key={index} 
-                                    className="linear-gradient shadow-sm rounded-lg border-[1px] border-[#242424] cursor-pointer opacity-[75%] hover:opacity-[100%] hover:shadow-lg transition-all duration-300"
+                                    className=" shadow-sm rounded-lg border-[1px] border-[#242424] cursor-pointer opacity-[75%] hover:opacity-[100%] hover:shadow-lg transition-all duration-300"
                                     onClick={() => navigate(`/city/${city}`)}
                                 >
                                     <div className="p-4 text-center">
@@ -156,7 +156,7 @@ function processDescription(description, maxLength = 180)
                         <h2 className="text-2xl font-semibold text-[#FFDD00] mb-4 text-center">Promoted Stores</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mx-auto">
                             {Object.values(promotedStores).map((store, index) => (
-                                <div key={index} className="cursor-pointer linear-gradient shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[75%] hover:opacity-[100%] ease-in-out duration-500" onClick={() => navigate('/shop/'+store.urlPath)}>
+                                <div key={index} className="cursor-pointer  shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[75%] hover:opacity-[100%] ease-in-out duration-500" onClick={() => navigate('/shop/'+store.urlPath)}>
                                     <div className="p-6">
                                         <h3 className="text-2xl font-semibold text-center text-[#FFDD00] mb-2">{store.name}</h3>
                                         <div className='z-10 h-[400px] w-11/12 mx-auto my-4 rounded-xl overflow-hidden flex items-center'>
@@ -232,7 +232,7 @@ function processDescription(description, maxLength = 180)
                         <h2 className="text-2xl font-semibold text-[#FFDD00] mb-4 text-center">New Stores</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {Object.values(allNewStores).reverse().map((store, index) => (
-                                <div key={index} className="linear-gradient shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[80%] hover:opacity-[100%] ease-in-out duration-500 cursor-pointer" onClick={() => navigate('/shop/'+store.urlPath)}>
+                                <div key={index} className=" shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[80%] hover:opacity-[100%] ease-in-out duration-500 cursor-pointer" onClick={() => navigate('/shop/'+store.urlPath)}>
                                     <div className="p-4">
                                     <div className='my-[15px] w-full gap-10 justify-center flex'>
                                                 <div className='h-[50px]'>

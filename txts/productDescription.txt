@@ -1,20 +1,6 @@
 ~*^$List Your Business Today with UltraShop!$^*~
 
-*^Deploy ERCUltra ~(Only Gas and 3% to us)~^*
-~https://thirdweb.com/ultimatedeal.eth/ESH~
-
-*^Deploy Invoice (Service Key) Minter ~(Only Gas)~^*
-~https://thirdweb.com/ultimatedeal.eth/ESHInvoicesMinter~
-
-*^Deploy ERCUltraStore ~(Only Gas 5% for us from income)~^*
-*For Rental Of Services*
-~https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals~
-*For Sales Of Unlimited Time Services*
-~https://thirdweb.com/ultimatedeal.eth/ESHStoreSales~
-
-
-*^Deploy VotingSystem ~(Only Gas)~^*
-~https://thirdweb.com/ultimatedeal.eth/ESHVoting~
+*^Deploy Contracts From: https://ultrashop.tech/create-campaign~^*
 
 ~*^1. Elevate Your Business with ERCUltra Protocol^*~
 ~Unlock the potential of the ERCUltra protocol~, designed to function just like shares from the stock market. This innovative protocol allows you to distribute dividends as airdrops using USDC as payment. Just like major corporations use stock shares to attract investors and reward shareholders, you too can harness this power. With the ERCUltra protocol, you'll experience the same mechanisms that top global companies use to reward shareholders and drive growth. This is a core component of our package.

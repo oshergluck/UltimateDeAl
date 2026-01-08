@@ -127,7 +127,7 @@ const HeaderMobile = () => {
               {/* Wallet button (kept visible on mobile) */}
               <div className="shrink-0">
                 <ConnectButton
-                    autoConnect={false}
+                    autoConnect={true}
                   client={client}
                   wallets={wallets}
                   theme="dark"

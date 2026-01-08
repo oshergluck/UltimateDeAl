@@ -6,6 +6,7 @@ import { useSendTransaction, TransactionButton } from 'thirdweb/react';
 import { useStateContext } from '../context';
 import { CustomButton, FormField, Loader } from '../components';
 import { PinataSDK } from "pinata";
+
 const RegisterNewStore = () => {
   const navigate = useNavigate();
   const pinata = new PinataSDK({
@@ -19,7 +20,9 @@ const RegisterNewStore = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pop, setPopUp] = useState(false);
   const [pass, setPass] = useState('');
-  const { addStoreDetails, Stores, DEVS, address, getPass } = useStateContext();
+  const { addStoreDetails, Stores, DEVS, address } = useStateContext();
+  const API_URL = "http://localhost:5000/api";
+
   const [form, setForm] = useState({
     _urlPath: '',
     _smartContractAddress: '',
@@ -35,6 +38,7 @@ const RegisterNewStore = () => {
     voting: '',
     ercultra: '',
   });
+
   const UploadAnimation = ({ progress, isUploading, file, type }) => (
     <div className="mb-4 p-4 border border-gray-600 rounded-lg bg-gray-800">
       <div className="flex items-center justify-between mb-2">
@@ -73,6 +77,7 @@ const RegisterNewStore = () => {
       )}
     </div>
   );
+
   const handleImageUpload = async (file) => {
     if (!file) return;
     
@@ -101,6 +106,30 @@ const RegisterNewStore = () => {
 
   const handleFormFieldChange = (fieldName, e) => {
     setForm({ ...form, [fieldName]: e.target.value });
+  };
+
+  const generateStorePassword = async () => {
+      try {
+          const response = await fetch(`${API_URL}/register-store`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  smartContractAddress: form._smartContractAddress,
+                  ownerAddress: address
+              })
+          });
+          
+          const data = await response.json();
+          if(data.success) {
+              return data.password;
+          } else {
+              throw new Error("Server failed to generate password");
+          }
+      } catch (error) {
+          console.error("DB Error:", error);
+          alert("Error generating password via DB");
+          return null;
+      }
   };
 
   const PasswordPopup = () => (
@@ -138,14 +167,14 @@ const RegisterNewStore = () => {
             </h2>
             {pass ? (<>
               <div className="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200">
-              <span className="font-mono text-lg sm:text-xl text-blue-600 break-all overflow-x-auto">
+              <span className="font-mono text-lg sm:text-xl text-blue-600 break-all overflow-x-auto select-all">
                 {pass}
               </span>
             </div>
             </>):(<>
               <div className="bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200">
               <span className="font-mono text-lg sm:text-xl text-blue-600 break-all overflow-x-auto">
-                Kindly Wait...
+                Generating Password...
               </span>
             </div>
             </>)}
@@ -170,8 +199,8 @@ const RegisterNewStore = () => {
             <button
               onClick={() => setPopUp(false)}
               className="w-full sm:w-auto mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-8 rounded-lg 
-                       transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 
-                       focus:ring-blue-500 focus:ring-offset-2"
+                        transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:ring-offset-2"
             >
               Confirm & Close
             </button>
@@ -182,7 +211,7 @@ const RegisterNewStore = () => {
   );
 
   return (
-    <div className="linear-gradient rounded-[15px] flex justify-center items-center flex-col sm:p-10 p-2 mt-[50px]">
+    <div className="rounded-[15px] flex justify-center items-center flex-col sm:p-10 p-2 mt-[50px]">
       {isLoading && <Loader />}
       <h1 className="text-center font-epilogue font-bold sm:text-[25px] text-[25px] leading-[38px] text-white drop-shadow-md mt-[25px]">
         Register New Business
@@ -299,7 +328,7 @@ const RegisterNewStore = () => {
                 const tx = prepareContractCall({
                   contract: Stores,
                   method: "function registerStore(string _urlPath, address _smartContractAddress, string _picture, string _name, string _description, string _category, string _contactInfo, uint256 _receiptId, string _city, address _votingSystemAddress, address _ERCUltra)",
-                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId)+13, form._city, form.voting, form.ercultra],
+                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId)+2, form._city, form.voting, form.ercultra],
                 });
                 return tx;
               }}
@@ -308,9 +337,11 @@ const RegisterNewStore = () => {
               }}
               onTransactionConfirmed={async (receipt) => {
                 console.log("Transaction confirmed", receipt.transactionHash);
-                const pineappleexpress = await getPass(form._smartContractAddress);
-                await setPass(pineappleexpress);
                 setPopUp(true);
+                const generatedPass = await generateStorePassword();
+                if (generatedPass) {
+                    setPass(generatedPass);
+                }
               }}
               onError={(error) => {
                 console.error("Transaction error", error);

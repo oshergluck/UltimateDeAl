@@ -18,7 +18,7 @@ const StoreBox = ({ store,enc }) => {
       return cleanedDescription.substring(0, maxLength) + '...';
   }
     return (
-        <div onClick={() => {navigate('/shop/'+store.urlPath)}} className="cursor-pointer linear-gradient drop-shadow-md rounded-lg border-[1px] border-[#242424] opacity-[75%] hover:opacity-[100%] ease-in-out duration-500">
+        <div onClick={() => {navigate('/shop/'+store.urlPath)}} className="cursor-pointer  drop-shadow-md rounded-lg border-[1px] border-[#242424] opacity-[75%] hover:opacity-[100%] ease-in-out duration-500">
             <div className="p-4">
                 <h3 className="text-xl font-semibold text-[#FFDD00] mb-2 truncate text-center">{store.name}</h3>
                 <div className='z-[1] w-11/12 m-auto my-[15px]'>

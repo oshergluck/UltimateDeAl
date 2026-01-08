@@ -384,7 +384,7 @@ const City = () => {
     };
 
     return (
-        <div className="linear-gradient1 rounded-[15px] mx-auto p-8 mt-[35px]">
+        <div className=" rounded-[15px] mx-auto p-8 mt-[35px]">
             {isLoading && <Loader />}
             <h1 className="text-center font-bold text-[#ff9900] drop-shadow-md pb-[25px] sm:text-[50px] text-[30px]">
             Today is: 

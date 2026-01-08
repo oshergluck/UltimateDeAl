@@ -331,12 +331,12 @@ const navigateToDeploy4 = async () => {
 const isDisabled = !form.profileImageLinkFromPinata || !form.videoLinkFromPinata || !form.endDate || !form.target || !form.description || !form.title || !form.typeOfCampaign || !form.email;
 
   return (
-    <div className='w-full linear-gradient1 py-[20px]'>
+    <div className='w-full  py-[20px]'>
       <div className="mx-auto">
         {isMobile ? <FeaturedMobile /> : <Featured
         />}
         </div>
-    <div className='rounded-[15px] w-full border-[1px] linear-gradient border-[#242424] mt-[40px] overflow-auto touch-auto'>
+    <div className='rounded-[15px] w-full border-[1px]  border-[#242424] mt-[40px] overflow-auto touch-auto'>
         {isLoading && <Loader />}
         <div className='sm:w-9/12 w-11/12 mx-auto mt-[40px]'>
             <h1 className='text-white font-epilogue sm:text-[50px] font-semibold text-[18px] mb-[20px] text-[25px]'>Start New Campaign</h1>
@@ -425,23 +425,7 @@ You can use all of the signs on the same texts or some of them.
                         <div className='arrow-left w-[0] h-[0] sm:top-[0px] top-[-12px] border-t-[0px] border-b-[0px] border-r-[0px] border-[#000000] absolute z-[2] right-[15px] sm:right-[25px]'>
                         </div>
                     </div>
-
-                    <div className='sm:w-7/12 w-[95%] relative h-[100px] my-[60px] sm:block sm:left-[400px]'>
-                        <h3 className='text-white font-epilogue font-bold sm:text-[60px] text-[40px] absolute z-[2] top-[-20px]'>VIP Discount</h3>
-                        <div className='linear-gradient-special-offer w-full sm:h-[100px] h-[75px] left-[-27px] absolute rounded-[10px] z-[1] text-[#000000]'>
-                           <div className='sm:my-[20px] my-[10px] ml-[20px] sm:text-[26px] text-[15px]'>
-                                <div className='flex justify-left sm:gap-2'>
-                                    <p>VIP Campaigners has</p><p className='font-bold ml-[5px] mr-[5px]'> {discount} % </p><p> discount</p>
-                                </div>
-                                 <div className='flex justify-left sm:gap-2'>
-                                    <p>on the create commission!</p>
-                                </div>
-                           </div>
-                        </div>
-                        <div className='arrow-left w-[0] h-[0] sm:top-[0px] top-[-12px] border-t-[0px] border-b-[0px] border-r-[0px] border-[#000000] absolute z-[2] right-[25px] sm:right-[25px]'>
-                        </div>
-                    </div>
-
+                      <br/>
                     <div className='sm:w-6/12 w-full relative h-[120px] my-[60px] sm:block sm:left-[350px]'>
                         <h3 className='text-white font-epilogue font-bold sm:text-[60px] text-[35px] absolute z-[100] top-[-25px]'>Reward investors</h3>
                         <div className={`linear-gradient-special-offer w-full left-[-27px] absolute rounded-[10px] z-[1] text-[#000000] ${form.profileImageLinkFromPinata.length>0 ? ('sm:h-[120px] h-[120px]'):('sm:h-[100px] h-[100px]')}`}>
@@ -530,7 +514,7 @@ You can use all of the signs on the same texts or some of them.
                     <p className='text-[#ff9900] text-[18px] text-center font-bold mb-[10px]'>Cannot continue without Coin reward</p>
                     <FormField 
                         labelName="Your Coin Reward To Your Investors*"
-                        placeholder="Address"
+                        placeholder="0xAddress"
                         inputType="text"
                         value={form.rewardAddress}
                         handleChange={(e) => handleFormFieldChange('rewardAddress', e)}
@@ -580,9 +564,11 @@ You can use all of the signs on the same texts or some of them.
                       <div className='sm:flex sm:justify-center mb-[40px]'>
                       {VIP ? (<>
                         <button className={`!sm:w-3/12 w-full bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] transition-colors duration-300 ease-in-out mt-[20px] mr-[15px]`}   onClick={() => ApproveVIP()}>Approve VIP Commision Payment</button>
-                      </>):(<>
-                        <button className={`!sm:w-3/12 w-full bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] transition-colors duration-300 ease-in-out mt-[20px] mr-[15px]`}   onClick={() => Approve()}>Approve Commision Payment</button>
-                      </>)}
+                      </>):(
+                        <>
+                        {price>0 && <button className={`!sm:w-3/12 w-full bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] transition-colors duration-300 ease-in-out mt-[20px] mr-[15px]`}   onClick={() => Approve()}>Approve Commision Payment</button>}  
+                      </>
+                    )}
                     {symbol=='' ? (<></>):(
                       <>
                       <button className={`!sm:w-3/12 w-full bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] transition-colors duration-300 ease-in-out mt-[20px] mr-[15px]`}   onClick={() => ApproveReward(form.rewardAddress,theDecimals)} disabled={calculatedReward==0||form.rewardAddress==''}>Approve {symbol} Deposit</button>

@@ -167,7 +167,7 @@ const handleFormFieldChange = (fieldName, e) => {
       {isLoading && <Loader />}
       <div className="mt-[16px] flex lg:flex-row flex-col gap-5 mt-[50px]">
         <div className="flex-[2] flex flex-col gap-[30px]">
-          <div className='rounded-[15px] linear-gradient1 z-[0] pb-[20px] touch-auto overflow-auto'>
+          <div className='rounded-[15px] z-[0] pb-[20px] touch-auto overflow-auto'>
         <div className='z-[1] w-11/12 m-auto my-[20px]'>
           <h2 className="font-epilogue font-semibold text-[50px] text-[#FFFFFF] text-left ml-[50px] mt-[65px] drop-shadow-md">News</h2>
           <p className={`font-epilogue font text-[18px] text-[#FFFFFF] text-left ml-[15px] drop-shadow mt-[45px] mb-[30px]`}>{(post?.headline)}</p>
@@ -243,7 +243,7 @@ const handleFormFieldChange = (fieldName, e) => {
           </div>
 
           <div className="flex-1">  
-          <div className=" flex flex-col p-4 rounded-[15px] linear-gradient1">
+          <div className=" flex flex-col p-4 rounded-[15px]">
             <p className="font-epilogue fount-medium text-[20px] leading-[30px] text-center text-[#ffffff] drop-shadow-md">
               Comment
             </p>

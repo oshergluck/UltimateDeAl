@@ -191,6 +191,7 @@ export default function App() {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/create-campaign" element={<CreateCampaign />} />
                 <Route path="/my-campaigns" element={<Profile />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/campaign-details/:id" element={<CampaignDetails />} />
                 <Route path="/all-campaigns" element={<AllCampaigns />} />
                 <Route path="/blog" element={<News />} />

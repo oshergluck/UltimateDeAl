@@ -438,7 +438,7 @@ const getCampaignRewardTokens = async () => {
                     </div>
                     <div className='mr-[20px] py-[5px] my-auto'>
                         <ConnectButton
-                            autoConnect={false}
+                            autoConnect={true}
                             client={client}
                             wallets={wallets}
                             theme={"dark"}

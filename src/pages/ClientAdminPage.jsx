@@ -55,7 +55,7 @@ const [imageUploadProgress, setImageUploadProgress] = useState([0]);
     const [isLoading, setIsLoading] = useState(false);
     const [responseData, setResponseData] = useState('');
     const [contractPassword, setcontractPassword] = useState('');
-    const { approveCoinsForSmartContractDeAl,address ,login,storeRegistery,encryptIPFS,encrypt,decrypt,HexToInteger,generateKey,formatDate,generateSecretKey,ethAddressToBinaryKey} = useStateContext();
+    const { approveCoinsForSmartContractDeAl,address ,storeRegistery,encryptIPFS,encrypt,decrypt,HexToInteger,generateKey,formatDate,generateSecretKey,ethAddressToBinaryKey} = useStateContext();
     const [connectedto,setConnectedto] = useState(false);
     const [productCategory,setProductCategory] = useState('');
     const [receipts,setReceipts] = useState([]);
@@ -64,6 +64,8 @@ const [imageUploadProgress, setImageUploadProgress] = useState([0]);
     const [inv,setInvoices] = useState();
     const [invoicesaddress,setinvoiceaddress] = useState('');
     const {contract:contract} = useContract(userContract);
+    
+    const API_URL = import.meta.env.VITE_MONGO_SERVER_API+"/api";;
 
       const [adminContract, setAdminContract] = useState(null);
 
@@ -243,11 +245,10 @@ useEffect(() => {
             
             await waitWithTimeout(() => getAllReceipts());
             await waitWithTimeout(() => inv);
-            const data = await login(userContract,userPass)
-            setConnectedto(data);
+            
+            setConnectedto(true);
         } catch (error) {
             alert('Contract setup timeout: Try again', error);
-            // Retry logic can be added here
         } finally {
             setIsLoading(false);
         }
@@ -298,7 +299,6 @@ useEffect(() => {
           });
           sendTransaction(transaction);
 
-        //const data = contract.call('addWorker', [encryptedEmail, workerAddress, encryptedName],{ gasPrice : gasPrice , gasLimit:500000000});
         setIsLoading(false);
         return true;
         }
@@ -322,7 +322,6 @@ useEffect(() => {
           });
           sendTransaction(transaction);
 
-            //const data = await contract.call('payForWorker', [amountForPayment, workerIndex],{ gasPrice : gasPrice, gasLimit:500000000 });
             setIsLoading(false);
         }
         catch (error) {
@@ -439,7 +438,6 @@ useEffect(() => {
           sendTransaction(transaction);
 
 
-            //const data = await contract.call('updateProductQuantity', [productBarcode,produtQuantity],{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -463,7 +461,6 @@ useEffect(() => {
           });
           sendTransaction(transaction);
 
-            //const data = await contract.call('changeProductDiscount', [productBarcode,productDiscount],{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -483,24 +480,20 @@ useEffect(() => {
             const totalReceipts = receipts.length;
     
             const formattedReceipts = receipts.map((receipt, index) => {
-                // Decrypt specific fields in the receipt array
                 const decryptedReceipt = [
-                    `Invoice Id `+receipt[0],  // Assuming fields 0, 1, 2 do not need decryption
+                    `Invoice Id `+receipt[0], 
                     formatDate(receipt[1]*1000),
                     receipt[2],
-                    receipt[5],  // Assuming fields 5, 6, 7 do not need decryption
-                    receipt[6] / 1e6, // Decrypt field at index 8
+                    receipt[5], 
+                    receipt[6] / 1e6,
                 ];
     
-                // Calculate reverse index for display purposes
                 const reversedIndex = totalReceipts - index - 1;
                 return `${decryptedReceipt.join(', ')}`;
             });
     
-            // Join formatted receipts with double newlines to separate them
             const formattedString = formattedReceipts.join('~\n\n~');
     
-            // Update UI or state with formatted data
             setResponseData(`All Invoices:\n~${formattedString}~`);
             setIsLoading(false);
             return formattedReceipts;
@@ -518,16 +511,30 @@ useEffect(() => {
             setcontractPassword('');
             const data = await contract.call('receipts',[indexOfReceipt]);
             const moreData = await contract.call('infos',[indexOfReceipt]);
+            
+            // Fetch Client from Server
+            const response = await fetch(`${API_URL}/store/get-client-details`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeAddress: userContract,
+                    password: userPass,
+                    clientAddress: data[2]
+                })
+            });
+            const dbData = await response.json();
+            const client = dbData.success ? dbData.data : { name: "Unknown", email: "Unknown", phone: "Unknown", physicalAddress: "Unknown" };
+
             const formattedData = await {  
                 rId: data[0],
                 time: data[1],
                 wallet: data[2],
-                name: await decrypt(data[3],contractPassword,data[2],userContract,userPass),
-                email: await decrypt(data[4],contractPassword,data[2],userContract,userPass),
-                poductbarcode: data[5],
-                amountpayed: ethers.BigNumber.from(data[6].toString())/1e6.toString(),
-                pysicaladdress: await decrypt(data[7],contractPassword,data[2],userContract,userPass),
-                phone: await decrypt(data[8],contractPassword,data[2],userContract,userPass),
+                name: client.name,
+                email: client.email,
+                poductbarcode: data[3],
+                amountpayed: ethers.BigNumber.from(data[4].toString())/1e6.toString(),
+                pysicaladdress: client.physicalAddress,
+                phone: client.phone,
             };
                 const data2 = await contract.call('contractOwner');
                 await setContractOwner(data2);
@@ -547,37 +554,16 @@ useEffect(() => {
     const getAllDecryptedEmails = async () => {
       try {
           setIsLoading(true);
-          
-          // Fetch client addresses and encrypted emails
-          const encryptedEmails = await contract.call("getAllClientsEmails");
-  
-          // Create decryption promises without async/await in map
-          const decryptionPromises = encryptedEmails.map(email => 
-              decrypt(
-                  email,
-                  contractPassword,
-                  "0xfb311Eb413a49389a2078284B57C8BEFeF6aFF67",
-                  userContract,
-                  userPass
-              ).catch(() => '') // Return empty string on decryption failure
-          );
-          
-          // Wait for all promises to settle
-          const decryptedEmails = await Promise.all(decryptionPromises);
-          
-          // Convert to comma-separated string
-          const emailString = decryptedEmails.join(", ");
+          // Only show message, as emails are in DB now and not on-chain
           if(address==contractOwner) {
-            setResponseData(emailString);
+            setResponseData("Please check MongoDB or request export from support for client list.");
           }
           else setResponseData("Your'e not the contractOwner");
-          return emailString;
+          return "";
           
       } catch (error) {
           console.error("Process failed:", error);
-          alert("Failed to fetch or decrypt emails");
-          setResponseData(emailString); // Set empty response on critical failure
-          return "";
+          alert("Failed");
       } finally {
           setIsLoading(false);
       }
@@ -589,7 +575,20 @@ useEffect(() => {
           clearResponseData();
           setCustomerAddress(customerAddress);
           const receipts = await contract.call('getAllReceiptsByWalletAddress', [customerAddress]);
-      
+          
+          // Fetch Client from Server
+          const response = await fetch(`${API_URL}/store/get-client-details`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                storeAddress: userContract,
+                password: userPass,
+                clientAddress: customerAddress
+            })
+          });
+          const dbData = await response.json();
+          const client = dbData.success ? dbData.data : { name: "Unknown", email: "Unknown", phone: "Unknown", physicalAddress: "Unknown" };
+
           let formattedReceipts = '';
           for (let i = 0; i < receipts.length; i++) {
             const receipt = receipts[i];
@@ -597,12 +596,12 @@ useEffect(() => {
               rId: receipt[0],
               time: receipt[1],
               wallet: receipt[2],
-              name: await decrypt(receipt[3],contractPassword,receipt[2],userContract,userPass),
-              email: await decrypt(receipt[4],contractPassword,receipt[2],userContract,userPass),
-              poductbarcode: receipt[5],
-              amountpayed: (ethers.BigNumber.from(receipt[6].toString()) / 1e6).toString(),
-              pysicaladdress: await decrypt(receipt[7],contractPassword,receipt[2],userContract,userPass),
-              phone: await decrypt(receipt[8],contractPassword,receipt[2],userContract,userPass),
+              name: client.name,
+              email: client.email,
+              poductbarcode: receipt[3],
+              amountpayed: (ethers.BigNumber.from(receipt[4].toString()) / 1e6).toString(),
+              pysicaladdress: client.physicalAddress,
+              phone: client.phone,
             };
             const data2 = await contract.call('contractOwner');
       
@@ -650,29 +649,44 @@ useEffect(() => {
     }
 
     const getClientDetails = async (customerAddress) => {
+        if (!userContract || !userPass) {
+            alert("Please login first.");
+            return;
+        }
         try {
             setIsLoading(true);
-            clearResponseData();
+            setResponseData('');
 
-            await setcontractPassword('');
-            const data = await contract.call('getClientDetails', [customerAddress]);
-            const data1 = await contract.call('contractOwner');
-            const formattedData = await {
-                name: data[1],
-                email: data[3],
-                phone: data[2],
-                physicalAddress: data[4],
-                wallet: data[0],
-            };
-            
-            const tst = await decrypt(formattedData.name,contractPassword,formattedData.wallet,userContract,userPass)
+            const response = await fetch(`${API_URL}/store/get-client-details`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeAddress: userContract,
+                    password: userPass,
+                    clientAddress: customerAddress
+                })
+            });
 
+            const result = await response.json();
 
-            await setResponseData(`Name: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.name,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nEmail: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.email,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nPhysical Address: ${address.toLowerCase() == data1.toLowerCase() ? (`~`+await decrypt(formattedData.physicalAddress,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nPhone: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+await decrypt(formattedData.phone,contractPassword,formattedData.wallet,userContract,userPass)+`~`):('')}\nWallet: ${`~`+formattedData.wallet+`~`}`);
-            setIsLoading(false);
-            return formattedData;
+            if (!result.success) {
+                alert(result.error);
+                setResponseData(`Error: ${result.error}`);
+            } else {
+                const c = result.data;
+                const data1 = await contract.call('contractOwner');
+                setResponseData(`
+Name: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+c.name+`~`):('')}
+Email: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+c.email+`~`):('')}
+Phone: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+c.phone+`~`):('')}
+Address: ${data1.toLowerCase() == address.toLowerCase() ? (`~`+c.physicalAddress+`~`):('')}
+Wallet: ~${c.wallet}~
+                `);
+            }
         } catch (error) {
-            alert(error);
+            console.error(error);
+            alert("Connection Error");
+        } finally {
             setIsLoading(false);
         }
     };
@@ -692,7 +706,6 @@ useEffect(() => {
           });
           sendTransaction(transaction);
 
-            //const data = await contract.call('deposit', [AmountForDeposit*1e6],{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -715,7 +728,6 @@ useEffect(() => {
           });
           sendTransaction(transaction);
 
-            //const data = await contract.call('changeOwner', [newOwner],{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -742,7 +754,6 @@ useEffect(() => {
             gasPrice: gasPrice,
           });
           sendTransaction(transaction);
-        //const data = await contract.call('distributeQuarterlyBalance',{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -763,7 +774,6 @@ useEffect(() => {
           gasPrice: gasPrice,
         });
         sendTransaction(transaction);
-      //const data = await contract.call('distributeQuarterlyBalance',{ gasPrice : gasPrice , gasLimit:500000000});
           setIsLoading(false);
       }
       catch (error) {
@@ -784,7 +794,6 @@ useEffect(() => {
             gasPrice: gasPrice,
           });
           sendTransaction(transaction);
-        //const data = await contract.call('distributeQuarterlyBalance',{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -805,7 +814,6 @@ useEffect(() => {
             gasPrice: gasPrice,
           });
           sendTransaction(transaction);
-        //const data = await contract.call('distributeQuarterlyBalance',{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -816,7 +824,7 @@ useEffect(() => {
 
     const handleImageUpload = async (index, file) => {
       if (!file) return;
-    
+      
       const newUploadingStates = [...isUploadingImages];
       const newProgressStates = [...imageUploadProgress];
       
@@ -825,7 +833,7 @@ useEffect(() => {
       
       setIsUploadingImages(newUploadingStates);
       setImageUploadProgress(newProgressStates);
-    
+      
       try {
         const upload = await pinata.upload.file(file, {
           onProgress: (progress) => {
@@ -834,12 +842,11 @@ useEffect(() => {
             setImageUploadProgress([...newProgressStates]);
           }
         });
-    
-        // Update the specific image at index with the CID
+      
         const newImages = [...images];
         newImages[index] = upload.IpfsHash;
         setImages(newImages);
-    
+      
         console.log(`Image ${index + 1} uploaded to IPFS:`, upload.IpfsHash);
       } catch (error) {
         console.error(`Error uploading image ${index + 1}:`, error);
@@ -878,7 +885,6 @@ useEffect(() => {
           sendTransaction(transaction);
 
 
-        //const data = await contract.call('distributeQuarterlyBalance',{ gasPrice : gasPrice , gasLimit:500000000});
             setIsLoading(false);
         }
         catch (error) {
@@ -898,7 +904,6 @@ useEffect(() => {
             clearResponseData();
             setcontractPassword('');
             const data = await contract.call('workers', [workerIndex]);
-            // Convert BigNumber to numerical value
             const formattedData = await {
                 email: await decrypt(data[0],contractPassword),
                 address: data[1],
@@ -1131,7 +1136,7 @@ useEffect(() => {
                   Deposit USDC
                 </TransactionButton>
               </div>
-             
+              
               <TransactionButton
                 className={"!w-full !px-3 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-sm"}
                 transaction={async () => {
