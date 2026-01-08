@@ -30,6 +30,7 @@ import {
   CoinLauncher,
   AllCampaigns,
   EditCampaign,
+  Cart,
   News,
   VIPRegister,
   Admin,
@@ -180,6 +181,7 @@ export default function App() {
             <div className="mb-6 rounded-3xl border border-slate-700/70 bg-slate-950/60 px-2 py-4 sm:px-4 sm:py-6 lg:px-6 backdrop-blur-xl shadow-[0_0_45px_rgba(15,23,42,0.95)]">
               <Routes>
                 <Route path="/coin/:tokenAddress" element={<CoinPage />} />
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/coin-launcher" element={<CoinLauncher />} />
                 <Route path="/deploy-esh" element={<DeployPublishedContractPage />} />
                 <Route path="/deploy-rentals" element={<DeployRentals />} />

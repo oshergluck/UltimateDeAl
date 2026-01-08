@@ -6,11 +6,13 @@ import { base } from "thirdweb/chains";
 import { createWallet, walletConnect } from "thirdweb/wallets";
 import { ConnectButton } from "thirdweb/react";
 import { useStateContext } from "../context";
+import { useCart } from '../context/CartContext';
 import { Base } from "@thirdweb-dev/chains";
 
 const HeaderMobile = () => {
   const navigate = useNavigate();
   const { address, Blockchain, CrowdFunding } = useStateContext();
+  const { totalItems } = useCart();
 
   // --- UI state ---
   const [open, setOpen] = useState(false);
@@ -125,7 +127,18 @@ const HeaderMobile = () => {
               </button>
 
               {/* Wallet button (kept visible on mobile) */}
-              <div className="shrink-0">
+              <div className="shrink-0 flex items-center gap-2">
+                <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white hover:text-[#FFDD00] transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    {totalItems > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                            {totalItems}
+                        </span>
+                    )}
+                </div>
+
               <ConnectButton
     autoConnect={true}
     client={client}

@@ -46,3 +46,4 @@ export {default as CoinLauncher} from './CoinLauncher';
 export {default as CoinPage} from './CoinPage';
 export {default as RecentCoins} from './RecentCoinsUsingBackEnd.jsx';
 export {default as MyCoins} from './MyCoins';
+export {default as Cart} from './Cart';

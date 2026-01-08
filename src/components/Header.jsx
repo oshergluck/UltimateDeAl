@@ -14,6 +14,7 @@ import {
 import { Base } from "@thirdweb-dev/chains";
 import { base } from "thirdweb/chains";
 import { useStateContext } from '../context';
+import { useCart } from '../context/CartContext';
 import { createThirdwebClient, defineChain, getContract, readContract } from "thirdweb";
 import {
     smartWallet,
@@ -21,6 +22,7 @@ import {
 } from "thirdweb/wallets/smart";
 
 const Header = () => {
+    const { totalItems } = useCart(); 
 
     const socialWallet = inAppWallet({
         auth: {
@@ -442,7 +444,19 @@ const getCampaignRewardTokens = async () => {
                             <button onClick={naviateToShops} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Shops</button>
                         </div>
                     </div>
-                    <div className='mr-[20px] py-[5px] my-auto'>
+                    <div className='mr-[20px] py-[5px] my-auto flex items-center gap-4'>
+                        
+                        <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white hover:text-[#FFDD00] transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            {totalItems > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                    {totalItems}
+                                </span>
+                            )}
+                        </div>
+
                     <ConnectButton
     autoConnect={true}
     client={client}

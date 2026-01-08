@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { CartProvider } from './context/CartContext';
 import {useSigner, ThirdwebProvider ,en,ThirdwebSDKProvider,
   // import the wallets you want
   metamaskWallet,
@@ -77,7 +78,9 @@ root.render(
         >
       <Router>
         <StateContextProvider>
+        <CartProvider>
           <App />
+          </CartProvider>
         </StateContextProvider>
       </Router>
       </ThirdwebProviderV5>

@@ -2,14 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { usdcoinusdclogo, ETHLogo, logoOfWebsite } from '../assets';
 import Slider from 'react-slick';
 import { useStateContext } from '../context';
-import { MediaRenderer } from '@thirdweb-dev/react';
 import { createThirdwebClient } from 'thirdweb';
 import { ethers } from 'ethers';
 import { IPFSMediaViewer } from '../components';
+import { useCart } from '../context/CartContext';
 
-const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddress }) => {
+const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddress,storeAddress }) => {
   const { HexToInteger } = useStateContext();
+  const { addToCart } = useCart();
+  
+  const [showQuantityInput, setShowQuantityInput] = useState(false);
+  const [quantityToAdd, setQuantityToAdd] = useState(1);
+
   const client1 = createThirdwebClient({ clientId: import.meta.env.VITE_THIRDWEB_CLIENT });
+  
   const settings = {
     dots: false,
     infinite: true,
@@ -20,18 +26,23 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
     autoplaySpeed: 2000,
     arrows: false,
   };
+
   const [imagesOfProduct, setImagesOfProduct] = useState([]);
   const [productData, setProductData] = useState([]);
 
   useEffect(() => {
     async function fetchProductImages(contract) {
-      const pictures = await contract.call('getProductPics', [product]);
-      const data1 = await contract.call('products', [product]);
-      setProductData(data1);
-      setImagesOfProduct(pictures);
+      try {
+          const pictures = await contract.call('getProductPics', [product]);
+          const data1 = await contract.call('products', [product]);
+          setProductData(data1);
+          setImagesOfProduct(pictures);
+      } catch(e) {
+          console.log("Error fetching product data", e);
+      }
     }
     if (contract) { fetchProductImages(contract); }
-  }, [contract,product]);
+  }, [contract, product]);
 
   function processDescription(description, maxLength = 27) {
     if (!description) return '';
@@ -40,13 +51,73 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
     return cleanedDescription.substring(0, maxLength) + '...';
   }
 
+  const handleAddToCartClick = (e) => {
+    e.stopPropagation();
+    if (!showQuantityInput) {
+        setShowQuantityInput(true);
+    } else {
+        performAddToCart();
+    }
+  };
+
+  const performAddToCart = () => {
+    if (productData) {
+        if (quantityToAdd < 1) {
+            alert("Quantity must be at least 1");
+            return;
+        }
+
+        // --- תיקון קריטי: שליפת הכתובת כמחרוזת בלבד ---
+
+        if (!storeAddress) {
+            alert("System Error: Could not detect Store Address. Refresh and try again.");
+            console.error("Contract prop is invalid:", contract);
+            return;
+        }
+        // ------------------------------------------------
+
+        const cartItem = {
+            name: productData.name,
+            barcode: product, 
+            price: HexToInteger(productData.price._hex),
+            discount: HexToInteger(productData.discountPercentage._hex),
+            image: imagesOfProduct[0] || '',
+            description: productData.productDescription
+        };
+        
+        // שולחים את storeAddress שהוא string בטוח
+        addToCart(cartItem, type, storeAddress, parseInt(quantityToAdd));
+        
+        setShowQuantityInput(false);
+        setQuantityToAdd(1);
+        
+        // פידבק למשתמש
+        const btn = document.getElementById(`cart-btn-${product}`);
+        if(btn) {
+            btn.classList.add('bg-green-500');
+            setTimeout(() => btn.classList.remove('bg-green-500'), 1000);
+        }
+    }
+  };
+
+  const handleQuantityChange = (e) => {
+      e.stopPropagation();
+      setQuantityToAdd(e.target.value);
+  };
+
+  const handleInputClick = (e) => {
+      e.stopPropagation(); 
+  };
+
   return (
-    <div className='relative'>
+    <div className='relative group'>
       <div
-        className="product-box sm:w-[450px] w-[380px] relative sm:p-2 rounded-[15px] border-[1px] border-cyan-300 cursor-pointer sm:min-h-[400px]"
+        className="product-box sm:w-[450px] w-[380px] relative sm:p-2 rounded-[15px] border-[1px] border-cyan-300 cursor-pointer sm:min-h-[400px] hover:shadow-2xl transition-all duration-300"
         onClick={onClick}
       >
-        <div className="font-bold text-gray-500 sm:text-3xl text-2xl text-center z-10 drop-shadow-md my-[15px] sm:min-h-[45px] min-h-[55px]">{processDescription(productData?.name)}</div>
+        <div className="font-bold text-gray-500 sm:text-3xl text-2xl text-center z-10 drop-shadow-md my-[15px] sm:min-h-[45px] min-h-[55px]">
+            {processDescription(productData?.name)}
+        </div>
 
         <div className="relative">
           <Slider {...settings} className="z-0 relative mb-[-45px] mt-[-20px] sm:mt-[0px] mx-[-20px]">
@@ -54,19 +125,52 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
               imagesOfProduct.map((imageHash, index) => (
                 <div key={index} className="">
                   <IPFSMediaViewer
-                  ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imageHash}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                  className='!object-contain !w-full !max-h-[275px]'
+                    ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imageHash}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                    className='!object-contain !w-full !max-h-[275px]'
                   />
                 </div>
               ))
             ) : (
-              <div className="text-white">No images available</div>
+              <div className="text-white h-[200px] flex items-center justify-center">No images available</div>
             )}
           </Slider>
         </div>
+
+        {/* --- Add To Cart UI --- */}
+        <div className="absolute bottom-2 right-2 z-50 flex items-center gap-2">
+            <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${showQuantityInput ? 'w-[70px] opacity-100' : 'w-0 opacity-0'}`}
+            >
+                <input 
+                    type="number" 
+                    min="1"
+                    value={quantityToAdd}
+                    onChange={handleQuantityChange}
+                    onClick={handleInputClick}
+                    className="w-full h-[40px] rounded-lg bg-slate-800 text-white border border-[#FFDD00] text-center font-bold focus:outline-none"
+                />
+            </div>
+
+            <button 
+                id={`cart-btn-${product}`}
+                onClick={handleAddToCartClick}
+                className={`bg-[#FFDD00] hover:bg-orange-400 text-black p-3 rounded-full shadow-lg transform transition-all hover:scale-110 flex items-center justify-center ${showQuantityInput ? 'bg-green-500 hover:bg-green-400' : ''}`}
+                title={showQuantityInput ? "Confirm Add" : "Add to Cart"}
+            >
+                {showQuantityInput ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                )}
+            </button>
+        </div>
+
         {productData.length > 1 && (
           <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-2 z-20 drop-shadow-md">
-            {/* Price Tag */}
             <div className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg relative">
               <>
                 {HexToInteger(productData?.discountPercentage._hex) !== 0 ? (
@@ -89,7 +193,7 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
                       (HexToInteger(productData?.price._hex) / 1e6).toFixed(1)}
                   </span>
                 )}
-                <img src={usdcoinusdclogo} className="h-[25px] w-[25px] inline-block ml-1 mt-[-9px] mx-auto" />
+                <img src={usdcoinusdclogo} className="h-[25px] w-[25px] inline-block ml-1 mt-[-9px] mx-auto" alt="USDC" />
                 {type === 'Rentals' && (
                   <div className="flex items-center absolute top-[-21px] right-[-20px]">
                     <span className="bg-green-500 text-yellow-200 text-[10px] px-2 py-0.5 rounded-full font-medium tracking-wider uppercase shadow-sm">
@@ -99,13 +203,11 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
                 )}
               </>
             </div>
-            {/* Quantity Tag */}
             <div className="bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg drop-shadow-md">
               <span className="text-[10px] sm:text-xl">{ethers.BigNumber.from(productData?.quantity.toString()).toString()}</span>
               <span className="text-[10px] ml-1">left</span>
             </div>
 
-            {/* Discount Tag */}
             {HexToInteger(productData.discountPercentage._hex) !== 0 && (
               <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg drop-shadow-md">
                 <span className="text-md sm:text-xl">{HexToInteger(productData?.discountPercentage._hex)}%</span>

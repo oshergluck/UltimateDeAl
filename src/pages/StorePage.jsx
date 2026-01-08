@@ -719,6 +719,7 @@ const StorePage = () => {
                                             onClick={() => handleProductSelect(product.barcode)}
                                             type={type}
                                             paymentAddress={paymentAddress}
+                                            storeAddress={storeContractByURL}
                                         />
                                     ))
                                 ) : (
