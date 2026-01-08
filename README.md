@@ -73,7 +73,13 @@ to discuss what you would like to change.
 
 For a deep dive into the Solidity Architecture and the Bonding Curve logic, check out the core protocol repository: https://github.com/oshergluck/ESH-Protocol-SmartContracts
 
+Here’s a **clean, minimal replacement section** and a **small description** you can drop into your main README.
+
+---
+
 ## Backend & Infrastructure
-This protocol is supported by a hybrid off-chain architecture for privacy and notifications:
-* **[Encryption Server](https://github.com/oshergluck/ESH-BACKEND-ENC-SERVER):** Secure key management and PII encryption/decryption service.
-* **[Event Indexer & Notification Service](https://github.com/oshergluck/ESH-Emails-Server):** Node.js worker that listens to on-chain events and handles email notifications.
+
+This protocol is supported by a unified off-chain backend that handles event indexing, user data, and notifications:
+
+* **[Ultrashop Backend Server](https://github.com/oshergluck/UltimateDeAl-Backend-Mongo-And-Emails):**
+  A Node.js backend that listens to on-chain events on Base, manages encrypted user records in MongoDB, and sends transactional email notifications via Resend.
