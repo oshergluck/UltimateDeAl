@@ -240,23 +240,61 @@ const Product = () => {
 
     // New Function: Unregister via API (Store Specific)
     const handleUnregisterFromDB = async () => {
-        if (!confirmUnregister) return;
-        setIsLoading(true);
-        try {
-            await fetch(`${API_URL}/unregister/${address}?storeAddress=${storeContractByURL}`, { method: 'DELETE' });
-            setIsRegistered(false);
-            setShowUnregisterModal(false);
-            setConfirmUnregister(false);
-            setNameOfClient('');
-            setEmailOfClient('');
-            setPhoneNumOfClient('');
-            setPhysicalAddressOfClient('');
-        } catch (error) {
-            alert("Error removing client: " + error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      if (!confirmUnregister) return;
+      if (!address) {
+          alert("Wallet not connected");
+          return;
+      }
+
+      setIsLoading(true);
+
+      try {
+          // 1. הכנת ההודעה לחתימה (חייבת להיות זהה בול למה שהשרת מצפה)
+          const timestamp = Date.now();
+          const message = `I confirm that I want to delete my account: ${address.toLowerCase()} at ${timestamp}`;
+
+          // 2. יצירת החתימה באמצעות הארנק המחובר
+          // מניחים ש-window.ethereum קיים (MetaMask וכו')
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const signer = provider.getSigner();
+          const signature = await signer.signMessage(message);
+
+          // 3. שליחה לשרת (POST במקום DELETE)
+          const response = await fetch(`${API_URL}/unregister`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                  walletAddress: address,
+                  signature: signature,
+                  timestamp: timestamp
+              })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+              // ניקוי ה-State במקרה של הצלחה
+              setIsRegistered(false);
+              setShowUnregisterModal(false);
+              setConfirmUnregister(false);
+              setNameOfClient('');
+              setEmailOfClient('');
+              setPhoneNumOfClient('');
+              setPhysicalAddressOfClient('');
+              alert("Account removed successfully");
+          } else {
+              throw new Error(data.error || "Unknown error from server");
+          }
+
+      } catch (error) {
+          console.error("Unregister failed:", error);
+          alert("Error removing client: " + error.message);
+      } finally {
+          setIsLoading(false);
+      }
+  };
 
       const canUserLeaveReview = async () => {
         try {
@@ -1158,52 +1196,88 @@ reviews.map((review, index) => (
   {isLoading ? 'Registering...' : 'Register'}
 </button>
       </>):(<>
-      <ConnectButton
-            client={client}
-            theme={"dark"}
-            connectButton={{ label: "Connect" }}
-            connectModal={{
-            size: "wide",
-            title: "UltimateDeal",
-            titleIcon: logoOfWebsite,
-            welcomeScreen: {
-            title: "UltimateDeal",
-            subtitle:
-            "Make your first step to the journey of your life. Contribute to businesses anonymously and get shares in return and dividends. Open a Crowdfunding campaign and issue your business shares to the public. Get started by connecting your wallet.",
-            img: {
-            src: logoOfWebsite,
-            width: 150,
-            height: 150,
-            },
-            },
-            termsOfServiceUrl: "https://UltraShop.tech/terms",
-            privacyPolicyUrl: "https://UltraShop.tech/privacy-policy",
-            showThirdwebBranding: true,
-            }}
-            supportedTokens={{
-            [Base.chainId]: [
-              {
-                address: import.meta.env.VITE_DEAL_COIN_ADDRESS,
-                name: "DeAl",
-                symbol: "DEAL",
-                icon: logoOfWebsite,
-                },
-            ],
-            }}
-            detailsButton={{
-            displayBalanceToken: {
-            [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS,
-            },
-            }}
-            chain={base}
-            switchButton={{
-            label: "Switch Network",
-            className: "my-custom-class",
-            style: {
-            backgroundColor: "red",
-            },
-            }}
-            />
+        <ConnectButton
+    autoConnect={true}
+    client={client}
+    wallets={wallets}
+    theme="dark"
+    connectButton={{ label: "Connect" }}
+    auth={{
+        // 1. יצירת הודעת החתימה עם כל השדות החובה
+        getLoginPayload: async ({ address }) => {
+            const now = new Date();
+            const expiration = new Date(now.getTime() + 5 * 60 * 60 * 1000); // 5 שעות
+            
+            // יצירת מחרוזת רנדומלית (Nonce) - קריטי לאבטחה
+            const randomString = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+            return {
+                domain: window.location.host, // או "ultrashop.tech"
+                address: address,
+                statement: "I authorize this session for the UltraShop Dashboard.",
+                version: "1", // חובה!
+                nonce: randomString, // חובה!
+                chain_id: "8453", // Base Mainnet ID
+                issued_at: now.toISOString(), // חובה!
+                expiration_time: expiration.toISOString(),
+                uri: window.location.origin, // חובה!
+            };
+        },
+        
+        // 2. מה קורה אחרי חתימה מוצלחת
+        doLogin: async (params) => {
+            console.log("User signed in successfully", params);
+            // שומרים סימון שהמשתמש התחבר + זמן תפוגה בלוקל סטורג'
+            // זה גורם לכפתור להבין שאנחנו מחוברים
+            const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
+            localStorage.setItem("auth_token", "signed_in");
+            localStorage.setItem("auth_expiry", expirationTime);
+        },
+
+        // 3. בדיקה האם המשתמש כבר מחובר (בודק גם תוקף של 5 שעות)
+        isLoggedIn: async () => {
+            const token = localStorage.getItem("auth_token");
+            const expiry = localStorage.getItem("auth_expiry");
+            
+            if (!token || !expiry) return false;
+            
+            // בדיקה אם עברו 5 שעות
+            if (new Date() > new Date(expiry)) {
+                localStorage.removeItem("auth_token");
+                localStorage.removeItem("auth_expiry");
+                return false;
+            }
+            
+            return true;
+        },
+
+        // 4. התנתקות
+        doLogout: async () => {
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("auth_expiry");
+            console.log("User logged out");
+        },
+    }}
+    connectModal={{
+        size: "wide",
+        title: "UltraShop",
+        titleIcon: logoOfWebsite,
+        welcomeScreen: {
+            title: "UltraShop",
+            subtitle: "Create your own coin or invest in other coins",
+            img: { src: logoOfWebsite, width: 150, height: 150 },
+        },
+        termsOfServiceUrl: "https://ultrashop.tech/terms",
+        privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
+        showThirdwebBranding: true,
+    }}
+    supportedTokens={allSupportedTokens}
+    detailsButton={{
+        displayBalanceToken: { [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
+    }}
+    chain={base}
+    chains={[base]}
+/>
     </>)}
      
     </>

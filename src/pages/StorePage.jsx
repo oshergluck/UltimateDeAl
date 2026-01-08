@@ -253,17 +253,55 @@ const StorePage = () => {
     // New Function: Unregister via API (Store Specific)
     const handleUnregisterFromDB = async () => {
         if (!confirmUnregister) return;
+        if (!address) {
+            alert("Wallet not connected");
+            return;
+        }
+
         setIsLoading(true);
+
         try {
-            await fetch(`${API_URL}/unregister/${address}?storeAddress=${storeContractByURL}`, { method: 'DELETE' });
-            setIsRegistered(false);
-            setShowUnregisterModal(false);
-            setConfirmUnregister(false);
-            setNameOfClient('');
-            setEmailOfClient('');
-            setPhoneNumOfClient('');
-            setPhysicalAddressOfClient('');
+            // 1. הכנת ההודעה לחתימה (חייבת להיות זהה בול למה שהשרת מצפה)
+            const timestamp = Date.now();
+            const message = `I confirm that I want to delete my account: ${address.toLowerCase()} at ${timestamp}`;
+
+            // 2. יצירת החתימה באמצעות הארנק המחובר
+            // מניחים ש-window.ethereum קיים (MetaMask וכו')
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signature = await signer.signMessage(message);
+
+            // 3. שליחה לשרת (POST במקום DELETE)
+            const response = await fetch(`${API_URL}/unregister`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    walletAddress: address,
+                    signature: signature,
+                    timestamp: timestamp
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // ניקוי ה-State במקרה של הצלחה
+                setIsRegistered(false);
+                setShowUnregisterModal(false);
+                setConfirmUnregister(false);
+                setNameOfClient('');
+                setEmailOfClient('');
+                setPhoneNumOfClient('');
+                setPhysicalAddressOfClient('');
+                alert("Account removed successfully");
+            } else {
+                throw new Error(data.error || "Unknown error from server");
+            }
+
         } catch (error) {
+            console.error("Unregister failed:", error);
             alert("Error removing client: " + error.message);
         } finally {
             setIsLoading(false);
