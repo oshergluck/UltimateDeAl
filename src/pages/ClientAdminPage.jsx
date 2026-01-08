@@ -13,12 +13,19 @@ import { format, addDays } from 'date-fns';
 import { PinataSDK } from "pinata";
 
 const ClientAdminPage = () => {
+    // Product Images Upload State
     const [isUploadingImages, setIsUploadingImages] = useState([false]);
     const [imageUploadProgress, setImageUploadProgress] = useState([0]);
+
+    // Hidden Media Upload State
+    const [isUploadingHidden, setIsUploadingHidden] = useState(false);
+    const [hiddenUploadProgress, setHiddenUploadProgress] = useState(0);
+
     const pinata = new PinataSDK({
         pinataJwt: import.meta.env.VITE_PINATA_JWT,
         pinataGateway: "bronze-sticky-guanaco-654.mypinata.cloud",
     });
+
     const client = createThirdwebClient({ clientId: import.meta.env.VITE_THIRDWEB_CLIENT })
     const { mutate: sendTransaction, isPending } = useSendTransaction();
     const [userPass, setUserPass] = useState('');
@@ -27,6 +34,8 @@ const ClientAdminPage = () => {
     const POLYRPC1 = 'https://base-mainnet.g.alchemy.com/v2/d32cys2ito51Xt9AgfAUTBuIuQd-yQbm';
     const defaultFontSizeIndex = fontSizes.indexOf('sm');
     const defaultSize = fontSizes[defaultFontSizeIndex - 2];
+    
+    // Form States
     const [amountForPayment, setAmountForPayment] = useState('');
     const [setstoring, setsetstoring] = useState('');
     const [distId, setDistId] = useState('');
@@ -47,7 +56,7 @@ const ClientAdminPage = () => {
     const [customerAddress, setCustomerAddress] = useState('');
     const [nameofworker, setNameOfWorker] = useState('');
     const [email, setEmail] = useState('');
-    const [shopURL, setShopURL] = useState('');
+    
     const [AmountForDeposit, setAmountForDeposit] = useState('');
     const [newOwner, setNewOwner] = useState('');
     const [amount, setAmount] = useState('');
@@ -59,7 +68,7 @@ const ClientAdminPage = () => {
     const [connectedto, setConnectedto] = useState(false);
     const [productCategory, setProductCategory] = useState('');
     const [receipts, setReceipts] = useState([]);
-    const [hiddenIPFS, setHiddenIPFS] = useState('');
+    const [hiddenIPFS, setHiddenIPFS] = useState(''); // Stores the CID after upload
     const [type, setType] = useState('');
     const [inv, setInvoices] = useState();
     const [invoicesaddress, setinvoiceaddress] = useState('');
@@ -85,7 +94,6 @@ const ClientAdminPage = () => {
     }
 
     useEffect(() => {
-
         if (userContract && ethers.utils.isAddress(userContract)) {
             const contract = getContract({
                 client: client,
@@ -103,16 +111,6 @@ const ClientAdminPage = () => {
             setAdminContract(null);
         }
     }, [userContract]);
-
-    const Hidden = getContract({
-        client: client,
-        chain: {
-            id: 8453,
-            rpc: POLYRPC,
-        },
-        address: '0xCe5d3258b6dCDE1D1cB133956839a3c8571D9A5b',
-    });
-
 
     const PaymentContract = getContract({
         client: client,
@@ -138,6 +136,7 @@ const ClientAdminPage = () => {
         };
         recognizeType();
     }, [contract]);
+
     function renderDescriptionWithBreaks(description) {
         if (!description) return <p>No description provided.</p>;
 
@@ -201,8 +200,6 @@ const ClientAdminPage = () => {
 
                 return element;
             });
-
-
         };
 
         const lines = description.split('\n').map((line, index) => (
@@ -253,8 +250,6 @@ const ClientAdminPage = () => {
             setIsLoading(false);
         }
     };
-
-
 
     const handleImageChange = (index, value) => {
         setImages(prevImages => {
@@ -558,52 +553,52 @@ const ClientAdminPage = () => {
     };
 
     const getAllDecryptedEmails = async () => {
-      // בדיקת התחברות
-      if (!userContract || !userPass) {
-          alert("Please login first.");
-          return;
-      }
+        // בדיקת התחברות
+        if (!userContract || !userPass) {
+            alert("Please login first.");
+            return;
+        }
 
-      try {
-          setIsLoading(true);
-          setResponseData('');
+        try {
+            setIsLoading(true);
+            setResponseData('');
 
-          // פנייה לשרת לשליפת כל הלקוחות
-          const response = await fetch(`${API_URL}/store/get-all-clients`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  storeAddress: userContract,
-                  password: userPass
-              })
-          });
+            // פנייה לשרת לשליפת כל הלקוחות
+            const response = await fetch(`${API_URL}/store/get-all-clients`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeAddress: userContract,
+                    password: userPass
+                })
+            });
 
-          const result = await response.json();
+            const result = await response.json();
 
-          if (!result.success) {
-              setResponseData(`Error: ${result.error}`);
-          } else {
-              const clients = result.clients;
-              
-              if (clients.length === 0) {
-                  setResponseData("No clients registered for this store yet.");
-              } else {
-                  // פירמוט יפה של הרשימה להצגה (שימוש ב-~ להדגשה צהובה לפי הלוגיקה שלך)
-                  const formattedList = clients.map((c, i) => 
-                      `${i + 1}. Name: ~${c.name}~ \n   Email: ~${c.email}~ \n   Phone: ${c.phone} \n   Wallet: ${c.walletAddress}`
-                  ).join('\n\n-------------------\n\n');
+            if (!result.success) {
+                setResponseData(`Error: ${result.error}`);
+            } else {
+                const clients = result.clients;
 
-                  setResponseData(`Found ${clients.length} Clients:\n\n${formattedList}`);
-              }
-          }
+                if (clients.length === 0) {
+                    setResponseData("No clients registered for this store yet.");
+                } else {
+                    // פירמוט יפה של הרשימה להצגה (שימוש ב-~ להדגשה צהובה לפי הלוגיקה שלך)
+                    const formattedList = clients.map((c, i) =>
+                        `${i + 1}. Name: ~${c.name}~ \n   Email: ~${c.email}~ \n   Phone: ${c.phone} \n   Wallet: ${c.walletAddress}`
+                    ).join('\n\n-------------------\n\n');
 
-      } catch (error) {
-          console.error("Process failed:", error);
-          alert("Failed to fetch client list");
-      } finally {
-          setIsLoading(false);
-      }
-  };
+                    setResponseData(`Found ${clients.length} Clients:\n\n${formattedList}`);
+                }
+            }
+
+        } catch (error) {
+            console.error("Process failed:", error);
+            alert("Failed to fetch client list");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const getReceiptsByAddress = async () => {
         try {
@@ -941,6 +936,82 @@ Wallet: ~${c.wallet}~
         }
     };
 
+    // --- New Function: Upload Hidden Content (File to Pinata -> DB) ---
+    const handleHiddenMediaUpload = async (file) => {
+        if (!file) return;
+        setIsUploadingHidden(true);
+        setHiddenUploadProgress(0);
+
+        try {
+            const upload = await pinata.upload.file(file, {
+                onProgress: (progress) => {
+                    const percent = Math.round((progress.bytes / progress.totalBytes) * 100);
+                    setHiddenUploadProgress(percent);
+                }
+            });
+            setHiddenIPFS(upload.IpfsHash);
+            console.log("Hidden media uploaded to IPFS:", upload.IpfsHash);
+        } catch (error) {
+            console.error("Hidden upload error:", error);
+            alert("Failed to upload file to IPFS");
+        } finally {
+            setIsUploadingHidden(false);
+        }
+    };
+
+    const handleRemoveHiddenMedia = () => {
+        setHiddenIPFS('');
+        setHiddenUploadProgress(0);
+    };
+
+    // --- Upload Hidden Content Record to Database ---
+    const handleUploadHiddenContent = async () => {
+        if (!userContract || !userPass) {
+            alert("Please login first.");
+            return;
+        }
+        if (!productBarcode || !hiddenIPFS) {
+            alert("Please enter Product Barcode and upload a file first.");
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+
+            const response = await fetch(`${API_URL}/store/upload-hidden-content`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeAddress: userContract,
+                    password: userPass,
+                    productBarcode: productBarcode,
+                    ipfsHash: hiddenIPFS 
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert("Hidden content linked successfully in Database!");
+                // Clear inputs after success
+                setHiddenIPFS('');
+                setHiddenUploadProgress(0);
+            } else {
+                alert("Error: " + data.error);
+            }
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Failed to link content in DB");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // --- Edit Hidden Content (Upsert in DB) ---
+    const handleEditHiddenContent = async () => {
+        await handleUploadHiddenContent();
+    };
 
 
     const convertBigNumber = (bigNumberObj) => {
@@ -1452,61 +1523,62 @@ Wallet: ~${c.wallet}~
                                         SetStore
                                     </TransactionButton>
                                 </div>
-                                {/* Hidden Media Section */}
+                                {/* Hidden Media Section - New API based implementation */}
                                 <div className="bg-slate-700/50 rounded-lg p-3 sm:p-4 mb-4">
-                                    <h3 className="text-base sm:text-lg font-medium mb-3 text-gray-200">Hidden Media Management</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                                    <h3 className="text-base sm:text-lg font-medium mb-3 text-gray-200">Hidden Media Management (Token Gated)</h3>
+                                    <div className="grid grid-cols-1 gap-3 mb-3">
                                         <input type="text" placeholder="Product Barcode" value={productBarcode} onChange={e => setProductBarcode(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
-                                        <input type="text" placeholder="Shop URL" value={shopURL} onChange={e => setShopURL(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
-                                        <input type="text" placeholder="Media Hash CID" value={hiddenIPFS} onChange={e => setHiddenIPFS(e.target.value)} className="p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" />
+                                        
+                                        {/* File Upload for Hidden Media */}
+                                        <div className="p-4 border border-gray-600 rounded-lg bg-gray-800">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-white font-medium">Upload Media File</span>
+                                                {isUploadingHidden && <span className="text-yellow-400 text-sm">Uploading... {hiddenUploadProgress}%</span>}
+                                                {!isUploadingHidden && hiddenIPFS && <span className="text-green-400 text-sm">✓ Ready to Link</span>}
+                                            </div>
+                                            
+                                            <input
+                                                type="file"
+                                                onChange={(e) => handleHiddenMediaUpload(e.target.files[0])}
+                                                disabled={isUploadingHidden}
+                                                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"
+                                            />
+                                            
+                                            {isUploadingHidden && (
+                                                <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+                                                    <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${hiddenUploadProgress}%` }}></div>
+                                                </div>
+                                            )}
+                                            
+                                            {!isUploadingHidden && hiddenIPFS && (
+                                                <div className="text-green-400 text-sm break-all mb-2">
+                                                    CID: {hiddenIPFS}
+                                                </div>
+                                            )}
+                                            
+                                            {hiddenIPFS && (
+                                                <button onClick={handleRemoveHiddenMedia} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 text-xs">
+                                                    Clear File
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
+                                    
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <TransactionButton
-                                            className={"!px-2 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm"}
-                                            transaction={async () => {
-                                                const encryptedIPFS = await encryptIPFS(hiddenIPFS);
-                                                const tx = prepareContractCall({
-                                                    contract: Hidden,
-                                                    method: "function uploadIPFS(string shopUrl, string ipfsHash, string productBarcode)",
-                                                    params: [shopURL, encryptedIPFS, productBarcode],
-                                                });
-                                                return tx;
-                                            }}
-                                            onTransactionSent={(result) => {
-                                                console.log("Transaction submitted", result.transactionHash);
-                                            }}
-                                            onTransactionConfirmed={(receipt) => {
-                                                console.log("Transaction confirmed", receipt.transactionHash);
-                                            }}
-                                            onError={(error) => {
-                                                console.error("Transaction error", error);
-                                            }}
+                                        <button
+                                            onClick={handleUploadHiddenContent}
+                                            disabled={!hiddenIPFS || isUploadingHidden}
+                                            className="px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            Upload Hidden Video
-                                        </TransactionButton>
-                                        <TransactionButton
-                                            className={"!px-2 !sm:px-4 !py-2 !bg-yellow-500 !hover:bg-yellow-600 !text-black !font-medium !rounded-lg !transition-colors !duration-200 !text-xs !sm:text-sm"}
-                                            transaction={async () => {
-                                                const encryptedIPFS = await encryptIPFS(hiddenIPFS);
-                                                const tx = prepareContractCall({
-                                                    contract: Hidden,
-                                                    method: "function editIPFS(string shopUrl, string newIpfsHash, string productBarcode)",
-                                                    params: [shopURL, encryptedIPFS, productBarcode],
-                                                });
-                                                return tx;
-                                            }}
-                                            onTransactionSent={(result) => {
-                                                console.log("Transaction submitted", result.transactionHash);
-                                            }}
-                                            onTransactionConfirmed={(receipt) => {
-                                                console.log("Transaction confirmed", receipt.transactionHash);
-                                            }}
-                                            onError={(error) => {
-                                                console.error("Transaction error", error);
-                                            }}
+                                            Upload Hidden Video (DB)
+                                        </button>
+                                        <button
+                                            onClick={handleEditHiddenContent}
+                                            disabled={!hiddenIPFS || isUploadingHidden}
+                                            className="px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            Edit Hidden Video
-                                        </TransactionButton>
+                                            Edit Hidden Video (DB)
+                                        </button>
                                     </div>
                                 </div>
                             </section>

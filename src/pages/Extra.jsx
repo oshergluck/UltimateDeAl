@@ -1,46 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Featured, FeaturedMobile,IPFSMediaViewer } from '../components';
-import { RegisterNewStore, City,SnakeGame ,MemoryGame,TexasHoldemGame} from '../pages';
-
+import { Loader, Featured, FeaturedMobile, IPFSMediaViewer } from '../components';
+import { RegisterNewStore, City, SnakeGame, MemoryGame, TexasHoldemGame } from '../pages';
 import { useMediaQuery } from 'react-responsive';
 import { useStateContext } from '../context';
 import { useContract } from '@thirdweb-dev/react';
+import { ethers } from 'ethers'; // חובה עבור החתימה
 
 const Extra = () => {
     const navigate = useNavigate();
+    const [rendered,setRendered] = useState(false);
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const [isLoading, setIsLoading] = useState(false);
+    
+    // URL Parsing
     const StoreURL = window.location.pathname.split('/')[2];
     const ProductURL = window.location.pathname.split('/')[4];
+    
+    // State
     const [ownerShip, setOwnerShip] = useState(false);
     const [invoicesAddress, setInvoicesAddress] = useState('');
     const [media, setMedia] = useState('');
     const [error, setError] = useState(null);
-    const [isInitialized, setIsInitialized] = useState(false);
-    
-    const { contract: invoicesContract } = useContract(invoicesAddress);
-    const { address, getStoreDetails, storeRegistery, decryptIPFS,PokerLobby } = useStateContext();
     const [storeContractByURL, setStoreContractByURL] = useState('');
+    const [isStoreLoaded, setIsStoreLoaded] = useState(false);
+
+    // Context & Contracts
+    const { address, getStoreDetails, storeRegistery } = useStateContext();
     const { contract: theStoreContract } = useContract(storeContractByURL);
-    const { contract: Curses } = useContract('0xCe5d3258b6dCDE1D1cB133956839a3c8571D9A5b');
+    
+    // API URL
+    const API_URL = import.meta.env.VITE_MONGO_SERVER_API + "/api";
 
     function decodeUrlString(str) {
         return decodeURIComponent(str);
     }
 
-    // Step 1: Set up store contract
+    // Step 1: Set up store contract from URL
     useEffect(() => {
         const setContract = async () => {
             if (!storeRegistery || !StoreURL) return;
             
             try {
                 setIsLoading(true);
-                console.log('Setting up store contract...');
                 const data = await getStoreDetails(StoreURL);
-                const theData = await data[1];
+                const theData = await data[1]; // Store Contract Address
                 setStoreContractByURL(theData);
-                console.log('Store contract set:', theData);
             } catch (error) {
                 console.error('Error setting contract:', error);
                 setError('Failed to load store details');
@@ -52,20 +57,15 @@ const Extra = () => {
         setContract();
     }, [storeRegistery, StoreURL]);
 
-    // Step 2: Get invoices address
+    // Step 2: Get invoices address from Store Contract
     useEffect(() => {
         const getInvoices = async () => {
             try {
-                setIsLoading(true);
-                console.log('Getting invoices address...');
                 const dataOfInvoice = await theStoreContract.call('invoices');
                 setInvoicesAddress(dataOfInvoice);
-                console.log('Invoices address set:', dataOfInvoice);
+                setIsStoreLoaded(true);
             } catch (error) {
                 console.error('Error getting invoices:', error);
-                setError('Failed to load invoice information');
-            } finally {
-                setIsLoading(false);
             }
         };
         if(theStoreContract) {
@@ -73,66 +73,72 @@ const Extra = () => {
         }
     }, [theStoreContract]);
 
-    // Check if all dependencies are initialized
-    useEffect(() => {
-        if (invoicesContract && address && ProductURL && StoreURL && !isInitialized) {
-            console.log('All dependencies initialized');
-            setIsInitialized(true);
+    // --- New Function: Unlock Content via API ---
+    const handleUnlockContent = async () => {
+        if (!address) {
+            alert("Please connect your wallet first.");
+            return;
         }
-    }, [invoicesContract, address, ProductURL, StoreURL, isInitialized]);
+        if (!isStoreLoaded || !invoicesAddress) {
+            alert("Store data not fully loaded yet. Please wait.");
+            return;
+        }
 
-    // Step 3: Check ownership and get IPFS content
-    useEffect(() => {
-        const loadOwnershipAndMedia = async () => {
-            if (!isInitialized) {
-                console.log('Waiting for initialization...');
-                return;
-            }
+        try {
+            setIsLoading(true);
+            setError(null);
+
+            // 1. Prepare Data
+            const timestamp = Date.now();
+            const barcode = decodeUrlString(ProductURL);
             
-            try {
-                setIsLoading(true);
-                setError(null);
-                
-                console.log('Checking ownership...');
-                console.log('Address:', address);
-                console.log('ProductURL:', ProductURL);
-                
-                // Add delay to ensure contract is fully initialized
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Check ownership
-                const ownershipData = await invoicesContract.call('verifyOwnershipByBarcode', [address, ProductURL]);
-                console.log('Ownership verified:', ownershipData);
-                setOwnerShip(ownershipData);
+            // הודעה זהה בדיוק למה שהוגדר בשרת
+            const message = `I confirm ownership check for product ${barcode} at ${timestamp}`;
 
-                if (ownershipData) {
-                    // Get IPFS content
-                    console.log('Loading IPFS content...');
-                    const decodedProduct = decodeUrlString(ProductURL);
-                    const decodedStore = decodeUrlString(StoreURL);
-                    const ipfsData = await Curses.call('getIPFS', [decodedStore, decodedProduct, invoicesAddress, address]);
-                    const decryptedData = await decryptIPFS(ipfsData);
-                    setMedia(decryptedData);
-                    console.log('Media loaded successfully');
-                }
-            } catch (error) {
-                console.error('Error checking ownership or loading media:', error);
-                setError('No hidden media for this product');
-            } finally {
-                setIsLoading(false);
+            // 2. Sign Message
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const signature = await signer.signMessage(message);
+
+            // 3. Call API
+            const response = await fetch(`${API_URL}/access-hidden-content`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    walletAddress: address,
+                    signature: signature,
+                    timestamp: timestamp,
+                    storeAddress: storeContractByURL,
+                    invoiceContractAddress: invoicesAddress,
+                    productBarcode: barcode
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMedia(data.ipfsHash);
+                setOwnerShip(true);
+                setRendered(true);
+            } else {
+                throw new Error(data.error || "Access Denied");
             }
-        };
-        if(Curses) {
-            loadOwnershipAndMedia();
-        }
-    }, [isInitialized,Curses]);
 
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Failed to verify ownership");
+            setOwnerShip(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Render Special Pages (Games/Register)
     const renderContent = () => {
         if (StoreURL === 'mainshop' && ProductURL === 'LISTESH') {
-            return (<><div>
-            <RegisterNewStore />
-            </div>
-            </>);
+            return (<div><RegisterNewStore /></div>);
         }
         if (StoreURL === 'mainshop' && ProductURL === 'LOTERRY') {
             return <City />;
@@ -147,34 +153,55 @@ const Extra = () => {
     };
 
     return (
-        <>{isLoading && <Loader />}
+        <>
+            {isLoading && <Loader />}
             <div className="py-[35px] mx-auto">
                 {isMobile ? <FeaturedMobile /> : <Featured />}
             </div>
+
+            {/* Error Message */}
             {error && (
-                <div className="text-red-500 text-center mt-4">
-                    {error}
-                    <div className="min-h-screen rounded-[15px] mt-[40px] pb-[15px] ">
-                    <h2 className='text-center font-bold text-[#00FFFF] text-[24px] my-[15px] pt-[20px]'>
-                        NFT Hidden Media
-                    </h2>
-                    {renderContent()}
+                <div className="text-red-500 text-center mt-4 bg-red-100/10 p-4 rounded-lg mx-auto w-11/12 max-w-md border border-red-500">
+                    <p className="font-bold">{error}</p>
+                </div>
+            )}
+
+            <div className="min-h-screen rounded-[15px] mt-[20px] pb-[15px]">
+                <h2 className='text-center font-bold text-[#00FFFF] text-[24px] my-[15px] pt-[20px]'>
+                    NFT Hidden Media
+                </h2>
+
+                {/* If we have access -> Show Media */}
+                {ownerShip && media ? (
+                    <div className="animate-fade-in">
+                        <p className="text-center text-green-400 mb-4">Access Granted ✅</p>
+                        <IPFSMediaViewer 
+                            ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${media}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                            className='my-[50px] !w-11/12 mx-auto'
+                        />
                     </div>
-                </div>
-                
-            )}
-            {ownerShip && media && (
-                <div className="min-h-screen rounded-[15px] mt-[40px] pb-[15px] ">
-                    <h2 className='text-center font-bold text-[#00FFFF] text-[24px] my-[15px] pt-[20px]'>
-                        NFT Hidden Media
-                    </h2>
-                    <IPFSMediaViewer 
-                    ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${media}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                    className='my-[50px] !w-11/12 mx-auto'
-                    />
-                    {renderContent()}
-                </div>
-            )}
+                ) : (
+                    // If no access yet -> Show Unlock Button (Only for normal products, not special pages)
+                    !rendered && (
+                        <div className="flex flex-col items-center justify-center space-y-4 my-10">
+                            <p className="text-gray-300 text-center px-4">
+                                This content is exclusive to NFT owners.<br/>
+                                Please sign to verify ownership and unlock.
+                            </p>
+                            <button 
+                                onClick={handleUnlockContent}
+                                disabled={isLoading || !isStoreLoaded}
+                                className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold rounded-full shadow-lg transform transition hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? "Verifying..." : "🔓 Unlock Hidden Content"}
+                            </button>
+                        </div>
+                    )
+                )}
+
+                {/* Render Special Content (Games etc) */}
+                {renderContent()}
+            </div>
         </>
     );
 };
