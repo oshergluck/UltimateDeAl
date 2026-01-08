@@ -527,7 +527,7 @@ const handleCommentChange = (e) => {
                           {campaign? (<>
                             <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)+'$'}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -793,7 +793,7 @@ const handleCommentChange = (e) => {
                         {campaign? (<>
                             <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)+'$'}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -1122,7 +1122,7 @@ const handleCommentChange = (e) => {
                         {campaign? (<>
                             <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)+'$'}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}
@@ -1384,7 +1384,7 @@ const handleCommentChange = (e) => {
                         {campaign? (<>
                             <FormField
                         labelName='Amount Of USDC to invest'
-                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)}
+                        placeholder={`Minimum Amount ` + HexToInteger(campaign?.minimum._hex)/1e6.toFixed(2)+'$'}
                         inputType='number'
                         value={amount}
                         handleChange={handleAmountChange}

@@ -384,6 +384,11 @@ const getCampaignRewardTokens = async () => {
     const naviateToCreateCampaign = () => {
         navigate('/deploy-esh');
     }
+
+    const naviateToShops = () => {
+        navigate('/home');
+    }
+
     const naviateToVip = () => {
         navigate('/coin-launcher');
     }
@@ -434,6 +439,7 @@ const getCampaignRewardTokens = async () => {
                             {address ? (<button onClick={naviateToMyCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My Coins</button>) : (<></>)}
                             <button onClick={naviateToVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Launch Coin</button>
                             <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Coin</button>
+                            <button onClick={naviateToShops} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Shops</button>
                         </div>
                     </div>
                     <div className='mr-[20px] py-[5px] my-auto'>

@@ -45,7 +45,7 @@ const FeaturedMobile = () => {
   if (isLoading) return <Loader />;
 
   return (
-    <div className={`w-full overflow-hidden linear-gradient rounded-[15px] h-[685px] m-auto ${campaigns.length>0 ? ('block'):('hidden')}`}>
+    <div className={`w-full overflow-hidden  rounded-[15px] h-[685px] m-auto ${campaigns.length>0 ? ('block'):('hidden')}`}>
       <h1 className='text-[#FFFFFF] text-[25px] font-semibold mt-[30px] mb-[30px] ml-[65px]'>Featured Campaigns</h1>
       {campaigns.length > 0 ? (
         <Slider {...settings}

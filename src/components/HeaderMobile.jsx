@@ -288,6 +288,11 @@ const HeaderMobile = () => {
                 </button>
               </li>
             )}
+            <li>
+              <button onClick={go("/home")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
+                <BlogIcon /> <span className="text-base font-medium">Shops</span>
+              </button>
+            </li>
           </ul>
         </nav>
 

@@ -31,9 +31,9 @@ const City = () => {
     const [story, setStory] = useState('');
     const [mayor, setMayor] = useState('');
     const [high,setHighesBalance] = useState(0);
-    const {contract: highContract} = useContract('0xD90B9dB989b83B5d112c3e9fABd1a964E463E197'); //Main platform token
+    const {contract: highContract} = useContract('0xe9b7c1712f9d7c64ec3f3953be5560fe1a64041b'); //Main platform token
     const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
-    const { contract: invoicesContract } = useContract('0x8f0D68eA5542a09987d96926572259f03d799393'); //invoices contract address of the main shop to check NFT approves ownership
+    const { contract: invoicesContract } = useContract('0x85B9Beabe8deDBf9c310A2A44CCEE5D079b191cD'); //invoices contract address of the main shop to check NFT approves ownership
     const [ownerShip,setOwnerShip] = useState(false);
     const navigateToDeAlStore = () => {
         navigate('/shop/mainshop/products/LOTERRY');
@@ -302,7 +302,7 @@ const City = () => {
         if (!cityStartDate) return;
         const otherCitiesInfo = citiesAndMayors
         .filter(cm => cm.city.toLowerCase() !== cityName.toLowerCase())
-        .map(cm => `${cm.city} (Mayor: ${cm.mayor}, Balance: ${formatNumberWithCommas(Math.round(cm.balance*1e18))} $ULSH)`)
+        .map(cm => `${cm.city} (Mayor: ${cm.mayor}, Balance: ${formatNumberWithCommas(Math.round(cm.balance*1e18))} $USP)`)
         .join(', ');
         try {
             setIsLoading(true);
@@ -408,7 +408,7 @@ const City = () => {
             </p>
             <p className="text-white text-lg leading-relaxed mb-8">
                 In the bustling city of {cityName}, where magic and technology intertwine, 
-                the $ULSH Spinner stands as a beacon of hope and excitement. This mystical device, 
+                the $USP Spinner stands as a beacon of hope and excitement. This mystical device, 
                 powered by ancient runes and cutting-edge circuitry, offers citizens a chance to 
                 escape the daily grind and dream of a brighter future.
             </p>
@@ -418,11 +418,11 @@ const City = () => {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">Day Cost</h2>
-                            <p className="text-3xl font-semibold">{Math.round(registrationCost)} ULSH</p>
+                            <p className="text-3xl font-semibold">{Math.round(registrationCost)} USP</p>
                         </div>
                         <div className="bg-gradient-to-r from-blue-400 to-indigo-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">{cityName} has</h2>
-                            <p className="text-3xl font-semibold">{Math.round(totalDeposited)} ULSH</p>
+                            <p className="text-3xl font-semibold">{Math.round(totalDeposited)} USP</p>
                         </div>
                         <div className="bg-gradient-to-r from-green-400 to-teal-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">{cityName} Residents</h2>
@@ -519,7 +519,7 @@ const City = () => {
                                 <h2 className="text-xl font-bold text-white mb-4">Current Mayor:</h2>
                                 <h2 className="text-xl text-white mb-4"> {renderDescriptionWithBreaks(mayor)}</h2>
                                 <h2 className='text-[36px] text-yellow-400 mb-4'>Holding:</h2>
-                                <h2 className='text-[36px] text-yellow-400 mb-4'>{formatNumberWithCommas(Math.round(high))} $ULSH Stocks</h2>
+                                <h2 className='text-[36px] text-yellow-400 mb-4'>{formatNumberWithCommas(Math.round(high))} $USP Stocks</h2>
                             {story && (
                         <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
                             <h2 className="text-2xl font-bold text-white mb-4">City Fake News</h2>
