@@ -13,8 +13,20 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { PinataSDK } from "pinata";
+import {
+  createWallet,
+  walletConnect,
+  inAppWallet,
+} from "thirdweb/wallets";
 
 const Product = () => {
+  const wallets = [
+    createWallet("io.metamask"),
+    createWallet("com.coinbase.wallet"),
+    walletConnect(),
+    createWallet("com.trustwallet.app"),
+    createWallet("io.zerion.wallet"),
+];
   const navigate = useNavigate();
   const [enc,setEnc] = useState(false);
   const pinata = new PinataSDK({
@@ -189,8 +201,18 @@ const Product = () => {
     }
   
     const checkRegistrationDB = async () => {
-      if (!address) return;
+      // FIX: Reset state if no address is present
+      if (!address) {
+          setIsRegistered(false);
+          setNameOfClient('');
+          setEmailOfClient('');
+          setPhoneNumOfClient('');
+          setPhysicalAddressOfClient('');
+          return;
+      }
+  
       if (!storeContractByURL) return;
+      
       try {
           const response = await fetch(`${API_URL}/check/${address}?storeAddress=${storeContractByURL}`);
           const data = await response.json();
@@ -356,13 +378,21 @@ const Product = () => {
       };
 
       const checkOwnership = async (productUrl) => {
-        if(invoicesContract) {
-          const data = await invoicesContract.call('verifyOwnershipByBarcode',[address,productUrl]);
-          if(data) {
-            setOwnerShip(data);
-          }
-        }
-      }
+    // FIX: If no address or no contract, ownership is impossible -> set to false
+    if (!address || !invoicesContract) {
+        setOwnerShip(false);
+        return;
+    }
+
+    try {
+        const data = await invoicesContract.call('verifyOwnershipByBarcode', [address, productUrl]);
+        // The contract returns a boolean, so we can set it directly
+        setOwnerShip(data); 
+    } catch (error) {
+        console.error("Error checking ownership:", error);
+        setOwnerShip(false); // Default to false on error
+    }
+}
 
       const fetchRewardAddress = async () => {
         if (theStoreContract) {
@@ -397,13 +427,13 @@ const Product = () => {
                   
                   if (theStoreContract) {
                       const productUrlDecoded = decodeUrlString(productUrl);
-                      if(productUrlDecoded) {
-                        if(storeContract1) {
-                          fetchProduct(productUrlDecoded);
-                          if(invoicesContract);
-                          checkOwnership(productUrlDecoded);
+                      if(storeContract1) {
+                        fetchProduct(productUrlDecoded);
+                        // Semicolon removed below
+                        if(invoicesContract) {
+                            checkOwnership(productUrlDecoded);
                         }
-                      }
+                    }
                   }
                   setIsLoading(false);
               } catch (error) {
@@ -1196,88 +1226,6 @@ reviews.map((review, index) => (
   {isLoading ? 'Registering...' : 'Register'}
 </button>
       </>):(<>
-        <ConnectButton
-    autoConnect={true}
-    client={client}
-    wallets={wallets}
-    theme="dark"
-    connectButton={{ label: "Connect" }}
-    auth={{
-        // 1. יצירת הודעת החתימה עם כל השדות החובה
-        getLoginPayload: async ({ address }) => {
-            const now = new Date();
-            const expiration = new Date(now.getTime() + 5 * 60 * 60 * 1000); // 5 שעות
-            
-            // יצירת מחרוזת רנדומלית (Nonce) - קריטי לאבטחה
-            const randomString = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-            return {
-                domain: window.location.host, // או "ultrashop.tech"
-                address: address,
-                statement: "I authorize this session for the UltraShop Dashboard.",
-                version: "1", // חובה!
-                nonce: randomString, // חובה!
-                chain_id: "8453", // Base Mainnet ID
-                issued_at: now.toISOString(), // חובה!
-                expiration_time: expiration.toISOString(),
-                uri: window.location.origin, // חובה!
-            };
-        },
-        
-        // 2. מה קורה אחרי חתימה מוצלחת
-        doLogin: async (params) => {
-            console.log("User signed in successfully", params);
-            // שומרים סימון שהמשתמש התחבר + זמן תפוגה בלוקל סטורג'
-            // זה גורם לכפתור להבין שאנחנו מחוברים
-            const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
-            localStorage.setItem("auth_token", "signed_in");
-            localStorage.setItem("auth_expiry", expirationTime);
-        },
-
-        // 3. בדיקה האם המשתמש כבר מחובר (בודק גם תוקף של 5 שעות)
-        isLoggedIn: async () => {
-            const token = localStorage.getItem("auth_token");
-            const expiry = localStorage.getItem("auth_expiry");
-            
-            if (!token || !expiry) return false;
-            
-            // בדיקה אם עברו 5 שעות
-            if (new Date() > new Date(expiry)) {
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("auth_expiry");
-                return false;
-            }
-            
-            return true;
-        },
-
-        // 4. התנתקות
-        doLogout: async () => {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("auth_expiry");
-            console.log("User logged out");
-        },
-    }}
-    connectModal={{
-        size: "wide",
-        title: "UltraShop",
-        titleIcon: logoOfWebsite,
-        welcomeScreen: {
-            title: "UltraShop",
-            subtitle: "Create your own coin or invest in other coins",
-            img: { src: logoOfWebsite, width: 150, height: 150 },
-        },
-        termsOfServiceUrl: "https://ultrashop.tech/terms",
-        privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
-        showThirdwebBranding: true,
-    }}
-    supportedTokens={allSupportedTokens}
-    detailsButton={{
-        displayBalanceToken: { [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
-    }}
-    chain={base}
-    chains={[base]}
-/>
     </>)}
      
     </>

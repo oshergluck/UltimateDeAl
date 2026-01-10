@@ -20,7 +20,6 @@ const StorePage = () => {
     const { mutate: sendTransaction, isPending } = useSendTransaction();
     const ThirdWEBAPI = import.meta.env.VITE_THIRDWEB_CLIENT;
     const POLYRPC = `https://8453.rpc.thirdweb.com/${ThirdWEBAPI}`;
-    const POLYRPC1 = 'https://base-mainnet.g.alchemy.com/v2/d32cys2ito51Xt9AgfAUTBuIuQd-yQbm';
     const defaultFontSizeIndex = fontSizes.indexOf('sm');
     
     // API URL Definition

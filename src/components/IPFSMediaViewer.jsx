@@ -1,172 +1,94 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 
 const IPFSMediaViewer = ({ ipfsLink, className = '' }) => {
-  const [contentType, setContentType] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // כברירת מחדל, אנחנו מניחים שזו תמונה כדי לחסוך בקשות רשת
+  // רק אם הטעינה נכשלת, נשנה את הסטייט
+  const [mediaType, setMediaType] = useState('image');
   const [error, setError] = useState(null);
 
-  // Helper to determine type from string extension (Instant, no network needed)
-  const getTypeFromExtension = (url) => {
-    if (!url) return null;
-    const cleanUrl = url.split(/[?#]/)[0]; // Remove query params
-    const extension = cleanUrl.split('.').pop().toLowerCase();
-
-    const typeMap = {
-      // Images
-      jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image', svg: 'image',
-      // Video
-      mp4: 'video', webm: 'video', ogg: 'video', mov: 'video',
-      // Audio
-      mp3: 'audio', wav: 'audio', m4a: 'audio',
-      // Documents
-      pdf: 'document', doc: 'document', docx: 'document', txt: 'document', json: 'document'
-    };
-
-    return typeMap[extension] || null;
+  // פונקציה מהירה לזיהוי סיומת אם קיימת ב-URL (ללא בקשת רשת)
+  const getInitialType = (url) => {
+    if (!url) return 'image';
+    const cleanUrl = url.split(/[?#]/)[0].toLowerCase();
+    if (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov')) return 'video';
+    if (cleanUrl.endsWith('.mp3') || cleanUrl.endsWith('.wav')) return 'audio';
+    if (cleanUrl.endsWith('.pdf')) return 'document';
+    return 'image';
   };
 
-  useEffect(() => {
-    if (!ipfsLink) return;
-
-    // 1. Try to get type instantly from URL string
-    const instantType = getTypeFromExtension(ipfsLink);
-    if (instantType) {
-      setContentType(instantType);
-      setIsLoading(false);
-      return;
+  // משתמשים ב-useMemo כדי לחשב את הסוג הראשוני רק כשהלינק משתנה
+  useMemo(() => {
+    const initial = getInitialType(ipfsLink);
+    if (initial !== 'image') {
+        setMediaType(initial);
     }
-
-    // 2. If no extension, fetch headers (with timeout)
-    let isMounted = true;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-    const fetchContentType = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(ipfsLink, { 
-          method: 'HEAD',
-          signal: controller.signal 
-        });
-        
-        if (!isMounted) return;
-        
-        const type = response.headers.get('content-type');
-        setContentType(getMediaTypeFromMime(type));
-        setError(null);
-      } catch (error) {
-        if (!isMounted) return;
-        // Don't show error to user, just fall back to "unknown" view
-        console.warn('Could not determine content type via headers, defaulting to generic view.');
-        setContentType('unknown');
-      } finally {
-        clearTimeout(timeoutId);
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchContentType();
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-      clearTimeout(timeoutId);
-    };
   }, [ipfsLink]);
 
-  const getMediaTypeFromMime = (mimeType) => {
-    if (!mimeType) return 'unknown';
-    if (mimeType.startsWith('video/')) return 'video';
-    if (mimeType.startsWith('image/')) return 'image';
-    if (mimeType.startsWith('audio/')) return 'audio';
-    if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.startsWith('text/')) return 'document';
-    return 'unknown';
+  const combinedClassName = `w-full rounded-lg shadow-lg bg-gray-100 dark:bg-slate-800 overflow-hidden ${className}`.trim();
+
+  const handleImageError = () => {
+    // אם התמונה נכשלה לטעון, ננסה להציג כווידאו
+    if (mediaType === 'image') {
+      setMediaType('video');
+    } else {
+        // אם גם וידאו לא עובד, נסמן כשגיאה או קובץ כללי
+        setMediaType('unknown');
+    }
   };
 
-  // Memoize logic to prevent re-renders
-  const mediaType = useMemo(() => {
-    // If we have a state type, use it, otherwise 'unknown'
-    return contentType || 'unknown';
-  }, [contentType]);
-
-  // Styles
-  const baseStyles = "w-full rounded-lg shadow-lg bg-gray-100 dark:bg-slate-800 overflow-hidden";
-  const combinedClassName = `${baseStyles} ${className}`.trim();
-
-  if (isLoading) {
-    return (
-      <div className={`${combinedClassName} h-48 flex items-center justify-center`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-yellow-500 border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  // Render Logic
   const renderMedia = () => {
     switch (mediaType) {
-      case 'video':
-        return (
-          <video 
-            src={ipfsLink} 
-            className="w-full h-auto max-h-[500px] object-contain bg-black"
-            controls 
-            playsInline
-            preload="metadata"
-          />
-        );
-      
       case 'image':
         return (
           <img 
             src={ipfsLink} 
             alt="IPFS content"
-            className="w-full h-auto max-h-[500px] object-contain"
+            className="w-full h-full object-cover" // שיניתי ל-cover כדי למלא את הריבוע יפה
             loading="lazy"
-            onError={(e) => {
-              // Fallback if image fails to load
-              e.target.style.display = 'none';
-              setContentType('unknown');
-            }}
+            onError={handleImageError}
+          />
+        );
+
+      case 'video':
+        return (
+          <video 
+            src={ipfsLink} 
+            className="w-full h-full object-contain bg-black"
+            controls 
+            playsInline
+            preload="metadata"
+            onError={() => setMediaType('unknown')} // אם גם וידאו נכשל
           />
         );
       
       case 'audio':
         return (
-          <div className="p-6 flex flex-col items-center justify-center gap-4">
-            <div className="text-4xl">🎵</div>
-            <audio src={ipfsLink} className="w-full" controls />
+          <div className="w-full h-full flex items-center justify-center bg-gray-200 min-h-[100px]">
+            <audio src={ipfsLink} controls className="w-10/12" />
           </div>
         );
-      
+
       case 'document':
         return (
-          <iframe 
+            <iframe 
             src={ipfsLink} 
-            title="Document Viewer"
-            className="w-full h-[500px]"
-            sandbox="allow-same-origin allow-scripts"
-          />
+            title="Document"
+            className="w-full h-full min-h-[200px]"
+            />
         );
       
       case 'unknown':
       default:
         return (
-          <div className="p-8 text-center flex flex-col items-center justify-center gap-4">
-            <div className="text-gray-500 dark:text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <p className="font-medium">File Preview Unavailable</p>
-              <p className="text-sm opacity-75">Click below to view the file directly</p>
-            </div>
-            
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gray-800 text-white min-h-[150px]">
+            <p className="text-sm mb-2">File not previewable</p>
             <a 
               href={ipfsLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm font-medium"
+              className="text-blue-400 underline text-xs"
             >
-              Open File
+              Open Link
             </a>
           </div>
         );
@@ -175,9 +97,7 @@ const IPFSMediaViewer = ({ ipfsLink, className = '' }) => {
 
   return (
     <div className={combinedClassName}>
-      {error ? (
-        <div className="p-4 text-red-500 text-center text-sm">{error}</div>
-      ) : renderMedia()}
+      {renderMedia()}
     </div>
   );
 };
