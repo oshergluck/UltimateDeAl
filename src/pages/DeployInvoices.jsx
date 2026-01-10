@@ -84,14 +84,14 @@ export default function DeployInvoices() {
   };
 
   return (
-    <div className="min-h-screen linear-gradient1 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-4 shadow-lg">
             <Coins className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Deploy ESH Invoices</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Deploy ESH Invoices</h1>
           <p className="text-white">Create and deploy your custom shop invoices contract on Base</p>
         </div>
 
