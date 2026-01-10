@@ -727,7 +727,7 @@ return (<>
   <div className="mx-auto p-8 mt-9  rounded-2xl overflow-auto touch-auto">
 
 <div className='relative justify-center flex cursor-pointer' onClick={() => navigateToStore()}>
-<img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />
+{storeBanner && <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />}
               <h1 className="text-center flex font-bold text-[#ff9900] drop-shadow-md sm:text-8xl text-5xl">{storeName}</h1>
           </div>
 <div className='w-full justify-center gap-8 flex'>

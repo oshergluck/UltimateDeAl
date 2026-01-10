@@ -650,7 +650,7 @@ const StorePage = () => {
         <div className="rounded-[15px] mx-auto px-2 sm:p-8 mt-[35px] overflow-x-hidden touch-auto w-full max-w-[100vw]">
             
             <div className='relative justify-center flex'>
-                <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />
+                {storeBanner && <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />}
                 <h1 className="text-center flex font-bold text-[#ff9900] drop-shadow-md sm:text-8xl text-5xl">{storeName}</h1>
             </div>
             <div className='my-[25px]'>
@@ -842,13 +842,37 @@ const StorePage = () => {
                         >
                             Close Chart
                         </button>
-                        <div className="rounded-[15px] mx-auto h-full w-full relative min-[1400px]">
-                            <iframe
-                                className="absolute top-0 left-0 w-full h-full border-0"
-                                src={`https://dexscreener.com/base/${theERCUltra}?embed=1&loadChartSettings=0&tabs=0&info=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15`}
-                            />
-                        </div>
-
+                        
+                        {/* Mobile Optimization Check */}
+                        {window.innerWidth <= 768 ? (
+                             <div className="flex flex-col items-center justify-center h-full bg-[#1a1a1a] rounded-[15px] p-6 border border-gray-700">
+                                <h3 className="text-white text-xl mb-4 text-center">Charts are heavy for mobile wallets</h3>
+                                <p className="text-gray-400 mb-6 text-center text-sm">To prevent the app from freezing, please open the live chart in a secure external browser.</p>
+                                <a 
+                                    href={`https://www.geckoterminal.com/base/tokens/${theERCUltra}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-cyan-500 text-black font-bold py-3 px-6 rounded-lg hover:bg-cyan-400 transition-colors"
+                                >
+                                    Open Chart in New Tab ↗
+                                </a>
+                             </div>
+                        ) : (
+                            /* Desktop Version - Loads the Iframe */
+                            <iframe 
+                                height="100%" 
+                                width="100%" 
+                                className='rounded-[15px] mx-auto h-full w-full' 
+                                id="geckoterminal-embed" 
+                                title="GeckoTerminal Embed" 
+                                src={`https://www.geckoterminal.com/base/tokens/${theERCUltra}?embed=1&info=0&swaps=1`} 
+                                frameBorder="0" 
+                                allow="clipboard-write" 
+                                allowFullScreen
+                                loading="lazy" // שיפור ביצועים נוסף
+                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms" // הגבלת הרשאות למניעת זליגת זיכרון
+                            ></iframe>
+                        )}
                     </div>
                 )}
             </div>
