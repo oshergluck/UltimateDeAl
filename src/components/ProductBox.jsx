@@ -107,7 +107,7 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
   return (
     <div className='relative group'>
       <div
-        className="product-box w-[380px] h-[500px] flex flex-col p-2 rounded-[15px] border-[1px] border-cyan-300 cursor-pointer hover:shadow-2xl transition-all duration-300 bg-black backdrop-blur-sm overflow-hidden"
+        className="product-box w-[380px] h-[420px] flex flex-col p-2 rounded-[15px] border-[1px] border-cyan-300 cursor-pointer hover:shadow-2xl transition-all duration-300 bg-black backdrop-blur-sm overflow-hidden"
         onClick={onClick}
       >
         {/* --- 1. Title Area (Fixed Height) --- */}

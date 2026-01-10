@@ -475,7 +475,7 @@ const getCampaignRewardTokens = async () => {
             return {
                 domain: window.location.host, // או "ultrashop.tech"
                 address: address,
-                statement: "I authorize this session for the UltraShop Dashboard.",
+                statement: "I authorize this session for the UltraShop",
                 version: "1", // חובה!
                 nonce: randomString, // חובה!
                 chain_id: "8453", // Base Mainnet ID

@@ -158,7 +158,7 @@ const HeaderMobile = () => {
                           return {
                               domain: window.location.host,
                               address: address,
-                              statement: "I authorize this session for the UltraShop Dashboard.",
+                              statement: "I authorize this session for the UltraShop",
                               version: "1",
                               nonce: randomString,
                               chain_id: "8453",

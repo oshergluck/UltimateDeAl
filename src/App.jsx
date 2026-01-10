@@ -61,6 +61,7 @@ import {
 import { useMediaQuery } from "react-responsive";
 
 export default function App() {
+  
   const isShop = window.location.pathname.split("/")[1];
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const { term } = useParams();
