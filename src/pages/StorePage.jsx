@@ -63,6 +63,9 @@ const StorePage = () => {
     const [owner, setOwner] = useState('');
     const { contract: ShareContract } = useContract(theERCUltra);
 
+    // New State for Chart Lazy Loading
+    const [showChart, setShowChart] = useState(false);
+
     // Modal States for Unregister
     const [showUnregisterModal, setShowUnregisterModal] = useState(false);
     const [confirmUnregister, setConfirmUnregister] = useState(false);
@@ -150,28 +153,48 @@ const StorePage = () => {
             setIsLoading(true);
             
             const barcodes = await theStoreContract.call('getAllProductsBarcodes');
-            const products = [];
-            for (const barcode of barcodes) {
-                const product = await theStoreContract.call('products', [barcode]);
+            
+            let products = [];
+            const chunkSize = 5; // Process 5 items at a time to prevent mobile freezing
+
+            for (let i = 0; i < barcodes.length; i += chunkSize) {
+                const chunk = barcodes.slice(i, i + chunkSize);
                 
-                // Ensure the barcode is correctly stored with the product
-                if (category === 'All' || product.category === category) {
-                    await products.push({
-                        barcode: barcode,   // Make sure this is the correct barcode
-                        name: product.name,
-                        description: product.description,
-                        category: product.category,
-                        price: product.price,
-                        image: product.image,
-                        quantity: product.quantity
-                    });
-                }
+                const chunkPromises = chunk.map(async (barcode) => {
+                    try {
+                        const product = await theStoreContract.call('products', [barcode]);
+                        
+                        if (category === 'All' || product.category === category) {
+                            return {
+                                barcode: barcode,
+                                name: product.name,
+                                description: product.description,
+                                productDescription: product.description, 
+                                category: product.category,
+                                price: product.price,
+                                image: product.image,
+                                discountPercentage: product.discountPercentage,
+                                quantity: product.quantity
+                            };
+                        }
+                        return null;
+                    } catch (err) {
+                        console.error(`Error loading product ${barcode}:`, err);
+                        return null;
+                    }
+                });
+
+                const chunkResults = await Promise.all(chunkPromises);
+                products = [...products, ...chunkResults.filter(p => p !== null)];
             }
             
             console.log('Loaded products:', products);
+            
             if (products.length > 0) {
-                await setAllProducts(products);
-            } // Debug log
+                setAllProducts(products);
+            } else {
+                setAllProducts([]);
+            }
             setIsLoading(false);
             
         } catch (error) {
@@ -803,12 +826,31 @@ const StorePage = () => {
             <p className='text-center text-[#FFFFFF] sm:text-[30px] text-[12px] font-bold my-[25px]'>{theSymbolOfReward} address is {rewardAddress}</p>
             <p className=''></p>
             {theSymbolOfReward && rewardAddress ? (<><Swapper ERCUltraAddress={rewardAddress} SYMBOL={theSymbolOfReward} /></>) : (<></>)}
+            <div className='sm:flex sm:justify-items-center m-auto sm:items-center rounded-[15px] sm:w-11/12 w-full justify-center flex flex-col'>
+                {!showChart ? (
+                    <button 
+                        className="bg-[#FFDD00] text-black font-bold py-4 px-8 rounded-lg text-xl my-4 hover:opacity-80 transition-opacity"
+                        onClick={() => setShowChart(true)}
+                    >
+                        Load Price Chart
+                    </button>
+                ) : (
+                    <div className="relative w-full h-[720px]">
+                        <button 
+                            className="absolute top-2 right-2 z-10 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                            onClick={() => setShowChart(false)}
+                        >
+                            Close Chart
+                        </button>
+                        <div className="rounded-[15px] mx-auto h-full w-full relative min-[1400px]">
+                            <iframe
+                                className="absolute top-0 left-0 w-full h-full border-0"
+                                src={`https://dexscreener.com/base/${theERCUltra}?embed=1&loadChartSettings=0&tabs=0&info=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15`}
+                            />
+                        </div>
 
-
-            <p className='text-center text-[#FFFFFF] sm:text-[50px] text-[25px] font-bold my-[25px]'>{theSymbolOfReward} Price</p>
-            <div className='sm:flex sm:justify-items-center m-auto sm:items-center rounded-[15px] sm:w-11/12 w-full'>
-                <iframe height="100%" width="100%" className='rounded-[15px] mx-auto h-[720px] w-full' id="geckoterminal-embed" title="GeckoTerminal Embed" src={`https://www.geckoterminal.com/base/tokens/${theERCUltra}?embed=1&info=0&swaps=1`} frameBorder="0" allow="clipboard-write" allowFullScreen></iframe>
-
+                    </div>
+                )}
             </div>
 
             {/* Moved Products Section Here */}
@@ -872,7 +914,7 @@ const StorePage = () => {
                                             contract={theStoreContract}
                                             key={index}
                                             product={product.barcode}
-                                            productData={product}
+                                            productData={product} // Passing the full product object here
                                             onClick={() => handleProductSelect(product.barcode)}
                                             type={type}
                                             paymentAddress={paymentAddress}
