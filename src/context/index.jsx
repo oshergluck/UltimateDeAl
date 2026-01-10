@@ -23,7 +23,6 @@ export const StateContextProvider = ({ children }) => {
   const {contract:storeRegistery} = useContract(import.meta.env.VITE_STORE_REGISTERY);
   const {contract:TrueBlockchain} = useContract(import.meta.env.VITE_STORE_REGISTERY);
   const POLYRPC = `https://8453.rpc.thirdweb.com/${ThirdWEBAPI}`;
-  const POLYRPC1 = 'https://base-mainnet.g.alchemy.com/v2/d32cys2ito51Xt9AgfAUTBuIuQd-yQbm';
   const fetchWithConfig = async (endpoint, data) => {
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
