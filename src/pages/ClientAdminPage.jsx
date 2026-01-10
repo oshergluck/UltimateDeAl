@@ -1041,7 +1041,7 @@ Wallet: ~${c.wallet}~
     };
 
     return (
-        <div className="min-h-screen linear-gradient1 text-gray-100 p-2 sm:p-4 md:p-6">
+        <div className="min-h-screen text-gray-100 p-2 sm:p-4 md:p-6">
             <div className="max-w-7xl mx-auto bg-slate-800/50 rounded-xl shadow-2xl backdrop-blur-sm border border-slate-700 overflow-hidden">
                 {isLoading && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">

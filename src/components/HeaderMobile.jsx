@@ -67,6 +67,15 @@ const HeaderMobile = () => {
       </svg>
     </IconWrap>
   );
+
+  const UserIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c1.5-4 14.5-4 16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    </IconWrap>
+  )
+
   const PlusIcon = () => (
     <IconWrap>
       <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
@@ -95,6 +104,14 @@ const HeaderMobile = () => {
       </svg>
     </IconWrap>
   );
+
+  const WalletIcon = () => (
+    <IconWrap>
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+        <path d="M3 7h18v10H3zM17 12h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    </IconWrap>
+  )
 
   // close on Esc
   useEffect(() => {
@@ -298,9 +315,16 @@ const HeaderMobile = () => {
                     </button>
                   </li>
                 )}
+                {address && (
+                  <li>
+                    <button onClick={go("/dashboard")} className={navBtnClass}>
+                      <UserIcon /> <span className={navTextClass}>Dashboard</span>
+                    </button>
+                  </li>
+                )}
                 <li>
                   <button onClick={go("/home")} className={navBtnClass}>
-                    <BlogIcon /> <span className={navTextClass}>Shops</span>
+                    <WalletIcon /> <span className={navTextClass}>Shops</span>
                   </button>
                 </li>
               </ul>

@@ -352,6 +352,9 @@ const getCampaignRewardTokens = async () => {
     const handleBlogNavigate = () => {
         navigate('/blog');
     };
+    const handleDashboardNavigate = () => {
+        navigate('/dashboard');
+    };
 
     const handleAboutNavigate = () => {
         navigate('/about');
@@ -442,6 +445,7 @@ const getCampaignRewardTokens = async () => {
                             <button onClick={naviateToVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Launch Coin</button>
                             <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Coin</button>
                             <button onClick={naviateToShops} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Shops</button>
+                            {address ? (<button onClick={handleDashboardNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Dashboard</button>) : (<></>)}
                         </div>
                     </div>
                     <div className='mr-[20px] py-[5px] my-auto flex items-center gap-4'>

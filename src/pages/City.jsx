@@ -49,7 +49,7 @@ const City = () => {
     const DEALShare = getContract({
         client: client,
         chain: { id: 8453, rpc: POLYRPC },
-        address: '0xD90B9dB989b83B5d112c3e9fABd1a964E463E197',
+        address: '0xe9b7c1712f9d7c64ec3f3953be5560fe1a64041b',
     });
 
     useEffect(() => {
@@ -307,7 +307,7 @@ const City = () => {
         try {
             setIsLoading(true);
             const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-                model: "gpt-4o", // or "gpt-4o-mini" for a more cost-effective option
+                model: "gpt-4o-mini", // or "gpt-4o-mini" for a more cost-effective option
                 messages: [{
                     role: "user",
                     content: `Rules:
