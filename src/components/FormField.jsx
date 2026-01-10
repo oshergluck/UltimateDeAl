@@ -1,6 +1,7 @@
 import React from 'react'
 
-const FormField = ({ labelName, placeholder, inputType, isTextArea, value, handleChange,style }) => {
+// הוספתי את readOnly לרשימת ה-props
+const FormField = ({ labelName, placeholder, inputType, isTextArea, value, handleChange, style, readOnly }) => {
 
   const handleTextAreaChange = (event) => {
     const originalText = event.target.value;
@@ -10,11 +11,12 @@ const FormField = ({ labelName, placeholder, inputType, isTextArea, value, handl
     event.target.value = textWithSlashN;
 
     // Call the parent handleChange with the modified event
-    handleChange(event);
+    if (handleChange) handleChange(event); // הוספתי בדיקה אם הפונקציה קיימת
 
     // Restore the original text to allow for further editing
     event.target.value = originalText;
-};
+  };
+
   return (
     <label className="flex-1 flex flex-col">
       {labelName && (
@@ -26,6 +28,7 @@ const FormField = ({ labelName, placeholder, inputType, isTextArea, value, handl
           value={value}
           onChange={handleTextAreaChange}
           rows={10}
+          readOnly={readOnly} // הוספת readOnly כאן
           placeholder={placeholder}
           className={`py-[15px] sm:px-[25px] px-[15px] border-[1px] border-gray-600 outline-none linear-gradient1 font-epilogue text-white text-[16px] placeholder:text-white placeholder:opacity-[100%] rounded-[15px] ${style}`}
         />
@@ -36,6 +39,7 @@ const FormField = ({ labelName, placeholder, inputType, isTextArea, value, handl
           onChange={handleChange}
           type={inputType}
           step="1"
+          readOnly={readOnly} // הוספת readOnly כאן
           placeholder={placeholder}
           className={`py-[15px] sm:px-[25px] px-[15px] outline-none border-[1px] border-gray-600 linear-gradient1 font-epilogue text-white text-[16px] placeholder:text-white placeholder:opacity-[100%] rounded-[15px] ${style}`}
         />

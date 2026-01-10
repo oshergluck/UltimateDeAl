@@ -54,36 +54,40 @@ const AccessibilityMenu = () => {
     }
   }, [fontSize, isBlackAndWhite, isHighContrast]);
 
+  // מחלקה משותפת לכפתורים למניעת חזרות וקריאות טובה יותר
+  // הוספתי: text-white (ברירת מחדל), hover:text-black (במעבר עכבר), focus:text-black (בלחיצה/פוקוס)
+  const buttonClass = "block w-full py-2 px-4 mb-2 text-left text-white hover:bg-gray-100 hover:text-black focus:text-black focus:bg-gray-100 outline-none transition-colors duration-200";
+
   return (
     <div className="fixed bottom-4 left-0 z-50">
       <button onClick={toggleMenu} className="accessibility-toggle sm:w-[45px] w-[10%] ">
         <img src={accessibilityIcon} alt="Accessibility Options" className='opacity-[70%] duration-500 ease-in-out hover:opacity-[100%]'/>
       </button>
       {isOpen && (
-        <div className="accessibility-options bg-white shadow-md rounded p-3 mt-2">
+        <div className="accessibility-options bg-black shadow-md rounded p-3 mt-2 border border-gray-700">
           <button
             onClick={increaseFontSize}
-            className="block w-full py-2 px-4 mb-2 text-left hover:bg-gray-100"
+            className={buttonClass}
           >
             Increase Font Size
           </button>
           <button
             onClick={decreaseFontSize}
-            className="block w-full py-2 px-4 mb-2 text-left hover:bg-gray-100"
+            className={buttonClass}
           >
             Decrease Font Size
           </button>
           <button
             onClick={toggleHighContrast}
-            className="block w-full py-2 px-4 text-left hover:bg-gray-100"
+            className={buttonClass}
           >
             {isHighContrast ? 'Normal Contrast' : 'High Contrast'}
           </button>
           <button
             onClick={toggleBlackAndWhite}
-            className="block w-full py-2 px-4 text-left hover:bg-gray-100"
+            className={buttonClass}
           >
-            {isHighContrast ? 'Colors' : 'Black & White'}
+            {isBlackAndWhite ? 'Colors' : 'Black & White'}
           </button>
         </div>
       )}

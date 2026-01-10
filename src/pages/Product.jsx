@@ -176,6 +176,26 @@ const Product = () => {
       );
     };
 
+    // useEffect ייעודי לאיפוס נתונים בעת התנתקות
+  useEffect(() => {
+    if (!address) {
+      // המשתמש לא מחובר - נאפס את כל הסטייטים הקשורים למשתמש
+      setIsRegistered(false);
+      setOwnerShip(false);
+      setHasReceipt(false);
+      setCanLeaveReview(false);
+      setNameOfClient('');
+      setEmailOfClient('');
+      setPhoneNumOfClient('');
+      setPhysicalAddressOfClient('');
+      setAllowance(0);
+    } else {
+        // אופציונלי: אם המשתמש התחבר מחדש, נריץ בדיקה
+        checkRegistrationDB();
+        // הערה: checkOwnership רץ בתוך fetchStoreAndProducts אז לא חובה לקרוא לו כאן
+    }
+  }, [address]);
+
     function StarRatingMain({ rating }) {
       const renderStars = () => {
         const stars = [];
@@ -363,6 +383,9 @@ const Product = () => {
               
               if(address) {
                 checkRegistrationDB();
+              } else {
+                // אם אין כתובת, המשתמש בהכרח לא רשום
+                setIsRegistered(false);
               }
               
               if (data && data.length > 0) {
@@ -1095,22 +1118,15 @@ reviews.map((review, index) => (
       }
     }}
   >
-    {storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (<>
-    Purchase $USDC
-    </>
-  ):(<>
+    <>
       Purchase
-    </>)}
+    </>
     
   </TransactionButton>
   
 </>
 ):(<></>)}
-  
- 
-
   <br/>
-  {storeContractByURL=='0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d'|| storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD'? (<></>):(
     <>
     <button
         className="my-[30px] w-[150px] h-[50px] border-[1px] border-red-500 hover:bg-orange-400 bg-transparent text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1"
@@ -1119,72 +1135,7 @@ reviews.map((review, index) => (
         Unregister
       </button>
       </>
-  )}
-    {storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (<>
-  <TransactionButton
-  className={"!mr-[25px] !bg-[#FFDD00] !hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out"}
-  transaction={async () => {
-    const spender = storeContractByURL;
-    const value = amountOfProduct;
-    const tx = prepareContractCall({
-      contract:RewardContract,
-      method: "function approve(address spender, uint256 value) returns (bool)", 
-      params: [spender, value*1e18],
-      value: 0,
-    });
-    return tx;    
-  }}
-  onTransactionSent={(result) => {
-    console.log("Transaction submitted", result.transactionHash);
-  }}
-  onTransactionConfirmed={(receipt) => {
-    console.log("Transaction confirmed", receipt.transactionHash);
-  }}
-  onError={(error) => {
-    console.error("Transaction error", error);
-  }}
->
-  Approve DeAl
-</TransactionButton>
-<input
-      className="w-2/12 p-2 mt-[10px] mb-[15px] rounded-lg linear-gradient1 text-white mx-[20px] placeholder:text-[#FFFFFF]"
-      type="number"
-      min={1}
-      placeholder="Invoice Id"
-      value={receipt}
-      onChange={(e) => setReceipt(e.target.value)}
-  />
-      <TransactionButton
-  className='!mt-[30px] !bg-[#FFDD00]'
-    transaction={async() => {
-      const productUrlDecoded1 = decodeUrlString(productUrl);
-      const tx = prepareContractCall({
-        contract:storeContract1,
-        method: "function sell(uint256 _amount,string memory _barcode,uint256 _invoiceId)", 
-        params: [amountOfProduct,productUrlDecoded1,receipt],
-        value: 0
-      });
-      return tx;
-    }}
-    onTransactionSent={(result) => {
-      console.log("Transaction submitted", result.transactionHash);
-    }}
-    onTransactionConfirmed={(receipt) => {
-      console.log("Transaction confirmed", receipt.transactionHash);
-      refreshPage();
-    }}
-    onError={(error) => {
-      console.error("Transaction error", error);
-    }}
-  >
-    Sell DeAl
-    
-  </TransactionButton>
-  <p className='mt-[15px] text-[#FFDD00]'>Balance Of The Bank: {formatNumberWithCommas(Balance.toFixed(2))}$</p>
-    </>
-  ):(<></>)}
-  
-  
+   
   </>):(<>
       {address? (<> <h2 className="text-2xl font-semibold text-white">Register as a client of this store</h2>
               <p className="text-gray-300 mt-[10px]">All details are encrypted by the website</p>

@@ -37,12 +37,12 @@ const HeaderMobile = () => {
   ];
   const client = createThirdwebClient({ clientId: import.meta.env.VITE_THIRDWEB_CLIENT });
 
-  // --- Supported tokens (static + optional dynamic if you want to re-enable later) ---
+  // --- Supported tokens ---
   const staticTokens = [
     { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", name: "USD Coin", symbol: "USDC", icon: usdcoinusdclogo },
     { address: "0x4200000000000000000000000000000000000006", name: "Wrapped ETH", symbol: "WETH", icon: WethLogo },
   ];
-  const allSupportedTokens = { [base.chainId]: staticTokens }; // plug your dynamic list back here if desired
+  const allSupportedTokens = { [base.chainId]: staticTokens };
 
   // --- Nav helpers ---
   const go = (path, shouldClose = true) => () => {
@@ -50,8 +50,9 @@ const HeaderMobile = () => {
     navigate(path);
   };
 
-  // --- Icons (stroke inherits currentColor so they match text) ---
-  const IconWrap = ({ children }) => <span className="inline-flex w-6 h-6">{children}</span>;
+  // --- Icons ---
+  const IconWrap = ({ children }) => <span className="inline-flex w-6 h-6 text-cyan-400 group-hover:text-yellow-300 transition-colors duration-300">{children}</span>;
+  
   const HomeIcon = () => (
     <IconWrap>
       <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
@@ -102,11 +103,15 @@ const HeaderMobile = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
+  // Reusable Nav Button Style
+  const navBtnClass = "group w-full flex items-center gap-3 px-3 py-3 rounded-xl border border-slate-800 bg-slate-950/40 hover:bg-slate-900/60 hover:border-cyan-400/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-300 backdrop-blur-md";
+  const navTextClass = "text-base font-medium text-slate-200 group-hover:text-white transition-colors";
+
   return (
     <>
       {/* Fixed header */}
-      <header className="fixed top-0 inset-x-0 z-50 shadow-lg">
-        <div className="bg-black">
+      <header className="fixed top-0 inset-x-0 z-50 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+        <div className="bg-black/80 backdrop-blur-lg border-b border-white/5">
           <div className="mx-auto max-w-6xl px-3 sm:px-4">
             <div className="h-[64px] sm:h-[72px] flex items-center justify-between">
               {/* Brand */}
@@ -118,205 +123,198 @@ const HeaderMobile = () => {
                 <img
                   src={logoOfWebsite}
                   alt="UltraShop logo"
-                  className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur object-contain"
+                  className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur object-contain border border-white/10"
                 />
                 <div className="flex items-baseline leading-none">
-                  <span className="text-white font-epilogue font-semibold sm:text-xl text-[16px] tracking-tight">Ultra</span>
-                  <span className="text-[#FFDD00] font-epilogue font-semibold sm:text-xl text-[16px] tracking-tight">Shop</span>
+                  <span className="text-white font-epilogue font-semibold sm:text-xl text-[13px] tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">Ultra</span>
+                  <span className="text-[#FFDD00] font-epilogue font-semibold sm:text-xl text-[13px] tracking-tight drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]">Shop</span>
                 </div>
               </button>
 
-              {/* Wallet button (kept visible on mobile) */}
+              {/* Wallet button & Menu */}
               <div className="shrink-0 flex items-center gap-2">
-                <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white hover:text-[#FFDD00] transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="relative cursor-pointer group" onClick={() => navigate('/cart')}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-slate-300 group-hover:text-[#FFDD00] group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     {totalItems > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                        <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-[0_0_10px_rgba(236,72,153,0.8)]">
                             {totalItems}
                         </span>
                     )}
                 </div>
 
-              <ConnectButton
-    autoConnect={true}
-    client={client}
-    wallets={wallets}
-    theme="dark"
-    connectButton={{ label: "Connect" }}
-    auth={{
-        // 1. יצירת הודעת החתימה עם כל השדות החובה
-        getLoginPayload: async ({ address }) => {
-            const now = new Date();
-            const expiration = new Date(now.getTime() + 5 * 60 * 60 * 1000); // 5 שעות
-            
-            // יצירת מחרוזת רנדומלית (Nonce) - קריטי לאבטחה
-            const randomString = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-            return {
-                domain: window.location.host, // או "ultrashop.tech"
-                address: address,
-                statement: "I authorize this session for the UltraShop Dashboard.",
-                version: "1", // חובה!
-                nonce: randomString, // חובה!
-                chain_id: "8453", // Base Mainnet ID
-                issued_at: now.toISOString(), // חובה!
-                expiration_time: expiration.toISOString(),
-                uri: window.location.origin, // חובה!
-            };
-        },
-        
-        // 2. מה קורה אחרי חתימה מוצלחת
-        doLogin: async (params) => {
-            console.log("User signed in successfully", params);
-            // שומרים סימון שהמשתמש התחבר + זמן תפוגה בלוקל סטורג'
-            // זה גורם לכפתור להבין שאנחנו מחוברים
-            const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
-            localStorage.setItem("auth_token", "signed_in");
-            localStorage.setItem("auth_expiry", expirationTime);
-        },
-
-        // 3. בדיקה האם המשתמש כבר מחובר (בודק גם תוקף של 5 שעות)
-        isLoggedIn: async () => {
-            const token = localStorage.getItem("auth_token");
-            const expiry = localStorage.getItem("auth_expiry");
-            
-            if (!token || !expiry) return false;
-            
-            // בדיקה אם עברו 5 שעות
-            if (new Date() > new Date(expiry)) {
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("auth_expiry");
-                return false;
-            }
-            
-            return true;
-        },
-
-        // 4. התנתקות
-        doLogout: async () => {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("auth_expiry");
-            console.log("User logged out");
-        },
-    }}
-    connectModal={{
-        size: "wide",
-        title: "UltraShop",
-        titleIcon: logoOfWebsite,
-        welcomeScreen: {
-            title: "UltraShop",
-            subtitle: "Create your own coin or invest in other coins",
-            img: { src: logoOfWebsite, width: 150, height: 150 },
-        },
-        termsOfServiceUrl: "https://ultrashop.tech/terms",
-        privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
-        showThirdwebBranding: true,
-    }}
-    supportedTokens={allSupportedTokens}
-    detailsButton={{
-        displayBalanceToken: { [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
-    }}
-    chain={base}
-    chains={[base]}
-/>
+                <ConnectButton
+                  autoConnect={true}
+                  client={client}
+                  wallets={wallets}
+                  theme="dark"
+                  connectButton={{ label: "Connect" }}
+                  auth={{
+                      getLoginPayload: async ({ address }) => {
+                          const now = new Date();
+                          const expiration = new Date(now.getTime() + 5 * 60 * 60 * 1000); 
+                          const randomString = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                          return {
+                              domain: window.location.host,
+                              address: address,
+                              statement: "I authorize this session for the UltraShop Dashboard.",
+                              version: "1",
+                              nonce: randomString,
+                              chain_id: "8453",
+                              issued_at: now.toISOString(),
+                              expiration_time: expiration.toISOString(),
+                              uri: window.location.origin,
+                          };
+                      },
+                      doLogin: async (params) => {
+                          console.log("User signed in successfully", params);
+                          const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
+                          localStorage.setItem("auth_token", "signed_in");
+                          localStorage.setItem("auth_expiry", expirationTime);
+                      },
+                      isLoggedIn: async () => {
+                          const token = localStorage.getItem("auth_token");
+                          const expiry = localStorage.getItem("auth_expiry");
+                          if (!token || !expiry) return false;
+                          if (new Date() > new Date(expiry)) {
+                              localStorage.removeItem("auth_token");
+                              localStorage.removeItem("auth_expiry");
+                              return false;
+                          }
+                          return true;
+                      },
+                      doLogout: async () => {
+                          localStorage.removeItem("auth_token");
+                          localStorage.removeItem("auth_expiry");
+                          console.log("User logged out");
+                      },
+                  }}
+                  connectModal={{
+                      size: "wide",
+                      title: "UltraShop",
+                      titleIcon: logoOfWebsite,
+                      welcomeScreen: {
+                          title: "UltraShop",
+                          subtitle: "Create your own coin or invest in other coins",
+                          img: { src: logoOfWebsite, width: 150, height: 150 },
+                      },
+                      termsOfServiceUrl: "https://ultrashop.tech/terms",
+                      privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
+                      showThirdwebBranding: true,
+                  }}
+                  supportedTokens={allSupportedTokens}
+                  detailsButton={{
+                      displayBalanceToken: { [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
+                  }}
+                  chain={base}
+                  chains={[base]}
+                />
               </div>
 
               {/* Menu button */}
               <button
                 onClick={toggle}
-                className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-white/30"
+                className="ml-2 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 hover:border-cyan-400 active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
                 aria-label="Open menu"
                 aria-expanded={open}
               >
-                <img src={menu} alt="" className="w-6 h-6" />
+                <img src={menu} alt="" className="w-6 h-6 invert opacity-80" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Spacer so content doesn't hide under fixed header */}
+      {/* Spacer */}
       <div className="h-[64px] sm:h-[72px]" />
 
       {/* Backdrop */}
       <div
         onClick={close}
         className={`fixed inset-0 z-40 transition ${
-          open ? "visible bg-black/50 backdrop-blur-sm" : "invisible bg-transparent"
+          open ? "visible bg-black/60 backdrop-blur-sm" : "invisible bg-transparent"
         } duration-200`}
         aria-hidden={!open}
       />
 
-      {/* Slide-in mobile menu (right drawer) */}
+      {/* Slide-in mobile menu (Cyberpunk Style) */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-dvh w-[88%] max-w-sm linear-gradient1 border-l border-white/10 shadow-2xl
-        transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 right-0 z-50 h-dvh w-[88%] max-w-sm bg-black border-l border-cyan-500/20 shadow-[-10px_0_40px_rgba(6,182,212,0.15)]
+        transition-transform duration-300 overflow-hidden ${open ? "translate-x-0" : "translate-x-full"}`}
         role="dialog"
         aria-label="Mobile navigation"
       >
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-white/90 font-semibold">Menu</span>
-          </div>
-          <button
-            onClick={close}
-            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
-            aria-label="Close menu"
-          >
-            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none">
-              <path d="M6 6l12 12M18 6L6 18" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Links */}
-        <nav className="px-3 pb-4">
-          <ul className="space-y-2">
-            <li>
-              <button onClick={go("/")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <HomeIcon /> <span className="text-base font-medium">Home</span>
+        {/* BACKGROUND AURAS (Matching App.jsx) */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),_transparent_70%),radial-gradient(circle_at_bottom_right,_rgba(236,72,153,0.25),_transparent_60%)] opacity-80" />
+        {/* CYBER GRID (Matching App.jsx) */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.1)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 mix-blend-soft-light" />
+        
+        {/* Content Container (z-10 to sit above background) */}
+        <div className="relative z-10 flex flex-col h-full">
+            
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <span className="text-white font-bold tracking-wider drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">MENU</span>
+              </div>
+              <button
+                onClick={close}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800/50 hover:bg-red-500/20 border border-transparent hover:border-red-500/50 text-slate-400 hover:text-red-400 transition-all duration-300"
+                aria-label="Close menu"
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
               </button>
-            </li>
-            <li>
-              <button onClick={go("/about")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <GridIcon /> <span className="text-base font-medium">About</span>
-              </button>
-            </li>
-            <li>
-              <button onClick={go("/deploy-esh")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <StarIcon /> <span className="text-base font-medium">Create Coin</span>
-              </button>
-            </li>
-            <li>
-              <button onClick={go("/coin-launcher")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-              <PlusIcon /> <span className="text-base font-medium">Launch Coin</span>
-              </button>
-            </li>
-            {address && (
-              <li>
-                <button onClick={go("/my-coins")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                  <FolderIcon /> <span className="text-base font-medium">My Coins</span>
-                </button>
-              </li>
-            )}
-            <li>
-              <button onClick={go("/home")} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/90">
-                <BlogIcon /> <span className="text-base font-medium">Shops</span>
-              </button>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Footer / tagline */}
-        <div className="mt-auto px-4 pb-6">
-          <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-            <div className="text-white/90 font-semibold">UltraShop on Base</div>
-            <div className="text-white/70 text-sm mt-1">
-              Launch, invest, and trade coins. Simple UX, gas-efficient, and fast.
             </div>
-          </div>
+
+            {/* Links */}
+            <nav className="px-4 py-6 overflow-y-auto custom-scrollbar">
+              <ul className="space-y-3">
+                <li>
+                  <button onClick={go("/")} className={navBtnClass}>
+                    <HomeIcon /> <span className={navTextClass}>Home</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={go("/about")} className={navBtnClass}>
+                    <GridIcon /> <span className={navTextClass}>About</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={go("/deploy-esh")} className={navBtnClass}>
+                    <StarIcon /> <span className={navTextClass}>Create Coin</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={go("/coin-launcher")} className={navBtnClass}>
+                  <PlusIcon /> <span className={navTextClass}>Launch Coin</span>
+                  </button>
+                </li>
+                {address && (
+                  <li>
+                    <button onClick={go("/my-coins")} className={navBtnClass}>
+                      <FolderIcon /> <span className={navTextClass}>My Coins</span>
+                    </button>
+                  </li>
+                )}
+                <li>
+                  <button onClick={go("/home")} className={navBtnClass}>
+                    <BlogIcon /> <span className={navTextClass}>Shops</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+
+            {/* Footer / tagline */}
+            <div className="mt-auto px-4 pb-8 pt-4">
+              <div className="rounded-2xl border border-fuchsia-500/20 bg-black/40 p-5 backdrop-blur-md shadow-[0_0_20px_rgba(236,72,153,0.1)]">
+                <div className="text-white font-bold tracking-wide">UltraShop on Base</div>
+                <div className="text-slate-400 text-sm mt-1 leading-relaxed">
+                  Launch, invest, and trade coins. <span className="text-cyan-400">Simple UX</span>, gas-efficient, and fast.
+                </div>
+              </div>
+            </div>
         </div>
       </aside>
     </>

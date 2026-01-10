@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usdcoinusdclogo, ETHLogo, logoOfWebsite } from '../assets';
+import { usdcoinusdclogo, logoOfWebsite } from '../assets';
 import Slider from 'react-slick';
 import { useStateContext } from '../context';
 import { createThirdwebClient } from 'thirdweb';
@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 import { IPFSMediaViewer } from '../components';
 import { useCart } from '../context/CartContext';
 
-const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddress,storeAddress }) => {
+const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddress, storeAddress }) => {
   const { HexToInteger } = useStateContext();
   const { addToCart } = useCart();
   
@@ -67,14 +67,11 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
             return;
         }
 
-        // --- תיקון קריטי: שליפת הכתובת כמחרוזת בלבד ---
-
         if (!storeAddress) {
             alert("System Error: Could not detect Store Address. Refresh and try again.");
             console.error("Contract prop is invalid:", contract);
             return;
         }
-        // ------------------------------------------------
 
         const cartItem = {
             name: productData.name,
@@ -85,13 +82,11 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
             description: productData.productDescription
         };
         
-        // שולחים את storeAddress שהוא string בטוח
         addToCart(cartItem, type, storeAddress, parseInt(quantityToAdd));
         
         setShowQuantityInput(false);
         setQuantityToAdd(1);
         
-        // פידבק למשתמש
         const btn = document.getElementById(`cart-btn-${product}`);
         if(btn) {
             btn.classList.add('bg-green-500');
@@ -112,32 +107,91 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
   return (
     <div className='relative group'>
       <div
-        className="product-box sm:w-[450px] w-[380px] relative sm:p-2 rounded-[15px] border-[1px] border-cyan-300 cursor-pointer sm:min-h-[400px] hover:shadow-2xl transition-all duration-300"
+        className="product-box w-[380px] h-[500px] flex flex-col p-2 rounded-[15px] border-[1px] border-cyan-300 cursor-pointer hover:shadow-2xl transition-all duration-300 bg-black backdrop-blur-sm overflow-hidden"
         onClick={onClick}
       >
-        <div className="font-bold text-gray-500 sm:text-3xl text-2xl text-center z-10 drop-shadow-md my-[15px] sm:min-h-[45px] min-h-[55px]">
+        {/* --- 1. Title Area (Fixed Height) --- */}
+        <div className="h-[60px] flex items-center justify-center font-bold text-white text-2xl z-10 drop-shadow-md text-center px-2">
             {processDescription(productData?.name)}
         </div>
 
-        <div className="relative">
-          <Slider {...settings} className="z-0 relative mb-[-45px] mt-[-20px] sm:mt-[0px] mx-[-20px]">
-            {imagesOfProduct.length > 0 ? (
-              imagesOfProduct.map((imageHash, index) => (
-                <div key={index} className="">
-                  <IPFSMediaViewer
-                    ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imageHash}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                    className='!object-contain !w-full !max-h-[275px]'
-                  />
+        {/* --- 2. Media & Tags Area (Fixed Height Container) --- */}
+        <div className="relative w-full h-[320px] mt-2">
+            
+            {/* Slider */}
+            <Slider {...settings} className="h-full w-full">
+                {imagesOfProduct.length > 0 ? (
+                imagesOfProduct.map((imageHash, index) => (
+                    <div key={index} className="h-[320px] flex items-center justify-center outline-none">
+                        <IPFSMediaViewer
+                            ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imageHash}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                            className='!object-contain !w-full !h-full max-h-[320px]'
+                        />
+                    </div>
+                ))
+                ) : (
+                <div className="text-white h-full flex items-center justify-center">No images available</div>
+                )}
+            </Slider>
+
+            {/* --- Tags Overlay (Inside Media Area) --- */}
+            {productData.length > 1 && (
+                <div className="absolute inset-0 pointer-events-none z-20">
+                    
+                    {/* Price Tag - Top Left of Image */}
+                    <div className="absolute top-2 left-2 bg-gradient-to-r from-cyan-400 to-cyan-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg">
+                        <>
+                            {HexToInteger(productData?.discountPercentage._hex) !== 0 ? (
+                            <>
+                                <span className="text-[12px] line-through mr-2 text-red-500">
+                                {type === 'Rentals' || type === 'Renting' ? 
+                                    (HexToInteger(productData?.price._hex) / 1e6 * 30).toFixed(1) :
+                                    (HexToInteger(productData?.price._hex) / 1e6).toFixed(1)}
+                                </span>
+                                <span className="text-[20px] text-yellow-200">
+                                {type === 'Rentals' || type === 'Renting' ? 
+                                    ((HexToInteger(productData?.price._hex) * (100 - HexToInteger(productData?.discountPercentage._hex))) / (100 * 1e6) * 30).toFixed(1) :
+                                    ((HexToInteger(productData?.price._hex) * (100 - HexToInteger(productData?.discountPercentage._hex))) / (100 * 1e6)).toFixed(1)}
+                                </span>
+                            </>
+                            ) : (
+                            <span className="text-[20px] text-yellow-200">
+                                {type === 'Rentals' || type === 'Renting' ? 
+                                (HexToInteger(productData?.price._hex) / 1e6 * 30).toFixed(1) :
+                                (HexToInteger(productData?.price._hex) / 1e6).toFixed(1)}
+                            </span>
+                            )}
+                            <img src={usdcoinusdclogo} className="h-[25px] w-[25px] inline-block ml-1 mt-[-9px] mx-auto" alt="USDC" />
+                            
+                            {type === 'Rentals' && (
+                            <div className="flex items-center absolute top-[-10px] right-[-10px]">
+                                <span className="bg-green-500 text-yellow-200 text-[10px] px-2 py-0.5 rounded-full font-medium tracking-wider uppercase shadow-sm">
+                                Month
+                                </span>
+                            </div>
+                            )}
+                        </>
+                    </div>
+
+                    {/* Quantity Tag - Top Right of Image */}
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg drop-shadow-md">
+                        <span className="text-[14px] sm:text-xl">{ethers.BigNumber.from(productData?.quantity.toString()).toString()}</span>
+                        <span className="text-[10px] ml-1">left</span>
+                    </div>
+
+                    {/* Discount Tag - Bottom Left of Image Area */}
+                    {HexToInteger(productData.discountPercentage._hex) !== 0 && (
+                        <div className="absolute bottom-10 left-2 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg drop-shadow-md">
+                            <span className="text-md sm:text-xl">{HexToInteger(productData?.discountPercentage._hex)}%</span>
+                            <span className="text-md ml-1">OFF</span>
+                        </div>
+                    )}
                 </div>
-              ))
-            ) : (
-              <div className="text-white h-[200px] flex items-center justify-center">No images available</div>
             )}
-          </Slider>
         </div>
 
-        {/* --- Add To Cart UI --- */}
-        <div className="absolute bottom-2 right-2 z-50 flex items-center gap-2">
+        {/* --- 3. Add To Cart Button (Pinned to Bottom Right of Card) --- */}
+        <div className="absolute bottom-3 right-3 z-50 flex items-center gap-2">
             <div 
                 className={`transition-all duration-300 ease-in-out overflow-hidden ${showQuantityInput ? 'w-[70px] opacity-100' : 'w-0 opacity-0'}`}
             >
@@ -168,54 +222,6 @@ const ProductBox = ({ product, isSelected, onClick, contract, type, paymentAddre
                 )}
             </button>
         </div>
-
-        {productData.length > 1 && (
-          <div className="absolute top-0 left-0 right-0 flex justify-between items-start p-2 z-20 drop-shadow-md">
-            <div className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg relative">
-              <>
-                {HexToInteger(productData?.discountPercentage._hex) !== 0 ? (
-                  <>
-                    <span className="text-[12px] line-through mr-2 text-red-500">
-                      {type === 'Rentals' || type === 'Renting' ? 
-                        (HexToInteger(productData?.price._hex) / 1e6 * 30).toFixed(1) :
-                        (HexToInteger(productData?.price._hex) / 1e6).toFixed(1)}
-                    </span>
-                    <span className="text-[20px] sm:text-[24px] text-yellow-200">
-                      {type === 'Rentals' || type === 'Renting' ? 
-                        ((HexToInteger(productData?.price._hex) * (100 - HexToInteger(productData?.discountPercentage._hex))) / (100 * 1e6) * 30).toFixed(1) :
-                        ((HexToInteger(productData?.price._hex) * (100 - HexToInteger(productData?.discountPercentage._hex))) / (100 * 1e6)).toFixed(1)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[20px] sm:text-[24px] text-yellow-200">
-                    {type === 'Rentals' || type === 'Renting' ? 
-                      (HexToInteger(productData?.price._hex) / 1e6 * 30).toFixed(1) :
-                      (HexToInteger(productData?.price._hex) / 1e6).toFixed(1)}
-                  </span>
-                )}
-                <img src={usdcoinusdclogo} className="h-[25px] w-[25px] inline-block ml-1 mt-[-9px] mx-auto" alt="USDC" />
-                {type === 'Rentals' && (
-                  <div className="flex items-center absolute top-[-21px] right-[-20px]">
-                    <span className="bg-green-500 text-yellow-200 text-[10px] px-2 py-0.5 rounded-full font-medium tracking-wider uppercase shadow-sm">
-                      Per Month
-                    </span>
-                  </div>
-                )}
-              </>
-            </div>
-            <div className="bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg drop-shadow-md">
-              <span className="text-[10px] sm:text-xl">{ethers.BigNumber.from(productData?.quantity.toString()).toString()}</span>
-              <span className="text-[10px] ml-1">left</span>
-            </div>
-
-            {HexToInteger(productData.discountPercentage._hex) !== 0 && (
-              <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg drop-shadow-md">
-                <span className="text-md sm:text-xl">{HexToInteger(productData?.discountPercentage._hex)}%</span>
-                <span className="text-md ml-1">OFF</span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

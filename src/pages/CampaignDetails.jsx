@@ -406,29 +406,7 @@ const handleCommentChange = (e) => {
         {isMobile ? <FeaturedMobile /> : <Featured/>}
         </div>
         </div>
-{isMobile ? (<><div className={`rounded-[15px] h-[280px] absolute inset-0 sm:w-[20%] mx-auto flex items-center justify-center border-[1px] border-[#FFDD00] bg-[#000000] z-10 drop-shadow py-4 transition-all duration-700 ${toggleApproveCoins ? 'translate-y-[2600px]' : '-translate-y-full'}`}>
-  <p className={`text-[#FFFFFF] font-epilogue font-bold text-[30px] text-center absolute bottom-1 right-2 cursor-pointer`} onClick={() => setToggleApproveCoins(prev => !prev)}>X</p>
-  <div>
-    <p className="text-[#FFFFFF] font-epilogue font-bold text-[16px] text-center mt-[25px] drop-shadow">Approve $USDC For Fundraising</p>
-    <div className='w-full flex flex-col items-center'>
-      <div className='mt-[20px] w-10/12'>
-        <input
-          className="rounded-[2px] w-full max-h-[53px] p-5 !rounded-[6px] bg-[#424242]"
-          type="number"
-          placeholder="Amount For Approval"
-          value={amountForApprove}
-          onChange={e => setAmountForApprove(e.target.value)}
-        />
-      </div>
-      <div className='w-10/12 mt-[20px]'>
-        
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
+{isMobile ? (<>
         {campaign?.websiteComment === "Refunded because of illegal activity" ? (
         <video className=' w-full rounded-[15px] my-[50px]' controls>
            </video>
@@ -918,29 +896,7 @@ const handleCommentChange = (e) => {
                     {investors !== undefined && ( <Investors investors={investors} websiteComment={campaign?.websiteComment} />)}
                     </div>
                 </div>
-            </div> </>) : (<> <div className={`rounded-[15px] h-[280px] absolute inset-0 sm:w-[20%] mx-auto flex items-center justify-center border-[1px] border-[#FFDD00] bg-[#000000] z-10 drop-shadow py-4 transition-all duration-700 ${toggleApproveCoins ? 'translate-y-[1500px]' : '-translate-y-full'}`}>
-  <p className={`text-[#FFFFFF] font-epilogue font-bold text-[30px] text-center absolute bottom-1 right-2 cursor-pointer`} onClick={() => setToggleApproveCoins(prev => !prev)}>X</p>
-  <div>
-    <p className="text-[#FFFFFF] font-epilogue font-bold text-[16px] text-center mt-[25px] drop-shadow">Approve USDC For Fundraising</p>
-    <div className='w-full flex flex-col items-center'>
-      <div className='mt-[20px] w-10/12'>
-        <input
-          className="rounded-[2px] w-full max-h-[53px] p-5 !rounded-[6px] bg-[#424242]"
-          type="number"
-          placeholder="Amount For Approval"
-          value={amountForApprove}
-          onChange={e => setAmountForApprove(e.target.value)}
-        />
-      </div>
-      <div className='w-10/12 mt-[20px]'>
-      
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
+            </div> </>) : (<> 
         {campaign?.websiteComment === "Refunded because of illegal activity" ? (
         <video className=' w-full rounded-[15px] my-[50px]' controls>
            </video>

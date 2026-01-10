@@ -289,22 +289,32 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
                     setSYMBA('ETH');
                 } else if (SELLTOKENCONTRACT) {
                     try {
-                        const [sellSymbol, sellDecimals, balance] = await Promise.all([
+                        // 1. קודם כל מביאים מידע ציבורי על המטבע (לא דורש כתובת משתמש)
+                        const [sellSymbol, sellDecimals] = await Promise.all([
                             SELLTOKENCONTRACT.call('symbol'),
                             SELLTOKENCONTRACT.call('decimals'),
-                            SELLTOKENCONTRACT.call('balanceOf', [address])
                         ]);
                         
                         setSYMBA(sellSymbol);
                         setDecimals(sellDecimals);
-                        setTheBalance(ethers.utils.formatUnits(balance, sellDecimals));
 
-                        const allowanceAmount = await readContract({
-                            contract: SELL,
-                            method: "function allowance(address, address) returns (uint256)",
-                            params: [address, AGGREGATOR_CONTRACT_ADDRESS]
-                        });
-                        setAllowance(allowanceAmount);
+                        // 2. בדיקה אם המשתמש מחובר לפני שמנסים למשוך יתרה ואישור
+                        if (address) {
+                            const balance = await SELLTOKENCONTRACT.call('balanceOf', [address]);
+                            setTheBalance(ethers.utils.formatUnits(balance, sellDecimals));
+
+                            const allowanceAmount = await readContract({
+                                contract: SELL,
+                                method: "function allowance(address, address) returns (uint256)",
+                                params: [address, AGGREGATOR_CONTRACT_ADDRESS]
+                            });
+                            setAllowance(allowanceAmount);
+                        } else {
+                            // אם אין משתמש מחובר, נאפס את הנתונים
+                            setTheBalance(0);
+                            setAllowance(0);
+                        }
+
                     } catch (error) {
                         console.error("Sell token contract error:", error);
                         setSYMBA('Unknown');
@@ -400,6 +410,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
             }
         };
 
+        
         const intervalId = setInterval(fetchData, 10000);
         const countdownId = setInterval(() => setSecondsLeft(prev => prev > 0 ? prev - 1 : 10), 1000);
 

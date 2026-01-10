@@ -348,7 +348,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .product-box {
-  background: linear-gradient(to right, #ffffff, #ffffff);
+  background: linear-gradient(to right, #002a3d, #003253);
   overflow: hidden;
 }
 

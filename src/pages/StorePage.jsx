@@ -36,13 +36,11 @@ const StorePage = () => {
     const [storeContractByURL, setStoreContractByURL] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [responseData, setResponseData] = useState('');
-    const [userSecretKey, setUserSecretKey] = useState('');
     const [type, setType] = useState('');
     const [phoneNumOfClient, setPhoneNumOfClient] = useState('');
     const [buttonDisabled, setButtonDisabled] = useState(false);
     const [userRatingAverage, setUserRatingAverage] = useState(0);
     const [selectedRating, setSelectedRating] = useState(4);
-    const [selectedProduct, setSelectedProduct] = useState('');
     const [categories, setCategories] = useState(['All']);
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [canLeaveReview, setCanLeaveReview] = useState(false);
@@ -77,6 +75,35 @@ const StorePage = () => {
     const handleFormFieldChange = (fieldName, e) => {
         setForm({ ...form, [fieldName]: e.target.value });
     };
+
+    // ---------------------------------------------------------
+    // New Fix: Reset state immediately when wallet disconnects
+    // ---------------------------------------------------------
+    useEffect(() => {
+        if (!address) {
+            // User disconnected - Reset all sensitive states
+            setIsRegistered(false);
+            setCanLeaveReview(false);
+            
+            // Reset form/user data
+            setNameOfClient('');
+            setEmailOfClient('');
+            setPhoneNumOfClient('');
+            setPhysicalAddressOfClient('');
+            setReceipt(null);
+            
+            // Optional: Close modals if open
+            setShowUnregisterModal(false);
+        } else {
+            // User connected/switched account - Re-check status
+            checkRegistrationDB();
+            
+            if (storeRegistery && theStoreContract) {
+                canUserLeaveReview();
+            }
+        }
+    }, [address]); 
+    // ---------------------------------------------------------
 
     function StarRating({ rating }) {
         const renderStars = () => {
@@ -130,7 +157,7 @@ const StorePage = () => {
                 // Ensure the barcode is correctly stored with the product
                 if (category === 'All' || product.category === category) {
                     await products.push({
-                        barcode: barcode,  // Make sure this is the correct barcode
+                        barcode: barcode,   // Make sure this is the correct barcode
                         name: product.name,
                         description: product.description,
                         category: product.category,
@@ -597,7 +624,7 @@ const StorePage = () => {
     const [receipt, setReceipt] = useState(null);
 
     return (<>{isLoading && <Loader />}
-        <div className="  rounded-[15px] mx-auto p-8 mt-[35px] overflow-auto touch-auto">
+        <div className="rounded-[15px] mx-auto px-2 sm:p-8 mt-[35px] overflow-x-hidden touch-auto w-full max-w-[100vw]">
             
             <div className='relative justify-center flex'>
                 <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />
@@ -649,89 +676,12 @@ const StorePage = () => {
 
 
             </div>
-            <h2 className='text-[#FFDD00] sm:text-[18px] text-[16px] mb-[15px]'>{renderDescriptionWithBreaks(dataOfStore.description)}</h2>
+            <h2 className='text-[#FFDD00] sm:text-[18px] text-center text-[16px] mb-[15px]'>{renderDescriptionWithBreaks(dataOfStore.description)}</h2>
             {address ? (<h2 className='text-[#C3C2C1] font-bold sm:text-[18px] text-[16px] mb-[15px]'>{renderDescriptionWithBreaks(dataOfStore.contactInfo)}</h2>
             ) : (<h2 className='text-[#C3C2C1] font-bold sm:text-[18px] text-[16px] mb-[15px]'>Contact Info available only to connected users.</h2>
             )}
             {dataOfVoting?.votingSystemAddress ? (<button className={`bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out mt-[50px] mr-[15px]`} target='_blank' onClick={() => navigate('voting')}>{storeName} Decisions</button>) : (<></>)}
-            <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
-                <div className="flex-1 w-full flex flex-col">
-                    {allProducts !== null ? (
-                        <>
-                            {/* Category Dropdown */}
-                            <div className="flex flex-col w-full">
-                                <span className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFDD00] mb-[10px] mt-[20px]">
-                                    Category:
-                                </span>
-                                <div className="z-50 relative inline-block text-left mb-[20px] sm:w-3/12 w-10/12 ease-in-out duration-500 hover:opacity-[100%] opacity-[70%]">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-[#424242] px-3 py-2 text-sm font-semibold text-[#FFFFFF] ring-inset !text-[18px]"
-                                    >
-                                        {selectedCategoryName}
-                                        <svg className="-mr-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                                        </svg>
-                                    </button>
-
-                                    {isDropdownOpen && (
-                                        <div
-                                            className="absolute h-[325px] overflow-auto touch-auto left-0 z-50 mt-2 w-56 origin-top-right rounded-md linear-gradient shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                            role="menu"
-                                            aria-orientation="vertical"
-                                            aria-labelledby="menu-button"
-                                            tabIndex="50"
-                                        >
-                                            <div className="py-1" role="none">
-                                                {categories.map((category, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="text-[#FFFFFF] block px-4 z-50 py-2 text-sm hover:bg-[#FFFFFF] hover:bg-opacity-[25%] cursor-pointer"
-                                                        role="menuitem"
-                                                        tabIndex="50"
-                                                        onClick={async () => {
-                                                            await setIsDropdownOpen(false);
-                                                            await setSelectedCategoryName(category);
-                                                            await setSelectedCategory(category);
-                                                            await productsBarcodes(category);
-                                                        }}
-                                                    >
-                                                        {category}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Products Display */}
-                            <div className="flex gap-2 flex-wrap py-[25px] justify-center">
-                                {allProducts && allProducts.length > 0 ? (
-                                    allProducts.map((product, index) => (
-                                        <ProductBox
-                                            contract={theStoreContract}
-                                            key={index}
-                                            product={product.barcode}
-                                            productData={product}
-                                            onClick={() => handleProductSelect(product.barcode)}
-                                            type={type}
-                                            paymentAddress={paymentAddress}
-                                            storeAddress={storeContractByURL}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="text-white text-center py-4">
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <></>
-                    )}
-                </div>
-            </div>
+            
             <div className='my-[30px]'>
                 {responseData}
             </div>
@@ -835,12 +785,12 @@ const StorePage = () => {
                             </div>
 
                             <button
-  disabled={isLoading || !nameOfClient || !phoneNumOfClient} // וודא ש-isLoading כאן
-  onClick={handleRegisterToDB}
-  className={`mb-[20px] !bg-cyan-400 !mt-[30px] hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1 ${!nameOfClient || !emailOfClient || !phoneNumOfClient ? 'opacity-50 cursor-not-allowed' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {isLoading ? 'Registering...' : 'Register'}
-</button>
+                                disabled={isLoading || !nameOfClient || !phoneNumOfClient} // וודא ש-isLoading כאן
+                                onClick={handleRegisterToDB}
+                                className={`mb-[20px] !bg-cyan-400 !mt-[30px] hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1 ${!nameOfClient || !emailOfClient || !phoneNumOfClient ? 'opacity-50 cursor-not-allowed' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {isLoading ? 'Registering...' : 'Register'}
+                            </button>
                         </div>) : (<></>)}
 
                     </>
@@ -861,10 +811,92 @@ const StorePage = () => {
 
             </div>
 
-            {/* Unregister Confirmation Modal */}
-            {showUnregisterModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-                    <div className="bg-gray-800 p-8 rounded-xl border border-cyan-400 max-w-sm w-full">
+            {/* Moved Products Section Here */}
+            <div className="flex flex-col md:flex-row items-center gap-4 mb-8 mt-12">
+                <div className="flex-1 w-full flex flex-col">
+                    {allProducts !== null ? (
+                        <>
+                            {/* Category Dropdown */}
+                            <div className="flex flex-col w-full">
+                                <span className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFDD00] mb-[10px] mt-[20px]">
+                                    Category:
+                                </span>
+                                <div className="z-50 relative inline-block text-left mb-[20px] sm:w-3/12 w-10/12 ease-in-out duration-500 hover:opacity-[100%] opacity-[70%]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-[#424242] px-3 py-2 text-sm font-semibold text-[#FFFFFF] ring-inset !text-[18px]"
+                                    >
+                                        {selectedCategoryName}
+                                        <svg className="-mr-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+
+                                    {isDropdownOpen && (
+                                        <div
+                                            className="absolute h-[325px] overflow-auto touch-auto left-0 z-50 mt-2 w-56 origin-top-right rounded-md linear-gradient shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                            role="menu"
+                                            aria-orientation="vertical"
+                                            aria-labelledby="menu-button"
+                                            tabIndex="50"
+                                        >
+                                            <div className="py-1" role="none">
+                                                {categories.map((category, index) => (
+                                                    <span
+                                                        key={index}
+                                                        className="text-[#FFFFFF] block px-4 z-50 py-2 text-sm hover:bg-[#FFFFFF] hover:bg-opacity-[25%] cursor-pointer"
+                                                        role="menuitem"
+                                                        tabIndex="50"
+                                                        onClick={async () => {
+                                                            await setIsDropdownOpen(false);
+                                                            await setSelectedCategoryName(category);
+                                                            await setSelectedCategory(category);
+                                                            await productsBarcodes(category);
+                                                        }}
+                                                    >
+                                                        {category}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Products Display */}
+                            <div className="flex gap-3 flex-wrap py-[25px] justify-center w-full">
+                                {allProducts && allProducts.length > 0 ? (
+                                    allProducts.map((product, index) => (
+                                        <ProductBox
+                                            contract={theStoreContract}
+                                            key={index}
+                                            product={product.barcode}
+                                            productData={product}
+                                            onClick={() => handleProductSelect(product.barcode)}
+                                            type={type}
+                                            paymentAddress={paymentAddress}
+                                            storeAddress={storeContractByURL}
+                                        />
+                                    ))
+                                ) : (
+                                    <div className="text-white text-center py-4">
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <></>
+                    )}
+                </div>
+            </div>
+
+        </div>
+
+        {/* Unregister Confirmation Modal - Moved OUTSIDE the main container to ensure Fixed positioning works correctly */}
+        {showUnregisterModal && (
+                <div className="fixed top-0 left-0 w-full h-full z-[9999] flex items-center justify-center bg-black bg-opacity-70">
+                    <div className="bg-gray-800 p-8 rounded-xl border border-cyan-400 max-w-sm w-full mx-4 relative">
                         <h3 className="text-xl text-white font-bold mb-4">Are you sure?</h3>
                         <p className="text-gray-300 mb-6">This will delete your customer data from our database permanently.</p>
 
@@ -897,8 +929,6 @@ const StorePage = () => {
                     </div>
                 </div>
             )}
-
-        </div>
         </>
     );
 }
