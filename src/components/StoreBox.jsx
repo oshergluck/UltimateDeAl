@@ -26,14 +26,6 @@ const StoreBox = ({ store,enc }) => {
                             </div>
                 <p className="text-white text-center text-sm min-h-[80px]">{processDescription(store.description)}</p>
                 <div className='my-[15px] w-full gap-10 justify-center flex'>
-                            <div className='h-[50px]'>
-                                <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                <h2 className='text-[12px] text-white font-bold text-center'>Encrypted</h2>
-                            </div>
-                            <div className='h-[50px]'>
-                                <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                <h2 className='text-[12px] text-white font-bold text-center'>Emails</h2>
-                            </div>
                             {enc ? (<>
                                 <div className='h-[50px]'>
                                 <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>

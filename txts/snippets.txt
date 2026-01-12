@@ -1,0 +1,50 @@
+<div className='sm:flex sm:justify-items-center m-auto sm:items-center rounded-[15px] sm:w-11/12 w-full justify-center flex flex-col'>
+                {!showChart ? (
+                    <button 
+                        className="bg-[#FFDD00] text-black font-bold py-4 px-8 rounded-lg text-xl my-4 hover:opacity-80 transition-opacity"
+                        onClick={() => setShowChart(true)}
+                    >
+                        Load Price Chart
+                    </button>
+                ) : (
+                    <div className="relative w-full h-[720px]">
+                        <button 
+                            className="absolute top-2 right-2 z-10 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                            onClick={() => setShowChart(false)}
+                        >
+                            Close Chart
+                        </button>
+                        
+                        {/* Mobile Optimization Check */}
+                        {window.innerWidth <= 768 ? (
+                             <div className="flex flex-col items-center justify-center h-full bg-[#1a1a1a] rounded-[15px] p-6 border border-gray-700">
+                                <h3 className="text-white text-xl mb-4 text-center">Charts are heavy for mobile wallets</h3>
+                                <p className="text-gray-400 mb-6 text-center text-sm">To prevent the app from freezing, please open the live chart in a secure external browser.</p>
+                                <a 
+                                    href={`https://www.geckoterminal.com/base/tokens/${theERCUltra}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-cyan-500 text-black font-bold py-3 px-6 rounded-lg hover:bg-cyan-400 transition-colors"
+                                >
+                                    Open Chart in New Tab ↗
+                                </a>
+                             </div>
+                        ) : (
+                            /* Desktop Version - Loads the Iframe */
+                            <iframe 
+                                height="100%" 
+                                width="100%" 
+                                className='rounded-[15px] mx-auto h-full w-full' 
+                                id="geckoterminal-embed" 
+                                title="GeckoTerminal Embed" 
+                                src={`https://www.geckoterminal.com/base/tokens/${theERCUltra}?embed=1&info=0&swaps=1`} 
+                                frameBorder="0" 
+                                allow="clipboard-write" 
+                                allowFullScreen
+                                loading="lazy" // שיפור ביצועים נוסף
+                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms" // הגבלת הרשאות למניעת זליגת זיכרון
+                            ></iframe>
+                        )}
+                    </div>
+                )}
+            </div>

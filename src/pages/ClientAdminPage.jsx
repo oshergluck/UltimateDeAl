@@ -540,7 +540,7 @@ const ClientAdminPage = () => {
             const data2 = await contract.call('contractOwner');
             await setContractOwner(data2);
             if (formattedData) {
-                await setResponseData(`Receipt ID: ~${formattedData.rId}~\nTime: ~${formatDate(formattedData.time * 1000)}~\nWallet: ~${data[2]}~\nName: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.name) : ('')}~\nEmail: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.email) : ('You are not the contractOwner!')}~\nProduct Barcode: ~${formattedData.poductbarcode}~\nAmount Payed: ~${formattedData.amountpayed} USDC~\nAddress: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.pysicaladdress) : ('')}~\nPhone: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.phone) : ('')}~\n ${address.toLowerCase() == data2.toLowerCase() ? ('') : ('')}`);
+                await setResponseData(`Receipt ID: ~${formattedData.rId}~\nTime: ~${formatDate(formattedData.time * 1000)}~\nWallet: ~${data[2]}~\nName: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.name) : ('')}~\nEmail: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.email) : ('You are not the contractOwner!')}~\nProduct Barcode: ~${formattedData.poductbarcode}~\nAmount Payed: ~${formattedData.amountpayed} USDC~\nAddress: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.pysicaladdress) : ('')}~\nPhone: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.phone) : ('')}~\n ${address.toLowerCase() == data2.toLowerCase() ? (moreData) : ('')}`);
                 setIsLoading(false);
             }
 
@@ -605,7 +605,7 @@ const ClientAdminPage = () => {
             setIsLoading(true);
             clearResponseData();
             setCustomerAddress(customerAddress);
-
+            const moreData = await contract.call('infos', [indexOfReceipt]);
             // Fetch Client Orders from Server (DB) securely
             const ordersResponse = await fetch(`${API_URL}/store/get-client-orders`, {
                 method: 'POST',
@@ -643,7 +643,7 @@ const ClientAdminPage = () => {
 
             for (let i = 0; i < dbOrders.length; i++) {
                 const order = dbOrders[i];
-                formattedReceipts += `\n\n\nReceipt ID: ${order.receiptId}\nTime: ${formatDate(order.timestamp * 1000)}\nWallet: ${order.clientAddress}\nName: ${address.toLowerCase() == data2.toLowerCase() ? (client.name) : ("Your'e not the Contract Owner")}\nEmail: ${address.toLowerCase() == data2.toLowerCase() ? (client.email) : ("Your'e not the Contract Owner")}\nProduct Barcode: ${order.productBarcode}\nAmount Payed: ~${order.price} USDC~\nAddress: ${address.toLowerCase() == data2.toLowerCase() ? (client.physicalAddress) : ("Your'e not the Contract Owner")}\nPhone: ${address.toLowerCase() == data2.toLowerCase() ? (client.phone) : ("Your'e not the Contract Owner")}\nStatus: ${order.isRefunded ? "~REFUNDED~" : "Completed"}\n\n\n\n\n`;
+                formattedReceipts += `\n\n\nReceipt ID: ${order.receiptId}\nTime: ${formatDate(order.timestamp * 1000)}\nWallet: ${order.clientAddress}\nName: ${address.toLowerCase() == data2.toLowerCase() ? (client.name) : ("Your'e not the Contract Owner")}\nEmail: ${address.toLowerCase() == data2.toLowerCase() ? (client.email) : ("Your'e not the Contract Owner")}\nProduct Barcode: ${order.productBarcode}\nAmount Payed: ~${order.price} USDC~\nAddress: ${address.toLowerCase() == data2.toLowerCase() ? (client.physicalAddress) : ("Your'e not the Contract Owner")}\nMore info ${moreData}\nPhone: ${address.toLowerCase() == data2.toLowerCase() ? (client.phone) : ("Your'e not the Contract Owner")}\nStatus: ${order.isRefunded ? "~REFUNDED~" : "Completed"}\n\n\n\n\n`;
             }
 
             await setResponseData(formattedReceipts);

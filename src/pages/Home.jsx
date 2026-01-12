@@ -126,7 +126,7 @@ function processDescription(description, maxLength = 180)
                 <div className=" mx-auto py-6 sm:px-6 lg:px-8">
                     {/* Listing Button */}
                     <div className="opacity-[50%] hover:opacity-[100%] ease-in-out duration-500 sm:w-full w-[95%] mx-auto  shadow-xl rounded-lg mb-8 cursor-pointer border-[1px] border-[#242424]"
-                    onClick={() => {navigate('/shop/mainshop/products/LISTESH')}}
+                    onClick={() => {navigate('/shop/USP/products/LISTESH')}}
                     >
                         <h1 className='text-white font-epilogue font-semibold sm:text-[80px] text-4xl my-auto text-center py-[40px]'>Launch Your Online StartUp</h1>
                         <h1 className='text-[#FFDD00] font-epilogue font-semibold sm:text-[28px] text-[18px] my-auto text-center mt-[20px] pb-[20px] px-[10px]'>Buy/Sell Products And Earn From Almost Every Transaction</h1>
@@ -168,15 +168,6 @@ function processDescription(description, maxLength = 180)
                                         <div className="flex items-center justify-between my-[20px]">
                                         {address ? (<div className='text-white min-h-[180px] w-full'>
                                             <div className='my-[15px] w-full gap-8 justify-center flex'>
-                                                <div className='h-[70px]'>
-                                                    
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>Encrypted</h2>
-                                                </div>
-                                                <div className='h-[70px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>AutoEmails</h2>
-                                                </div>
                                                 {encryptionStatus[store.urlPath]? (<>
                                                     <div className='h-[70px]'>
                                                     <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
@@ -190,15 +181,6 @@ function processDescription(description, maxLength = 180)
                                             Creation Date: {store?.creationDate ? hexToTimestamp(store.creationDate._hex) : 'N/A'}
                                             </div>):(<div className='text-white min-h-[180px]'>
                                                 <div className='my-[15px] gap-8 w-full justify-center flex'>
-                                                <div className='h-[70px]'>
-                                                    
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-white font-bold'>Encrypted</h2>
-                                                </div>
-                                                <div className='h-[70px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>AutoEmails</h2>
-                                                </div>
                                                 {encryptionStatus[store.urlPath]? (<>
                                                     <div className='h-[70px]'>
                                                     <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
@@ -235,14 +217,6 @@ function processDescription(description, maxLength = 180)
                                 <div key={index} className=" shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[80%] hover:opacity-[100%] ease-in-out duration-500 cursor-pointer" onClick={() => navigate('/shop/'+store.urlPath)}>
                                     <div className="p-4">
                                     <div className='my-[15px] w-full gap-10 justify-center flex'>
-                                                <div className='h-[50px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-white font-bold text-center'>Encrypted</h2>
-                                                </div>
-                                                <div className='h-[70px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>AutoEmails</h2>
-                                                </div>
                                                 {encryptionStatus[store.urlPath]? (<>
                                                     <div className='h-[70px]'>
                                                     <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>

@@ -664,14 +664,6 @@ const StorePage = () => {
                 <div className='my-[10px] w-full justify-center'>
 
                     <div className='w-full gap-8 justify-center flex'>
-                        <div className='h-[50px] my-[10px]'>
-                            <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                            <h2 className='text-[12px] text-white font-bold text-center'>Encrypted</h2>
-                        </div>
-                        <div className='h-[50px] my-[10px]'>
-                            <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                            <h2 className='text-[12px] text-center text-white font-bold'>AutoEmails</h2>
-                        </div>
                         {enc ? (<>
                             <div className='h-[50px] my-[10px]'>
                                 <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
@@ -825,58 +817,9 @@ const StorePage = () => {
             </div>
             <p className='text-center text-[#FFFFFF] sm:text-[30px] text-[12px] font-bold my-[25px]'>{theSymbolOfReward} address is {rewardAddress}</p>
             <p className=''></p>
-            {theSymbolOfReward && rewardAddress ? (<><Swapper ERCUltraAddress={rewardAddress} SYMBOL={theSymbolOfReward} /></>) : (<></>)}
-            <div className='sm:flex sm:justify-items-center m-auto sm:items-center rounded-[15px] sm:w-11/12 w-full justify-center flex flex-col'>
-                {!showChart ? (
-                    <button 
-                        className="bg-[#FFDD00] text-black font-bold py-4 px-8 rounded-lg text-xl my-4 hover:opacity-80 transition-opacity"
-                        onClick={() => setShowChart(true)}
-                    >
-                        Load Price Chart
-                    </button>
-                ) : (
-                    <div className="relative w-full h-[720px]">
-                        <button 
-                            className="absolute top-2 right-2 z-10 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                            onClick={() => setShowChart(false)}
-                        >
-                            Close Chart
-                        </button>
-                        
-                        {/* Mobile Optimization Check */}
-                        {window.innerWidth <= 768 ? (
-                             <div className="flex flex-col items-center justify-center h-full bg-[#1a1a1a] rounded-[15px] p-6 border border-gray-700">
-                                <h3 className="text-white text-xl mb-4 text-center">Charts are heavy for mobile wallets</h3>
-                                <p className="text-gray-400 mb-6 text-center text-sm">To prevent the app from freezing, please open the live chart in a secure external browser.</p>
-                                <a 
-                                    href={`https://www.geckoterminal.com/base/tokens/${theERCUltra}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="bg-cyan-500 text-black font-bold py-3 px-6 rounded-lg hover:bg-cyan-400 transition-colors"
-                                >
-                                    Open Chart in New Tab ↗
-                                </a>
-                             </div>
-                        ) : (
-                            /* Desktop Version - Loads the Iframe */
-                            <iframe 
-                                height="100%" 
-                                width="100%" 
-                                className='rounded-[15px] mx-auto h-full w-full' 
-                                id="geckoterminal-embed" 
-                                title="GeckoTerminal Embed" 
-                                src={`https://www.geckoterminal.com/base/tokens/${theERCUltra}?embed=1&info=0&swaps=1`} 
-                                frameBorder="0" 
-                                allow="clipboard-write" 
-                                allowFullScreen
-                                loading="lazy" // שיפור ביצועים נוסף
-                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms" // הגבלת הרשאות למניעת זליגת זיכרון
-                            ></iframe>
-                        )}
-                    </div>
-                )}
-            </div>
-
+            {theSymbolOfReward && rewardAddress ? (<>
+                <button className={`bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out mt-[50px] mr-[15px]`} target='_blank' onClick={() => navigate('/coin/'+rewardAddress)}>{storeName} Coin</button></>) : (<></>)}
+            
             {/* Moved Products Section Here */}
             <div className="flex flex-col md:flex-row items-center gap-4 mb-8 mt-12">
                 <div className="flex-1 w-full flex flex-col">

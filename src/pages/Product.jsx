@@ -731,14 +731,6 @@ return (<>
               <h1 className="text-center flex font-bold text-[#ff9900] drop-shadow-md sm:text-8xl text-5xl">{storeName}</h1>
           </div>
 <div className='w-full justify-center gap-8 flex'>
-                          <div className='h-[50px] my-[10px]'>
-                              <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                              <h2 className='text-[12px] text-white font-bold text-center'>Encrypted</h2>
-                          </div>
-                          <div className='h-[50px] my-[10px]'>
-                              <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                              <h2 className='text-[12px] text-center text-white font-bold'>AutoEmails</h2>
-                          </div>
                           {enc? (<>
                               <div className='h-[50px] my-[10px]'>
                               <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
@@ -919,7 +911,7 @@ reviews.map((review, index) => (
   <br/>
     <textarea
     className="w-full p-2 rounded-lg linear-gradient1 mb-[5px] mt-[15px] text-white h-[300px] placeholder:text-[#FFFFFF]"
-    placeholder="More info if needed"
+    placeholder="More info if needed, *Don't share private info here."
     value={form.moreInfo}
     onChange={(e) => handleFormFieldChange('moreInfo', e)}
   />

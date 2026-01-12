@@ -21,7 +21,7 @@ const RegisterNewStore = () => {
   const [pop, setPopUp] = useState(false);
   const [pass, setPass] = useState('');
   const { addStoreDetails, Stores, DEVS, address } = useStateContext();
-  const API_URL = "http://localhost:5000/api";
+  const API_URL = `${import.meta.env.VITE_MONGO_SERVER_API}/api`;
 
   const [form, setForm] = useState({
     _urlPath: '',

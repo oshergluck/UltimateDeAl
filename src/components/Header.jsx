@@ -324,7 +324,7 @@ const getCampaignRewardTokens = async () => {
 
     // Fetch ERCUltra tokens when component mounts or when storeRegistery changes
     useEffect(() => {
-        //fetchERCUltraTokens();
+        fetchERCUltraTokens();
     }, [storeRegistery]);
 
     // Combine static and dynamic tokens
@@ -341,7 +341,7 @@ const getCampaignRewardTokens = async () => {
   };
 
   useEffect(() => {
-    //fetchCampaignRewardTokens();
+    fetchCampaignRewardTokens();
 }, [CrowdFunding, address]);
   
   // Use it when combining all tokens

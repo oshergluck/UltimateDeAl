@@ -31,9 +31,9 @@ const City = () => {
     const [story, setStory] = useState('');
     const [mayor, setMayor] = useState('');
     const [high,setHighesBalance] = useState(0);
-    const {contract: highContract} = useContract('0xe9b7c1712f9d7c64ec3f3953be5560fe1a64041b'); //Main platform token
+    const {contract: highContract} = useContract('0xA03e84dE600Ea42c2F43cf8A8b198BF5a3650240'); //Main platform token
     const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
-    const { contract: invoicesContract } = useContract('0x85B9Beabe8deDBf9c310A2A44CCEE5D079b191cD'); //invoices contract address of the main shop to check NFT approves ownership
+    const { contract: invoicesContract } = useContract('0x7C14154C6fd0636742344D5Ee69297bDC2218ceb'); //invoices contract address of the main shop to check NFT approves ownership
     const [ownerShip,setOwnerShip] = useState(false);
     const navigateToDeAlStore = () => {
         navigate('/shop/mainshop/products/LOTERRY');
@@ -49,7 +49,7 @@ const City = () => {
     const DEALShare = getContract({
         client: client,
         chain: { id: 8453, rpc: POLYRPC },
-        address: '0xe9b7c1712f9d7c64ec3f3953be5560fe1a64041b',
+        address: '0xA03e84dE600Ea42c2F43cf8A8b198BF5a3650240',
     });
 
     useEffect(() => {
