@@ -80,7 +80,7 @@ export default function DeployPublishedContractPage() {
         client: client,
         chain: base,
         account: account,
-        publisher: "0x070e7075939183Df83bF7F14D9142a2c33a6470a",
+        publisher: "0xBDEda0d0a434C2C21ED532Bc64aDE1a136b65847",
         contractId: "ESH",
         contractParams: params,
       });
