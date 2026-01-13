@@ -137,16 +137,16 @@ const Extra = () => {
 
     // Render Special Pages (Games/Register)
     const renderContent = () => {
-        if (StoreURL === 'mainshop' && ProductURL === 'LISTESH') {
+        if (StoreURL === 'USP' && ProductURL === 'LISTESH') {
             return (<div><RegisterNewStore /></div>);
         }
-        if (StoreURL === 'mainshop' && ProductURL === 'LOTERRY') {
+        if (StoreURL === 'USP' && ProductURL === 'LOTERRY') {
             return <City />;
         }
-        if (StoreURL === 'mainshop' && ProductURL === 'PROS') {
+        if (StoreURL === 'USP' && ProductURL === 'PROS') {
             return <SnakeGame/>;
         }
-        if (StoreURL === 'mainshop' && ProductURL === 'FUNDPROS') {
+        if (StoreURL === 'USP' && ProductURL === 'FUNDPROS') {
             return <MemoryGame/>;
         }
         return null;
