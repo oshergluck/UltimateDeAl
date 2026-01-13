@@ -118,7 +118,7 @@ const Header = () => {
             ]);
     
             // Return object based on token address
-            if (tokenAddress === '0xD90B9dB989b83B5d112c3e9fABd1a964E463E197') {
+            if (tokenAddress === '0xA03e84dE600Ea42c2F43cf8A8b198BF5a3650240') {
                 return {
                     address: tokenAddress,
                     name: name,
@@ -341,7 +341,7 @@ const getCampaignRewardTokens = async () => {
   };
 
   useEffect(() => {
-    fetchCampaignRewardTokens();
+    //fetchCampaignRewardTokens();
 }, [CrowdFunding, address]);
   
   // Use it when combining all tokens
@@ -349,8 +349,8 @@ const getCampaignRewardTokens = async () => {
       [Base.chainId]: deduplicateTokens([...staticTokens, ...dynamicTokens])
   };
 
-    const handleBlogNavigate = () => {
-        navigate('/blog');
+    const handleNFTSNavigate = () => {
+        navigate('/nfts');
     };
     const handleDashboardNavigate = () => {
         navigate('/dashboard');
@@ -446,6 +446,7 @@ const getCampaignRewardTokens = async () => {
                             <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Coin</button>
                             <button onClick={naviateToShops} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Shops</button>
                             {address ? (<button onClick={handleDashboardNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Dashboard</button>) : (<></>)}
+                            {address ? (<button onClick={handleNFTSNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>NFTs</button>) : (<></>)}
                         </div>
                     </div>
                     <div className='mr-[20px] py-[5px] my-auto flex items-center gap-4'>
