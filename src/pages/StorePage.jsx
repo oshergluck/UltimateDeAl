@@ -879,7 +879,7 @@ const StorePage = () => {
                                     allProducts.map((product, index) => (
                                         <ProductBox
                                             contract={theStoreContract}
-                                            key={index}
+                                            key={product.barcode ? product.barcode.toString() : index}
                                             product={product.barcode}
                                             productData={product} // Passing the full product object here
                                             onClick={() => handleProductSelect(product.barcode)}

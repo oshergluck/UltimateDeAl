@@ -576,6 +576,13 @@ useEffect(() => {
                     </button>
                   </li>
                 )}
+                {address && (
+                  <li>
+                    <button onClick={go("/nfts")} className={navBtnClass}>
+                      <BlogIcon /> <span className={navTextClass}>NFTs</span>
+                    </button>
+                  </li>
+                )}
                 <li>
                   <button onClick={go("/home")} className={navBtnClass}>
                     <WalletIcon /> <span className={navTextClass}>Shops</span>
