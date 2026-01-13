@@ -54,7 +54,7 @@ npm install
 npm run dev
 🌐 Live Demo
 You can test and explore the deployed dApp at:
-👉 https://ultrashop.tech/shop/mainshop
+👉 https://ultrashop.tech/shop/USP
 
 📚 How It Works
 Start a Store – Deploy a subdomain with a store contract (rent or sale)
@@ -72,8 +72,6 @@ Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
 
 For a deep dive into the Solidity Architecture and the Bonding Curve logic, check out the core protocol repository: https://github.com/oshergluck/ESH-Protocol-SmartContracts
-
-Here’s a **clean, minimal replacement section** and a **small description** you can drop into your main README.
 
 ---
 
