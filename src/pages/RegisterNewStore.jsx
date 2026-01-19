@@ -28,7 +28,8 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
   const pinata = new PinataSDK({
     pinataJwt: import.meta.env.VITE_PINATA_JWT,
     pinataGateway: "bronze-sticky-guanaco-654.mypinata.cloud",
-  });
+  });const [passToken, setPassToken] = useState('');
+  const [claimStatus, setClaimStatus] = useState('idle');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
@@ -153,6 +154,7 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
   
       if (data?.success && data?.password) {
         setPass(data.password);
+        setPassToken(data.passwordToken || '');
         setPassStatus('success');
         return data.password;
       }
@@ -169,6 +171,30 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
       return null;
     }
   };
+
+  const claimPassword = async () => {
+    if (!passToken) return;
+    setClaimStatus('loading');
+    try {
+      const res = await fetchWithTimeout(`${API_URL}/register-store/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          smartContractAddress: form._smartContractAddress,
+          ownerAddress: address,
+          passwordToken: passToken,
+        }),
+      }, 12000);
+  
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.success) throw new Error(data?.message || "Claim failed");
+  
+      setClaimStatus('success');
+    } catch (e) {
+      setClaimStatus('error');
+    }
+  };
+  
   
   const PasswordPopup = () => (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -235,13 +261,15 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
             </div>
   
             <button
-              onClick={() => setPopUp(false)}
-              className="w-full sm:w-auto mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-8 rounded-lg 
-                        transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 
-                        focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Confirm & Close
-            </button>
+                onClick={async () => {
+                  await claimPassword();
+                  setPopUp(false);
+                }}
+                className="w-full sm:w-auto mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-8 rounded-lg"
+              >
+                Confirm & Close
+              </button>
+
           </div>
         </div>
       </div>

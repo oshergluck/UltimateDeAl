@@ -91,7 +91,7 @@ export const FooterMobile = () => {
           </a>
         </div>
         <div className=' pb-[50px] text-center text-[#FFFFFF]'>
-        © 2024 Copyright: 
+        © 2026 Copyright: 
         <button className='textcolor hover:text-[#FFFFFF] duration-500 ease-in-out ml-[5px]' onClick={handleNavigateHome}> UltraShop.tech</button>
         </div>
       </div>
