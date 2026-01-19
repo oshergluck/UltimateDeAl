@@ -43,3 +43,4 @@ export {default as Swap} from './Swap';
 export {default as CandleChart15mAdvanced} from "./Chart";
 export {default as CoinBox} from "./CoinBox";
 export {default as CookieAlert} from "./CookieAlert"
+export {default as ProtectedBox} from "./ProtectedBox"

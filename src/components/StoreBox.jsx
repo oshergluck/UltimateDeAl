@@ -18,25 +18,44 @@ const StoreBox = ({ store,enc }) => {
       return cleanedDescription.substring(0, maxLength) + '...';
   }
     return (
-        <div onClick={() => {navigate('/shop/'+store.urlPath)}} className="cursor-pointer  drop-shadow-md rounded-lg border-[1px] border-[#242424] opacity-[75%] hover:opacity-[100%] ease-in-out duration-500">
-            <div className="p-4">
-                <h3 className="text-xl font-semibold text-[#FFDD00] mb-2 truncate text-center">{store.name}</h3>
-                <div className='z-[1] w-11/12 m-auto my-[15px]'>
-                                <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${store.picture}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='!h-[250px] object-contain m-[auto] rounded-[5px]' />
-                            </div>
-                <p className="text-white text-center text-sm min-h-[80px]">{processDescription(store.description)}</p>
-                <div className='my-[15px] w-full gap-10 justify-center flex'>
-                            {enc ? (<>
-                                <div className='h-[50px]'>
-                                <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                <h2 className='text-[12px] text-white font-bold text-center'>Verified</h2>
-                            </div>
-                            </>):(<>
-                                
-                            </>)}
-                </div>
-            </div>
-        </div>
+<div
+  onClick={() => navigate("/shop/" + store.urlPath)}
+  className="group cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 hover:shadow-2xl transition overflow-hidden"
+>
+  <div className="p-5">
+    <h3 className="text-[#FFDD00] font-extrabold text-xl text-center truncate">
+      {store.name}
+    </h3>
+
+    {/* Image */}
+    <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 bg-black/20">
+      <img
+        src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${store.picture}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+        className="w-full h-[250px] object-cover group-hover:scale-[1.02] transition"
+        alt={store.name}
+        loading="lazy"
+      />
+    </div>
+
+    {/* Description */}
+    <p className="mt-4 text-white/80 text-center text-sm leading-relaxed line-clamp-4 min-h-[80px]">
+      {processDescription(store.description)}
+    </p>
+
+    {/* Verified */}
+    {enc ? (
+      <div className="mt-5 flex justify-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-200 border border-blue-400/20">
+          <img src={done_desktop} className="w-4 h-4" alt="verified" />
+          Verified
+        </span>
+      </div>
+    ) : (
+      <div className="mt-5 h-[28px]" />
+    )}
+  </div>
+</div>
+
     );
 };
 

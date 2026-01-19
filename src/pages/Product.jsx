@@ -720,521 +720,747 @@ const navigateToStore = async () => {
   navigate(`/shop/${StoreURL}`);
 }
 
-return (<>
-{isLoading && <Loader />}
-  <div className="mx-auto p-8 mt-9  rounded-2xl overflow-auto touch-auto">
+return (
+  <>
+    {isLoading && <Loader />}
 
-<div className='relative justify-center flex cursor-pointer' onClick={() => navigateToStore()}>
-{storeBanner && <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />}
-              <h1 className="text-center flex font-bold text-[#ff9900] drop-shadow-md sm:text-8xl text-5xl">{storeName}</h1>
-          </div>
-<div className='w-full justify-center gap-8 flex'>
-                          {enc? (<>
-                              <div className='h-[50px] my-[10px]'>
-                              <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                              <h2 className='text-[12px] text-center text-white font-bold'>Verified</h2>
-                          </div>
-                          </>):(<>
-                            
-                          </>)}
-                          </div>
-<ProductSearch contractAddress={storeContractByURL} />
-<div className='z-[1] sm:w-5/12 w-11/12 m-auto mt-[5px] !rounded-[15px] overflow-hidden'>
-</div>
-{product ? (
-  <div className="space-y-8">
-   
-    
-      <h3 className="sm:text-6xl text-4xl text-[#FFDD00] font-bold text-center">{product?.name}</h3>
-      {storeContractByURL=='0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d'|| storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD'? (<></>) : (<>
-        {ownerShip ? (<>   <div className='mt-[20px] ml-[25px] sm:mb-[90px]'>
-        <img src={VerifiedIcon} className='mx-auto w-[70px] h-[70px] sm:w-[35px] sm:h-[35px]'></img>
-        <h2 className='text-[12px] text-white font-bold text-center'>Owned</h2>
-        <button onClick={async() => await navigateToReactJS()} className='w-[250px] h-[35px] flex justify-center items-center z-5 font-bold text-[#FFFFF2] !mx-auto rounded-[15px] bg-[#00FFFF]'>To Hidden Contents</button>
-    </div>
-  </>):(<></>)}
-        {reward!==0 ? (<>
-                  <RewardBadge
-              type={type}
-              theSymbolOfReward={theSymbolOfReward}
-              reward={reward}
-              />
-              </>):(<></>)}
-    </>)}
-    
-    <div className="flex flex-wrap justify-center items-center gap-6 my-8">
-     <div className="relative z-10">
-      {(() => {
-        const isWETH = paymentAddress === "0xE1CbE71D2e56aAc7d50eB0ef855Fe5E4B51DF26c";
-        const price = HexToInteger(product?.price._hex);
-        const discount = HexToInteger(product?.discountPercentage._hex);
+    <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-6 lg:px-8 pt-8 pb-16 overflow-x-hidden">
+      {/* ========================= */}
+      {/* Store Hero */}
+      {/* ========================= */}
+      <div className="relative z-[200] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
+        <div
+          className="relative h-[130px] sm:h-[220px] w-full cursor-pointer"
+          onClick={() => navigateToStore()}
+        >
+          {storeBanner ? (
+            <img
+              src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+              className="h-full w-full object-cover"
+              alt="store banner"
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-r from-blue-700/40 via-cyan-500/20 to-blue-900/40" />
+          )}
 
-        const multiplier = type === 'Renting' || type === 'Rentals' ? 1 : 1;
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10" />
 
-        const formattedPrice = isWETH 
-          ? (price / 1e18 * multiplier).toFixed(multiplier === 30 ? 2 : 2) 
-          : (price / 1e6 * multiplier).toFixed(multiplier === 30 ? 2 : 2);
+          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+            <div>
+              <h1 className="text-white font-extrabold tracking-tight text-3xl sm:text-5xl drop-shadow-lg">
+                {storeName}
+              </h1>
 
-        const discountedPrice = isWETH 
-          ? ((price * (100 - discount)) / (100 * 1e18) * multiplier).toFixed(multiplier === 30 ? 2 : 2) 
-          : ((price * (100 - discount)) / (100 * 1e6) * multiplier).toFixed(multiplier === 30 ? 2 : 2);
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                {enc ? (<>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs sm:text-sm text-blue-200 border border-blue-400/20">
+                    🛡️ Verified Store
+                  </span>
+                </>
+                ) : (
+                  <></>
+                )}
+              </div>
+            </div>
 
-        const logoSrc = isWETH ? logoOfWebsite : usdcoinusdclogo;
-
-        const label = type === 'Renting' || type === 'Rentals' ? 'Price Per Day' 
-                    : type === 'Sales' ? 'Sales Price' 
-                    : type === 'Liquidity' ? 'Fixed Price' 
-                    : 'Price';
-
-        return (
-          <div className="flex flex-wrap justify-center items-center gap-1 bg-gradient-to-r from-blue-400 to-[#00FFFF] text-black font-bold py-3 px-6 rounded-lg shadow-lg transform">
-            {discount !== 0 ? (
-              <>
-                <span className="text-lg line-through mr-2 text-red-500">{formattedPrice}</span>
-                <span className="text-3xl text-white">{discountedPrice}</span>
-              </>
-            ) : (
-              <span className="text-3xl text-white">{formattedPrice}</span>
-            )}
-            <img src={logoSrc} className="h-[35px] w-[35px]" />
-            <div className="absolute -top-2 -right-2 bg-green-500 text-yellow-200 text-xs font-bold px-2 py-1 rounded-full shadow">
-              {label}
+            <div className="hidden sm:flex items-center gap-2 rounded-2xl bg-black/30 border border-white/10 px-4 py-2">
+              <span className="text-white/70 text-sm">Tap banner to return</span>
             </div>
           </div>
-        );
-      })()}
-    </div>
-
-      {storeContractByURL=='0xb9288F571322151414d65c8622D1621b60ffdF6e' ? (<></>):(<>
-        <div className="relative z-10">
-        <div className="bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
-          <span className="text-3xl">{ethers.BigNumber.from(product?.quantity.toString()).toString()}</span>
-          <span className="text-xl ml-1">left</span>
         </div>
-        <div className="absolute -bottom-2 -right-2 bg-yellow-300 text-purple-700 text-xs font-bold px-2 py-1 rounded-full shadow">
-          In Stock
+
+        <div className="relative z-[200] p-4 sm:p-6">
+          <div className="relative z-[200] rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+            <ProductSearch contractAddress={storeContractByURL} />
+          </div>
         </div>
       </div>
-      </>)}
-      {HexToInteger(product.discountPercentage._hex) !== 0 && (
-        <div className="relative z-10">
-          <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform rotate-3">
-            <span className="text-3xl">{HexToInteger(product?.discountPercentage._hex)}%</span>
-            <span className="text-xl ml-1">OFF</span>
+
+      {/* ========================= */}
+      {/* Product Body */}
+      {/* ========================= */}
+      {product ? (
+        <div className="mt-8 space-y-6">
+          {/* Title + Owned/Rewards */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+            <h3 className="text-center text-white font-extrabold tracking-tight text-3xl sm:text-5xl">
+              {product?.name}
+            </h3>
+
+            {(storeContractByURL === "0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d" ||
+              storeContractByURL === "0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD") ? null : (
+              <div className="mt-5 flex flex-wrap justify-center items-center gap-3">
+                {ownerShip ? (
+                  <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <img src={VerifiedIcon} className="w-6 h-6" alt="owned" />
+                      <span className="text-white font-bold">Owned</span>
+                    </div>
+
+                    <button
+                      onClick={async () => await navigateToReactJS()}
+                      className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-300 text-black font-extrabold px-4 py-2 shadow-lg hover:opacity-95 transition"
+                    >
+                      Exclusive Content 🔥
+                    </button>
+                  </div>
+                ) : null}
+
+                {reward !== 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                    <RewardBadge
+                      type={type}
+                      theSymbolOfReward={theSymbolOfReward}
+                      reward={reward}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
-          <div className="absolute -top-2 -left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow animate-pulse">
-            Save!
+
+          {/* Price / Stock / Discount */}
+          <div className="flex flex-wrap justify-center items-center gap-4">
+            {/* Price Card */}
+            <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl px-5 py-4">
+              {(() => {
+                const isWETH =
+                  paymentAddress === "0xE1CbE71D2e56aAc7d50eB0ef855Fe5E4B51DF26c";
+                const price = HexToInteger(product?.price._hex);
+                const discount = HexToInteger(product?.discountPercentage._hex);
+                const multiplier = type === "Renting" || type === "Rentals" ? 1 : 1;
+
+                const formattedPrice = isWETH
+                  ? (price / 1e18 * multiplier).toFixed(2)
+                  : (price / 1e6 * multiplier).toFixed(2);
+
+                const discountedPrice = isWETH
+                  ? ((price * (100 - discount)) / (100 * 1e18) * multiplier).toFixed(2)
+                  : ((price * (100 - discount)) / (100 * 1e6) * multiplier).toFixed(2);
+
+                const logoSrc = isWETH ? logoOfWebsite : usdcoinusdclogo;
+
+                const label =
+                  type === "Renting" || type === "Rentals"
+                    ? "Price Per Day"
+                    : type === "Sales"
+                    ? "Sales Price"
+                    : type === "Liquidity"
+                    ? "Fixed Price"
+                    : "Price";
+
+                return (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-end gap-2">
+                        {discount !== 0 ? (
+                          <>
+                            <span className="text-sm sm:text-base text-white/50 line-through">
+                              {formattedPrice}
+                            </span>
+                            <span className="text-2xl sm:text-3xl text-white font-extrabold">
+                              {discountedPrice}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-2xl sm:text-3xl text-white font-extrabold">
+                            {formattedPrice}
+                          </span>
+                        )}
+                      </div>
+
+                      <img src={logoSrc} className="h-9 w-9" alt="token" />
+                    </div>
+
+                    <div className="mt-2 inline-flex items-center rounded-full bg-blue-500/20 px-3 py-1 text-xs sm:text-sm text-blue-200 border border-blue-400/20">
+                      {label}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Stock */}
+            {storeContractByURL === "0xb9288F571322151414d65c8622D1621b60ffdF6e" ? null : (
+              <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl px-5 py-4">
+                <div className="text-white/70 text-sm">In Stock</div>
+                <div className="text-white font-extrabold text-2xl sm:text-3xl">
+                  {ethers.BigNumber.from(product?.quantity.toString()).toString()}
+                  <span className="text-white/60 text-base ml-2">left</span>
+                </div>
+              </div>
+            )}
+
+            {/* Discount */}
+            {HexToInteger(product.discountPercentage._hex) !== 0 && (
+              <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl px-5 py-4">
+                <div className="text-white/70 text-sm">Discount</div>
+                <div className="text-white font-extrabold text-2xl sm:text-3xl">
+                  {HexToInteger(product?.discountPercentage._hex)}%
+                  <span className="text-blue-200 text-base ml-2">OFF</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Gallery + Description */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gallery */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl max-h-[700px] shadow-xl p-4 sm:p-6">
+              <div className="rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
+                <div className="h-[220px] sm:h-[520px] w-full">
+                  <IPFSMediaViewer
+                    ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${selectedImage}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                    className="h-full w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex gap-3 overflow-x-auto touch-auto pb-1">
+                {imagesOfProduct.map((imageHash, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className={`flex-shrink-0 rounded-2xl overflow-hidden border transition
+                      ${
+                        selectedImage === imageHash
+                          ? "border-blue-400/60 ring-2 ring-blue-500/40"
+                          : "border-white/10 hover:border-blue-400/40"
+                      }`}
+                    onMouseEnter={() => setSelectedImage(imageHash)}
+                    onClick={() => setSelectedImage(imageHash)}
+                  >
+                    <div className="bg-black/20 w-[120px] h-[70px]">
+                      <IPFSMediaViewer
+                        ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imageHash}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                        className="h-full w-full"
+                      />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+              <h4 className="text-white font-extrabold text-xl mb-3">
+                About this product
+              </h4>
+              <div className="text-white/80 leading-relaxed overflow-auto touch-auto">
+                {renderDescriptionWithBreaks(product?.productDescription)}
+              </div>
+            </div>
+          </div>
+
+          {/* Reviews + Leave review */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Reviews */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h3 className="text-white font-extrabold text-xl">⭐ Reviews</h3>
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
+                  <StarRatingMain rating={userRatingAvarage} />
+                </div>
+              </div>
+
+              <div className="mt-4 max-h-[360px] overflow-auto touch-auto space-y-4 pr-1">
+                {reviews && reviews.length > 0 ? (
+                  reviews.map((review, index) => (
+                    <div
+                      key={index}
+                      className="rounded-2xl border border-white/10 bg-black/20 p-4 hover:bg-black/30 transition"
+                    >
+                      <StarRating rating={Number(review.rating.toString())} />
+                      <p className="text-white/90 mt-2">{review.comment}</p>
+
+                      <div className="mt-3 text-xs sm:text-sm text-white/60 flex flex-wrap gap-2">
+                        <a
+                          href={`https://Base.blockscout.com/address/${review.user}`}
+                          className="underline underline-offset-4 hover:text-white"
+                        >
+                          {review.user}
+                        </a>
+                        <span className="text-white/30">•</span>
+                        <span>Invoice: {review.receipt.toString()}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-white/60">No reviews yet</p>
+                )}
+              </div>
+            </div>
+
+            {/* Leave review */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 shadow-xl p-4 sm:p-6">
+              {canLeaveReview ? (
+                <div className="space-y-4">
+                  <h3 className="text-white font-extrabold text-xl">✍️ Leave a Review</h3>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4 space-y-4">
+                    <StarRatingForNewReview
+                      rating={selectedRating}
+                      onRatingChange={handleStarChange}
+                    />
+
+                    <p className="text-white/70 text-sm">
+                      Selected Rating:{" "}
+                      <span className="text-white font-bold">{selectedRating}</span>
+                    </p>
+
+                    <textarea
+                      className="w-full min-h-[180px] rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Your review"
+                      value={form.review}
+                      onChange={(e) => handleFormFieldChange("review", e)}
+                    />
+
+                    <button
+                      className={`w-full sm:w-auto rounded-2xl px-6 py-3 font-extrabold shadow-lg transition
+                        ${
+                          buttonDisabled
+                            ? "bg-white/10 text-white/40 cursor-not-allowed"
+                            : "bg-gradient-to-r from-blue-500 to-cyan-300 text-black hover:opacity-95 hover:shadow-xl"
+                        }`}
+                      onClick={() => addReview(selectedRating, form.review)}
+                      disabled={buttonDisabled}
+                    >
+                      Add Review
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-white/60">
+                  You can leave a review after a verified purchase.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ========================= */}
+          {/* Purchase / Register */}
+          {/* ========================= */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+            {isRegistered ? (
+              <>
+                {/* More Info */}
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <h3 className="text-white font-extrabold text-lg mb-2">Optional note</h3>
+                  <textarea
+                    className="w-full min-h-[160px] rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="More info if needed. Don’t share private info here."
+                    value={form.moreInfo}
+                    onChange={(e) => handleFormFieldChange("moreInfo", e)}
+                  />
+                </div>
+
+                {/* Amount / Days */}
+                {StoreURL === "DeAl" && productUrl === "LISTBIZ" ? null : (
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-white/80 font-bold text-sm">
+                        {type === "Sales" ? "Amount" : "Amount"}
+                      </span>
+
+                      <input
+                        className="w-[120px] rounded-2xl border border-white/10 bg-black/30 p-3 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        type="number"
+                        min={1}
+                        placeholder="1"
+                        value={amountOfProduct}
+                        onChange={(e) => setAmountOfProduct(e.target.value)}
+                      />
+
+                      {type !== "Sales" &&
+                      paymentAddress !== "0x4200000000000000000000000000000000000006" &&
+                      storeContractByURL !== "0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD" ? (
+                        <span className="text-white/80 font-bold text-sm">Days</span>
+                      ) : null}
+
+                      <span className="ml-auto text-white/60 text-sm">
+                        Connected as{" "}
+                        <span className="text-blue-200 font-semibold">
+                          {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Approve / Purchase */}
+                {address ? (
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <TransactionButton
+                      className={`!rounded-2xl !px-6 !py-3 !font-extrabold !shadow-lg !transition
+                        !bg-white !text-blue-700 hover:!shadow-xl
+                        ${
+                          amountOfProduct *
+                            (HexToInteger(product?.price._hex) -
+                              (HexToInteger(product?.discountPercentage._hex) *
+                                HexToInteger(product?.price._hex)) /
+                                100) <
+                          allowance
+                            ? "!hidden"
+                            : ""
+                        }`}
+                      transaction={async () => {
+                        const finalPrice =
+                          Math.round(
+                            Math.round(HexToInteger(product?.price._hex)) *
+                              (100 - HexToInteger(product?.discountPercentage._hex)) /
+                              100
+                          ) *
+                            amountOfProduct +
+                          1e3;
+
+                        const spender = storeContractByURL;
+                        const value = finalPrice;
+
+                        const tx = prepareContractCall({
+                          contract: PaymentContract,
+                          method: "function approve(address spender, uint256 value) returns (bool)",
+                          params: [spender, value],
+                          value: 0,
+                        });
+
+                        return tx;
+                      }}
+                      onTransactionSent={(result) => {
+                        console.log("Transaction submitted", result.transactionHash);
+                      }}
+                      onTransactionConfirmed={async () => {
+                        const data = await PaymentContract1.call("allowance", [
+                          address,
+                          storeContractByURL,
+                        ]);
+                        setAllowance(HexToInteger(data._hex));
+                      }}
+                      onError={(error) => {
+                        console.error("Transaction error", error);
+                      }}
+                    >
+                      {symbolPayment ? `Approve ${symbolPayment}` : "Approve $USDC"}
+                    </TransactionButton>
+
+                    <TransactionButton
+                      className={`!rounded-2xl !px-6 !py-3 !font-extrabold !shadow-lg !transition
+                        !bg-gradient-to-r !from-blue-500 !to-cyan-300 !text-black hover:!opacity-95 hover:!shadow-xl
+                        ${
+                          allowance >=
+                          (HexToInteger(product?.price._hex) -
+                            (HexToInteger(product?.discountPercentage._hex) *
+                              HexToInteger(product?.price._hex)) /
+                              100) *
+                            amountOfProduct
+                            ? ""
+                            : "!hidden"
+                        }`}
+                      transaction={async () => {
+                        const productUrlDecoded = decodeUrlString(productUrl);
+
+                        const response = await fetch(`${API_URL}/sign-purchase`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            walletAddress: address,
+                            productBarcode: productUrlDecoded,
+                            amount: amountOfProduct,
+                          }),
+                        });
+
+                        const data = await response.json();
+
+                        if (!data.success) {
+                          alert("Error: " + data.error);
+                          throw new Error(data.error);
+                        }
+
+                        const { signature, deadline } = data;
+
+                        let IPFSOFNFT = "";
+
+                        let priceForNFT =
+                          (HexToInteger(product?.price._hex) *
+                            (100 - HexToInteger(product?.discountPercentage._hex))) /
+                          (100 * 1e6);
+
+                        const rewardForUser = await rewardCalc(type);
+                        const today = new Date();
+                        const sellDate = `${today
+                          .getDate()
+                          .toString()
+                          .padStart(2, "0")}/${(today.getMonth() + 1)
+                          .toString()
+                          .padStart(2, "0")}/${today.getFullYear()}`;
+
+                        const expirationPeriod = amountOfProduct * 24 * 60 * 60 * 1000;
+                        const expirationDateObj = new Date(Date.now() + expirationPeriod);
+                        const expirationDate = `${expirationDateObj
+                          .getDate()
+                          .toString()
+                          .padStart(2, "0")}/${(expirationDateObj.getMonth() + 1)
+                          .toString()
+                          .padStart(2, "0")}/${expirationDateObj.getFullYear()}`;
+
+                        if (type === "Rentals" || type === "Renting") {
+                          const upload = await pinata.upload.json({
+                            name: `Invoice`,
+                            description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
+                            external_url: `https://UltraShop.tech/shop/${StoreURL}`,
+                            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
+                            attributes: [
+                              { trait_type: "Invoice Id", value: invoiceCounter },
+                              { trait_type: "Product Name", value: product.name },
+                              { trait_type: "Rental Period", value: `${amountOfProduct} Days` },
+                              { trait_type: "Sell Date", value: sellDate },
+                              {
+                                trait_type: "Amount Payed",
+                                value: `${(priceForNFT * amountOfProduct).toFixed(2)} $USDC`,
+                              },
+                              { trait_type: "Price Per Day", value: `${priceForNFT.toFixed(2)} $USDC` },
+                              { trait_type: "Reward Address", value: rewardAddress },
+                              {
+                                trait_type: "Reward Amount",
+                                value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}`,
+                              },
+                              { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
+                              { trait_type: `${product.name} Expiration Date`, value: expirationDate },
+                            ],
+                          });
+                          IPFSOFNFT = upload.IpfsHash;
+                        } else if (type === "Sales") {
+                          const upload = await pinata.upload.json({
+                            name: `Invoice`,
+                            description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
+                            external_url: `https://UltraShop.tech/shop/${StoreURL}`,
+                            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
+                            attributes: [
+                              { trait_type: "Invoice Id", value: invoiceCounter },
+                              { trait_type: "Product Name", value: product.name },
+                              { trait_type: "Amount", value: amountOfProduct },
+                              { trait_type: "Sell Date", value: sellDate },
+                              {
+                                trait_type: "Amount Payed",
+                                value: `${(priceForNFT * amountOfProduct).toFixed(2)} $USDC`,
+                              },
+                              { trait_type: "Price", value: `${priceForNFT.toFixed(2)} $USDC` },
+                              { trait_type: "Reward Address", value: rewardAddress },
+                              { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
+                              {
+                                trait_type: "Reward Amount",
+                                value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}`,
+                              },
+                            ],
+                          });
+                          IPFSOFNFT = upload.IpfsHash;
+                        }
+
+                        const theInfo = form.moreInfo;
+
+                        const tx = prepareContractCall({
+                          contract: storeContract1,
+                          method:
+                            "function purchaseProduct(string _productBarcode, uint256 _amount, string _info, string metadata, bytes _signature, uint256 _deadline)",
+                          params: [
+                            productUrlDecoded,
+                            amountOfProduct,
+                            theInfo,
+                            IPFSOFNFT,
+                            signature,
+                            deadline,
+                          ],
+                        });
+
+                        return tx;
+                      }}
+                      onTransactionSent={(result) => {
+                        console.log("Transaction submitted", result.transactionHash);
+                      }}
+                      onTransactionConfirmed={() => {
+                        refreshPage();
+                      }}
+                      onError={(error) => {
+                        console.error("Transaction error", error);
+                        if (error.message && error.message.includes("Not authorized")) {
+                          alert("You are not registered in our database! Please register first.");
+                        } else if (error.message && error.message.includes("Signature expired")) {
+                          alert("Signature expired. Please try again.");
+                        } else {
+                          alert("Transaction failed: " + error.message);
+                        }
+                      }}
+                    >
+                      Purchase
+                    </TransactionButton>
+                  </div>
+                ) : null}
+
+                
+                    {/* Review by Invoice input */}
+                    <div className="mt-[20px] rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <h3 className="text-white font-extrabold text-lg mb-3">
+                        Already bought?
+                      </h3>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                          type="text"
+                          placeholder="Enter Invoice Number"
+                          value={receipt}
+                          onChange={(e) => setReceipt(e.target.value)}
+                        />
+                        <button
+                          className="w-full sm:w-auto rounded-2xl px-6 py-3 font-extrabold shadow-lg bg-white text-blue-700 hover:shadow-xl transition"
+                          onClick={() => AddReviewButton()}
+                        >
+                          Review
+                        </button>
+                      </div>
+                    </div>
+
+                {/* Unregister */}
+                <div className="mt-6">
+                  <button
+                    className="rounded-2xl border border-red-400/40 bg-red-500/10 text-red-200 font-extrabold px-5 py-3 hover:bg-red-500/20 transition"
+                    onClick={() => setShowUnregisterModal(true)}
+                  >
+                    🚫 Unregister
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Register block */}
+                {address ? (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <h2 className="text-white font-extrabold text-xl">
+                        Register as a client of this store
+                      </h2>
+                      <p className="text-white/60 mt-2">
+                        🔐 All details are encrypted by the website
+                      </p>
+
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {storeContractByURL == import.meta.env.VITE_ULTIMATEDEAL_STORE ||
+                        storeContractByURL == "0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75" ? null : (
+                          <input
+                            className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                            type="text"
+                            placeholder="Your Physical Address"
+                            value={physicalAddressOfClient}
+                            onChange={(e) => setPhysicalAddressOfClient(e.target.value)}
+                          />
+                        )}
+
+                        <input
+                          className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                          type="text"
+                          placeholder="Your Email"
+                          value={emailOfClient}
+                          onChange={(e) => setEmailOfClient(e.target.value)}
+                        />
+
+                        <input
+                          className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                          type="text"
+                          placeholder="Your Phone Number"
+                          value={phoneNumOfClient}
+                          onChange={(e) => setPhoneNumOfClient(e.target.value)}
+                        />
+
+                        <input
+                          className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                          type="text"
+                          placeholder="Your Name"
+                          value={nameOfClient}
+                          onChange={(e) => setNameOfClient(e.target.value)}
+                        />
+                      </div>
+
+                      <button
+                        disabled={isLoading || !nameOfClient || !phoneNumOfClient}
+                        onClick={handleRegisterToDB}
+                        className={`mt-5 w-full sm:w-auto rounded-2xl px-6 py-3 font-extrabold shadow-lg transition
+                          ${
+                            isLoading || !nameOfClient || !phoneNumOfClient
+                              ? "bg-white/10 text-white/40 cursor-not-allowed"
+                              : "bg-gradient-to-r from-blue-500 to-cyan-300 text-black hover:opacity-95 hover:shadow-xl"
+                          }`}
+                      >
+                        {isLoading ? "Registering..." : "Register"}
+                      </button>
+                    </div>
+
+                  </div>
+                ) : (
+                  <div className="text-white/60">
+                    Connect your wallet to register and purchase.
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Important */}
+          <div className="rounded-3xl border border-blue-400/20 bg-blue-500/10 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+            <h2 className="text-white font-extrabold text-lg mb-1">Important</h2>
+            <p className="text-white/80">
+              Must approve to let the blockchain use your coins before purchasing the product.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ========================= */}
+      {/* Unregister Modal */}
+      {/* ========================= */}
+      {showUnregisterModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-2xl p-6">
+            <h3 className="text-white font-extrabold text-xl mb-2">Are you sure?</h3>
+            <p className="text-white/60 mb-5">
+              This will delete your customer data from our database permanently.
+            </p>
+
+            <label className="flex items-center gap-3 mb-6 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={confirmUnregister}
+                onChange={(e) => setConfirmUnregister(e.target.checked)}
+                className="w-5 h-5 accent-blue-500"
+              />
+              <span className="text-white/90 font-semibold">Yes, I want to unregister</span>
+            </label>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowUnregisterModal(false)}
+                className="rounded-2xl px-4 py-2 text-white/80 hover:bg-white/10 transition"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleUnregisterFromDB}
+                disabled={!confirmUnregister}
+                className={`rounded-2xl px-4 py-2 font-extrabold transition
+                  ${
+                    confirmUnregister
+                      ? "bg-red-500 text-white hover:bg-red-400"
+                      : "bg-white/10 text-white/40 cursor-not-allowed"
+                  }`}
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
-
     </div>
-
-    <div className="flex flex-col sm:flex-row justify-between items-start gap-8">
-    <div className={`w-full sm:w-1/2 sm:my-0`}>
-    <div className="w-full bg-white mb-2 sm:max-h-[500px] max-h-[180px] h-[180px] sm:h-[500px] rounded-2xl overflow-hidden">
-      <IPFSMediaViewer
-        ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${selectedImage}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-        className='sm:max-h-[500px] max-h-[180px] h-[180px] sm:h-[500px]'
-      />
-    </div>
-
-    <div className="flex flex-row gap-3 overflow-x-auto p-1 touch-auto">
-      {imagesOfProduct.map((imageHash, index) => (
-        <div
-          key={index}
-          className="flex-shrink-0 bg-white w-[108px] h-[61px] rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:ring-2 hover:ring-blue-500"
-          onMouseEnter={() => setSelectedImage(imageHash)}
-          onClick={() => setSelectedImage(imageHash)}
-        >
-          <IPFSMediaViewer
-            ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imageHash}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-            className='max-h-[65px] w-full'
-          />
-        </div>
-      ))}
-    </div>
-  </div>
-      <div className="text-white w-full sm:w-1/2 overflow-auto touch-auto">
-        {renderDescriptionWithBreaks(product?.productDescription)}
-      </div>
-      
-    </div>
-    
-    <div className="space-y-4 h-[350px] overflow-auto touch-auto">
-      <h3 className="text-2xl text-orange-400 sm:mt-[0px] mt-[30px]">Shop Reviews</h3>
-      <h3 className="text-2xl text-[#FFDD00]">Avarage Rating:</h3>
-      <div className='border-b border-gray-700 border-b-[1px] pb-[20px]'><StarRatingMain rating={userRatingAvarage} /></div>
-      {reviews && reviews.length > 0 ? (
-reviews.map((review, index) => (
-  <div key={index} className="border-b border-gray-700 border-b-[1px] pb-[20px]">
-    <StarRating rating={Number(review.rating.toString())} />
-    <p className="text-white mt-2">{review.comment}</p>
-    <a href={`https://Base.blockscout.com/address/${review.user}`} className="text-white mt-2 text-[12px]">{review.user}</a>
-    <p className='text-white mt-2'>Invoice: {review.receipt.toString()}</p>
-  </div>
-))
-) : (
-<p className="text-white">No reviews yet</p>
-)}
-    </div>
-    <div className='mb-[20px]'>
-    {canLeaveReview && (
-      <div className="space-y-4 mb-[20px]">
-        <h1 className="text-white text-xl">Leave a Review</h1>
-        <StarRatingForNewReview 
-          rating={selectedRating} 
-          onRatingChange={handleStarChange} 
-        />
-        <p className="text-white">Selected Rating: {selectedRating}</p>
-        <textarea
-          className="w-full p-2 rounded-lg linear-gradient1 text-white h-[300px] placeholder:text-[#FFFFFF] placeholder:text-[#FFFFFF]"
-          placeholder="Your review"
-          value={form.review}
-          onChange={(e) => handleFormFieldChange('review', e)}
-        />
-        <button
-          className={`bg-gradient-to-r bg-cyan-400 text-black font-semibold rounded-lg p-4 shadow-md hover:opacity-90 transition-opacity duration-300 ease-in-out w-full sm:w-auto mb-[20px] ${buttonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={() => addReview(selectedRating, form.review)}
-          disabled={buttonDisabled}
-        >
-          Add Review
-        </button>
-      </div>
-    )}
-    </div>
-  </div>
-):(<></>)} 
-  {isRegistered? (<>
-  <br/>
-    <textarea
-    className="w-full p-2 rounded-lg linear-gradient1 mb-[5px] mt-[15px] text-white h-[300px] placeholder:text-[#FFFFFF]"
-    placeholder="More info if needed, *Don't share private info here."
-    value={form.moreInfo}
-    onChange={(e) => handleFormFieldChange('moreInfo', e)}
-  />
-  
-  {StoreURL=='DeAl'&&productUrl=='LISTBIZ' ? (<></>):(
-    <>
-      
-    {type=='Sales' ? (<>
-      <span className='text-white font-bold text-[14px]'>Amount</span>
-    <input
-      className="w-2/12 p-2 mt-[10px] mb-[15px] rounded-lg linear-gradient1 text-white mx-[20px] placeholder:text-[#FFFFFF]"
-      type="number"
-      min={1}
-      placeholder="Amount"
-      value={amountOfProduct}
-      onChange={(e) => setAmountOfProduct(e.target.value)}
-  />
-    </>):(<>
-    {paymentAddress=='0x4200000000000000000000000000000000000006'? (<>
-      <input
-      className="w-2/12 p-2 mt-[10px] mb-[15px] rounded-lg linear-gradient1 text-white mx-[20px] placeholder:text-[#FFFFFF]"
-      type="number"
-      min={1}
-      placeholder="Amount"
-      value={amountOfProduct}
-      onChange={(e) => setAmountOfProduct(e.target.value)}
-  />
-  <span className='text-white font-bold text-[14px] mr-[20px]'>Amount</span>
-    </>):(<>
-      <input
-      className="w-2/12 p-2 mt-[10px] mb-[15px] rounded-lg linear-gradient1 text-white mx-[20px] placeholder:text-[#FFFFFF]"
-      type="number"
-      min={1}
-      placeholder="Amount"
-      value={amountOfProduct}
-      onChange={(e) => setAmountOfProduct(e.target.value)}
-  />
-  {storeContractByURL=='0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (<></>):(<span className='text-white font-bold text-[14px] mr-[20px]'>Days</span>)}
-    </>)}
-    
-    </>)}
   </>
-  )}
-   {address ? (
-<>
-<TransactionButton
-  className={`!bg-[#FFDD00] !mr-[10px] !hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out ${amountOfProduct*(HexToInteger(product?.price._hex)-HexToInteger(product?.discountPercentage._hex)*HexToInteger(product?.price._hex)/100)<allowance ? ('!hidden'):('')}`}
-  transaction={async () => {
-    const finalPrice = await Math.round(Math.round(HexToInteger(product?.price._hex))*(100-(HexToInteger(product?.discountPercentage._hex)))/100)*amountOfProduct+1e3;
-    const spender = storeContractByURL;
-    const value = finalPrice;
-    const tx = prepareContractCall({
-      contract:PaymentContract,
-      method: "function approve(address spender, uint256 value) returns (bool)", 
-      params: [spender, value],
-      value: 0,
-    });
-    return tx;    
-  }}
-  onTransactionSent={(result) => {
-    console.log("Transaction submitted", result.transactionHash);
-  }}
-  onTransactionConfirmed={async(receipt) => {
-    console.log("Transaction confirmed", receipt.transactionHash);
-    const data = await PaymentContract1.call('allowance',[address,storeContractByURL]);
-    setAllowance(HexToInteger(data._hex));
-  }}
-  onError={(error) => {
-    console.error("Transaction error", error);
-  }}
->
-  {symbolPayment? (
-    <>
-    Approve {symbolPayment}
-    </>
-  ):(
-    <>
-    Approve $USDC
-    </>
-  )}
-</TransactionButton>
- 
- <TransactionButton
-  className={`!mt-[30px] !bg-[#FFDD00] ${allowance >= (HexToInteger(product?.price._hex)-HexToInteger(product?.discountPercentage._hex)*HexToInteger(product?.price._hex)/100)*amountOfProduct ? (''):('!hidden')}`}
-    transaction={async() => {
-        try {
-            const productUrlDecoded = decodeUrlString(productUrl);
-            
-            // 1. Get Signature from Server
-            const response = await fetch(`${API_URL}/sign-purchase`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    walletAddress: address,
-                    productBarcode: productUrlDecoded,
-                    amount: amountOfProduct
-                })
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                alert("Error: " + data.error);
-                throw new Error(data.error); 
-            }
-
-            const { signature, deadline } = data;
-
-            let IPFSOFNFT = '';
-            let priceForNFT = await ((HexToInteger(product?.price._hex) * (100 - HexToInteger(product?.discountPercentage._hex))) / (100 * 1e6));
-            const rewardForUser = await rewardCalc(type);
-            const today = new Date();
-            const sellDate = await `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-
-            const expirationPeriod = await amountOfProduct * 24 * 60 * 60 * 1000;
-            const expirationDateObj = await new Date(Date.now() + expirationPeriod);
-            const expirationDate = await `${expirationDateObj.getDate().toString().padStart(2, '0')}/${(expirationDateObj.getMonth() + 1).toString().padStart(2, '0')}/${expirationDateObj.getFullYear()}`;
-
-            if(type=='Rentals' || type=='Renting') {
-                const upload = await pinata.upload.json({
-                name: `Invoice`,
-                description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
-                external_url: `https://UltraShop.tech/shop/${StoreURL}`,
-                image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
-                attributes: [
-                    { trait_type: "Invoice Id", value: invoiceCounter },
-                    { trait_type: "Product Name", value: product.name },
-                    { trait_type: "Rental Period", value: `${amountOfProduct} Days` },
-                    { trait_type: "Sell Date", value: sellDate },
-                    { trait_type: "Amount Payed", value: `${(priceForNFT*amountOfProduct).toFixed(2)} $USDC` },
-                    { trait_type: "Price Per Day", value: `${priceForNFT.toFixed(2)} $USDC` },
-                    { trait_type: "Reward Address", value: rewardAddress },
-                    { trait_type: "Reward Amount", value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}` },
-                    { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
-                    { trait_type: `${product.name} Expiration Date`, value: expirationDate }
-                ]
-                });
-                IPFSOFNFT = await upload.IpfsHash;
-            }
-            else if(type=='Sales') {
-                const upload = await pinata.upload.json({
-                name: `Invoice`,
-                description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
-                external_url: `https://UltraShop.tech/shop/${StoreURL}`,
-                image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
-                attributes: [
-                    { trait_type: "Invoice Id", value: invoiceCounter },
-                    { trait_type: "Product Name", value: product.name },
-                    { trait_type: "Amount", value: amountOfProduct },
-                    { trait_type: "Sell Date", value: sellDate },
-                    { trait_type: "Amount Payed", value: `${(priceForNFT*(amountOfProduct)).toFixed(2)} $USDC` },
-                    { trait_type: "Price", value: `${(priceForNFT).toFixed(2)} $USDC` },
-                    { trait_type: "Reward Address", value: rewardAddress },
-                    { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
-                    { trait_type: "Reward Amount", value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}` }
-                ]
-                });
-                IPFSOFNFT = await upload.IpfsHash;
-            }
-            
-            const theInfo = form.moreInfo; 
-
-            const tx = prepareContractCall({
-                contract:storeContract1,
-                method: "function purchaseProduct(string _productBarcode, uint256 _amount, string _info, string metadata, bytes _signature, uint256 _deadline)", 
-                params: [
-                    productUrlDecoded,
-                    amountOfProduct,
-                    theInfo,
-                    await IPFSOFNFT,
-                    signature,
-                    deadline
-                ]
-            });
-            return tx;
-        } catch (error) {
-            console.error("Purchase error:", error);
-            throw error;
-        }
-    }}
-    onTransactionSent={(result) => {
-      console.log("Transaction submitted", result.transactionHash);
-    }}
-    onTransactionConfirmed={(receipt) => {
-      console.log("Transaction confirmed", receipt.transactionHash);
-      refreshPage();
-    }}
-    onError={(error) => {
-      console.error("Transaction error", error);
-      if (error.message && error.message.includes("Not authorized")) {
-          alert("You are not registered in our database! Please register first.");
-      } else if (error.message && error.message.includes("Signature expired")) {
-          alert("Signature expired. Please try again.");
-      } else {
-          alert("Transaction failed: " + error.message);
-      }
-    }}
-  >
-    <>
-      Purchase
-    </>
-    
-  </TransactionButton>
-  
-</>
-):(<></>)}
-  <br/>
-    <>
-    <button
-        className="my-[30px] w-[150px] h-[50px] border-[1px] border-red-500 hover:bg-orange-400 bg-transparent text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1"
-        onClick={() => setShowUnregisterModal(true)}
-      >
-        Unregister
-      </button>
-      </>
-   
-  </>):(<>
-      {address? (<> <h2 className="text-2xl font-semibold text-white">Register as a client of this store</h2>
-              <p className="text-gray-300 mt-[10px]">All details are encrypted by the website</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {storeContractByURL==import.meta.env.VITE_ULTIMATEDEAL_STORE  || storeContractByURL=='0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75'? (<></>):(<input
-                      className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                      type="text"
-                      placeholder="Your Physical Address"
-                      value={physicalAddressOfClient}
-                      onChange={(e) => setPhysicalAddressOfClient(e.target.value)}
-                  />)}
-                  <input
-                      className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                      type="text"
-                      placeholder="Your Email"
-                      value={emailOfClient}
-                      onChange={(e) => setEmailOfClient(e.target.value)}
-                  />
-                  <input
-                      className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                      type="text"
-                      placeholder="Your Phone Number"
-                      value={phoneNumOfClient}
-                      onChange={(e) => setPhoneNumOfClient(e.target.value)}
-                  />
-                  <input
-                      className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                      type="text"
-                      placeholder="Your Name"
-                      value={nameOfClient}
-                      onChange={(e) => setNameOfClient(e.target.value)}
-                  />
-              </div>
-              <button
-  disabled={isLoading || !nameOfClient || !phoneNumOfClient} // וודא ש-isLoading כאן
-  onClick={handleRegisterToDB}
-  className={`mb-[20px] !bg-cyan-400 !mt-[30px] hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1 ${!nameOfClient || !emailOfClient || !phoneNumOfClient ? 'opacity-50 cursor-not-allowed' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {isLoading ? 'Registering...' : 'Register'}
-</button>
-      </>):(<>
-    </>)}
-     
-    </>
-    )}
-    {address ? (<div>
-
-<div className="flex gap-4 mt-[20px]">
-    <input
-      className="p-4 rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF] placeholder:text-[#FFFFFF]"
-      type="text"
-      placeholder="Enter Invoice Number"
-      value={receipt}
-      onChange={e => setReceipt(e.target.value)}
-    />
-    <button
-      className="bg-cyan-400 hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out"
-      onClick={() => AddReviewButton()}
-    >
-      Review
-    </button>
-  </div>
-</div>):(<></>)}
-
-
-<div className="mt-8 p-4 bg-gray-800 rounded-lg">
-  <h2 className="text-xl font-semibold mb-2 text-white">Important!</h2>
-  <h2 className='text-[#FFDD00]'>Must Approve To Let The Blockchain Use Your Coins Before Purchasing The Product.
-  </h2>
-</div>
-
-{showUnregisterModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-        <div className="bg-gray-800 p-8 rounded-xl border border-cyan-400 max-w-sm w-full">
-            <h3 className="text-xl text-white font-bold mb-4">Are you sure?</h3>
-            <p className="text-gray-300 mb-6">This will delete your customer data from our database permanently.</p>
-            
-            <div className="flex items-center mb-6">
-                <input 
-                    type="checkbox" 
-                    id="confirmDelete" 
-                    checked={confirmUnregister}
-                    onChange={(e) => setConfirmUnregister(e.target.checked)}
-                    className="w-5 h-5 accent-cyan-400 mr-3"
-                />
-                <label htmlFor="confirmDelete" className="text-white">Yes, I want to unregister</label>
-            </div>
-
-            <div className="flex gap-4">
-                <button 
-                    onClick={() => setShowUnregisterModal(false)}
-                    className="px-4 py-2 rounded text-white hover:bg-gray-700"
-                >
-                    Cancel
-                </button>
-                <button 
-                    onClick={handleUnregisterFromDB}
-                    disabled={!confirmUnregister}
-                    className={`px-4 py-2 rounded font-bold ${confirmUnregister ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'}`}
-                >
-                    Confirm Delete
-                </button>
-            </div>
-        </div>
-    </div>
-)}
-</div>
-</>
 )
+
 }
 
 export default Product

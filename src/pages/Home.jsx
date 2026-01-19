@@ -106,136 +106,202 @@ function processDescription(description, maxLength = 180)
       }
 
 
-    return (
+      return (
         <>
-        <div>
-        <SearchEngine searchEngineAddress={'0x3646F77A96A1eBb0e04eE494053e38599eE66FC4'} listingContractAddress={import.meta.env.VITE_STORE_REGISTERY}/>
-        </div>
-        <div className=''>
-        <div className=" mx-auto">
-        {isMobile ? <FeaturedMobile /> : <Featured/>}
-        </div>
-        </div>
-        <div className="min-h-screen ">
+          {/* Search */}
+          <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pt-6">
+            <SearchEngine
+              searchEngineAddress={"0x3646F77A96A1eBb0e04eE494053e38599eE66FC4"}
+              listingContractAddress={import.meta.env.VITE_STORE_REGISTERY}
+            />
+          </div>
+      
+          {/* Featured */}
+          <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pt-6">
+            {isMobile ? <FeaturedMobile /> : <Featured />}
+          </div>
+      
+          <div className="min-h-screen">
             {isLoading && <Loader />}
-            
-            <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    <h1 className="sm:text-[80px] text-[35px] font-bold text-[#FFDD00] text-center my-[20px] sm:block hidden">UltraShop Marketplace</h1>
-                    <h1 className="sm:text-[80px] text-[35px] font-bold text-[#FFDD00] text-center sm:hidden block">Marketplace</h1>
+      
+            <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 py-8">
+              {/* Title */}
+              <div className="text-center mb-8">
+                <h1 className="hidden sm:block text-[44px] sm:text-[64px] lg:text-[80px] font-extrabold text-[#FFDD00] leading-[1.05]">
+                  UltraShop Marketplace
+                </h1>
+                <h1 className="sm:hidden block text-[36px] font-extrabold text-[#FFDD00] leading-[1.05]">
+                  Marketplace
+                </h1>
+                <p className="mt-3 text-white/70 text-sm sm:text-base">
+                  Discover stores, explore cities, and shop on-chain.
+                </p>
+              </div>
+      
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={() => navigate("/shop/ultrashop/products/LISTESH")}
+                className="w-full rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl hover:bg-white/10 transition p-6 sm:p-10"
+              >
+                <div className="text-center">
+                  <h2 className="text-white font-extrabold text-3xl sm:text-5xl lg:text-6xl">
+                    Launch Your Online StartUp
+                  </h2>
+                  <p className="mt-4 text-[#FFDD00] font-bold text-base sm:text-xl">
+                    Buy/Sell Products And Earn From Almost Every Transaction
+                  </p>
                 </div>
-                <div className=" mx-auto py-6 sm:px-6 lg:px-8">
-                    {/* Listing Button */}
-                    <div className="opacity-[50%] hover:opacity-[100%] ease-in-out duration-500 sm:w-full w-[95%] mx-auto  shadow-xl rounded-lg mb-8 cursor-pointer border-[1px] border-[#242424]"
-                    onClick={() => {navigate('/shop/ultrashop/products/LISTESH')}}
+              </button>
+      
+              {/* Cities */}
+              <div className="mt-10">
+                <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
+                  Explore Cities
+                </h2>
+      
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                  {getUniqueCities().map((city, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => navigate(`/city/${city}`)}
+                      className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition p-4 text-center shadow-lg"
                     >
-                        <h1 className='text-white font-epilogue font-semibold sm:text-[80px] text-4xl my-auto text-center py-[40px]'>Launch Your Online StartUp</h1>
-                        <h1 className='text-[#FFDD00] font-epilogue font-semibold sm:text-[28px] text-[18px] my-auto text-center mt-[20px] pb-[20px] px-[10px]'>Buy/Sell Products And Earn From Almost Every Transaction</h1>
-                    </div>
-                    {/* City Box Section */}
-                    <div className="mt-12 mb-8">
-                        <h2 className="text-2xl font-semibold text-[#FFDD00] mb-4 text-center">Explore Cities</h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {getUniqueCities().map((city, index) => (
-                                <div 
-                                    key={index} 
-                                    className=" shadow-sm rounded-lg border-[1px] border-[#242424] cursor-pointer opacity-[75%] hover:opacity-[100%] hover:shadow-lg transition-all duration-300"
-                                    onClick={() => navigate(`/city/${city}`)}
-                                >
-                                    <div className="p-4 text-center">
-                                        <h3 className="text-lg font-semibold text-[#FFDD00] mb-2">{city}</h3>
-                                        <p className="text-white text-sm">
-                                            {Object.values(allStores).filter(store => store.city === city).length} stores
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    {/* Promoted Stores Section */}
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-semibold text-[#FFDD00] mb-4 text-center">Promoted Stores</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mx-auto">
-                            {Object.values(promotedStores).map((store, index) => (
-                                <div key={index} className="cursor-pointer  shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[75%] hover:opacity-[100%] ease-in-out duration-500" onClick={() => navigate('/shop/'+store.urlPath)}>
-                                    <div className="p-6">
-                                        <h3 className="text-2xl font-semibold text-center text-[#FFDD00] mb-2">{store.name}</h3>
-                                        <div className='z-10 h-[400px] w-11/12 mx-auto my-4 rounded-xl overflow-hidden flex items-center'>
-                                            <img 
-                                                src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${store.picture}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} 
-                                                className='h-50 w-full object-cover mx-auto rounded-xl'
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-between my-[20px]">
-                                        {address ? (<div className='text-white min-h-[180px] w-full'>
-                                            <div className='my-[15px] w-full gap-8 justify-center flex'>
-                                                {encryptionStatus[store.urlPath]? (<>
-                                                    <div className='h-[70px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>Verified</h2>
-                                                </div>
-                                                </>):(<></>)}
-                                                
-                                                </div>
-                                            Contact Info:<br/> {formatTextWithLineBreaks(processDescription(store.contactInfo))}
-                                            <br/>
-                                            Creation Date: {store?.creationDate ? hexToTimestamp(store.creationDate._hex) : 'N/A'}
-                                            </div>):(<div className='text-white min-h-[180px]'>
-                                                <div className='my-[15px] gap-8 w-full justify-center flex'>
-                                                {encryptionStatus[store.urlPath]? (<>
-                                                    <div className='h-[70px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>Verified</h2>
-                                                </div>
-                                                </>):(<>
-                                                    </>)}
-                                                </div>
-                                            Contact Info: Available only to connected users.
-                                            <br/>
-                                            Creation Date: {store?.creationDate ? hexToTimestamp(store.creationDate._hex) : 'N/A'}
-                                            </div>)}
-                                        </div>
-                                        <p className="text-white mb-4 min-h-[220px] text-center">{formatTextWithLineBreaks(processDescription(store.description))}</p>
-                                        
-                                        <CustomButton 
-                                            btnType="button"
-                                            title="View Store"
-                                            styles="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"
-                                            handleClick={() => {navigate('/shop/'+store.urlPath)}}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    
-
-                    {/* New Stores Section */}
-                    <div>
-                        <h2 className="text-2xl font-semibold text-[#FFDD00] mb-4 text-center">New Stores</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {Object.values(allNewStores).reverse().map((store, index) => (
-                                <div key={index} className=" shadow-sm rounded-lg border-[1px] border-[#242424] opacity-[80%] hover:opacity-[100%] ease-in-out duration-500 cursor-pointer" onClick={() => navigate('/shop/'+store.urlPath)}>
-                                    <div className="p-4">
-                                    <div className='my-[15px] w-full gap-10 justify-center flex'>
-                                                {encryptionStatus[store.urlPath]? (<>
-                                                    <div className='h-[70px]'>
-                                                    <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                                    <h2 className='text-[12px] text-center text-white font-bold'>Verified</h2>
-                                                </div>
-                                                </>):(<>
-                                                    </>)}
-                                    </div>
-                                        <h3 className="text-md font-semibold text-[#FFDD00] mb-2 truncate text-center">{store.name}</h3>
-                                        <p className="text-white text-sm text-center">{formatTextWithLineBreaks(processDescription(store.description))}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                      <h3 className="text-[#FFDD00] font-extrabold text-base sm:text-lg truncate">
+                        {city}
+                      </h3>
+                      <p className="text-white/70 text-sm mt-1">
+                        {Object.values(allStores).filter((store) => store.city === city).length} stores
+                      </p>
+                    </button>
+                  ))}
                 </div>
-        </div>
+              </div>
+      
+              {/* Promoted Stores */}
+              <div className="mt-12">
+                <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
+                  Promoted Stores
+                </h2>
+      
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {Object.values(promotedStores).map((store, index) => (
+                    <div
+                      key={index}
+                      onClick={() => navigate("/shop/" + store.urlPath)}
+                      className="cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 transition overflow-hidden"
+                    >
+                      <div className="p-5">
+                        <h3 className="text-[#FFDD00] font-extrabold text-xl text-center truncate">
+                          {store.name}
+                        </h3>
+      
+                        {/* Image */}
+                        <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 bg-black/20">
+                          <img
+                            src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${store.picture}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                            className="w-full h-[220px] object-cover"
+                            alt={store.name}
+                            loading="lazy"
+                          />
+                        </div>
+      
+                        {/* Verified */}
+                        <div className="mt-4 flex justify-center">
+                          {encryptionStatus[store.urlPath] ? (
+                            <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-200 border border-blue-400/20">
+                              <img src={done_desktop} className="w-4 h-4" alt="verified" />
+                              Verified
+                            </div>
+                          ) : null}
+                        </div>
+      
+                        {/* Contact */}
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/80">
+                          <div className="font-bold text-white mb-1">Contact Info</div>
+                          {address ? (
+                            <div className="break-words">
+                              {formatTextWithLineBreaks(processDescription(store.contactInfo))}
+                            </div>
+                          ) : (
+                            <div>Available only to connected users.</div>
+                          )}
+      
+                          <div className="mt-3 text-white/60">
+                            Creation Date:{" "}
+                            <span className="text-white/80">
+                              {store?.creationDate ? hexToTimestamp(store.creationDate._hex) : "N/A"}
+                            </span>
+                          </div>
+                        </div>
+      
+                        {/* Description */}
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                          <p className="text-white/80 text-sm leading-relaxed line-clamp-6 text-center">
+                            {formatTextWithLineBreaks(processDescription(store.description))}
+                          </p>
+                        </div>
+      
+                        <div className="mt-5 flex justify-center">
+                          <CustomButton
+                            btnType="button"
+                            title="View Store"
+                            styles="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-xl text-sm"
+                            handleClick={(e) => {
+                              e?.stopPropagation?.();
+                              navigate("/shop/" + store.urlPath);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+      
+              {/* New Stores */}
+              <div className="mt-12">
+                <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
+                  New Stores
+                </h2>
+      
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {Object.values(allNewStores)
+                    .reverse()
+                    .map((store, index) => (
+                      <div
+                        key={index}
+                        onClick={() => navigate("/shop/" + store.urlPath)}
+                        className="cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 transition"
+                      >
+                        <div className="p-5">
+                          <div className="flex justify-center mb-3">
+                            {encryptionStatus[store.urlPath] ? (
+                              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-200 border border-blue-400/20">
+                                <img src={done_desktop} className="w-4 h-4" alt="verified" />
+                                Verified
+                              </div>
+                            ) : null}
+                          </div>
+      
+                          <h3 className="text-[#FFDD00] font-extrabold text-base text-center truncate">
+                            {store.name}
+                          </h3>
+      
+                          <p className="mt-3 text-white/80 text-sm text-center line-clamp-6">
+                            {formatTextWithLineBreaks(processDescription(store.description))}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </>
-    )
+      );
+      
 
 }
 

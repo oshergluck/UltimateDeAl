@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Featured, FeaturedMobile, IPFSMediaViewer } from '../components';
+import { Loader, Featured, FeaturedMobile, IPFSMediaViewer,ProtectedBox } from '../components';
 import { RegisterNewStore, City, SnakeGame, MemoryGame, TexasHoldemGame } from '../pages';
 import { useMediaQuery } from 'react-responsive';
 import { useStateContext } from '../context';
@@ -92,15 +92,41 @@ const Extra = () => {
             setError(null);
 
             // 2. Prepare Data
+            const origin = window.location.origin;
             const timestamp = Date.now();
             const barcode = decodeUrlString(ProductURL);
-            const message = `I confirm ownership check for product ${barcode} at ${timestamp}`;
 
-            // 3. Sign Message using v5 SDK (Works on Mobile & Desktop)
-            // DELETED: const provider = new ethers.providers.Web3Provider(window.ethereum);
-            // DELETED: const signature = await signer.signMessage(message);
-            
-            const signature = await account.signMessage({ message: message });
+            // 1) Get nonce challenge from backend
+            const chalRes = await fetch(`${API_URL}/access-challenge`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                walletAddress: account.address,
+                chainId: account.chainId
+            }),
+            });
+
+            const chal = await chalRes.json();
+            if (!chal.success) {
+            throw new Error(chal.error || "Challenge failed");
+            }
+
+            const nonce = chal.nonce;
+
+            // 2) Build message (bind everything)
+            const message = [
+            `UltraShop Hidden Content Access`,
+            `Domain: ${origin}`,
+            `Wallet: ${account.address.toLowerCase()}`,
+            `Store: ${storeContractByURL.toLowerCase()}`,
+            `Barcode: ${barcode}`,
+            `Timestamp: ${timestamp}`,
+            `Nonce: ${nonce}`,
+            `ChainId: ${account.chainId || ''}`,
+            ].join('\n');
+
+            // 3) Sign
+            const signature = await account.signMessage({ message });
 
             // 4. Call API
             const response = await fetch(`${API_URL}/access-hidden-content`, {
@@ -109,13 +135,14 @@ const Extra = () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    walletAddress: account.address, // Safer to use account.address here
+                    walletAddress: account.address,
                     signature: signature,
                     timestamp: timestamp,
                     storeAddress: storeContractByURL,
-                    invoiceContractAddress: invoicesAddress,
-                    productBarcode: barcode
-                })
+                    productBarcode: barcode,
+                    nonce: nonce,
+                    chainId: account.chainId,
+                  })
             });
 
             const data = await response.json();
@@ -176,10 +203,12 @@ const Extra = () => {
                 {ownerShip && media ? (
                     <div className="animate-fade-in">
                         <p className="text-center text-green-400 mb-4">Access Granted ✅</p>
+                        <ProtectedBox>
                         <IPFSMediaViewer 
                             ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${media}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
                             className='my-[50px] !w-11/12 mx-auto'
                         />
+                        </ProtectedBox>
                     </div>
                 ) : (
                     // If no access yet -> Show Unlock Button (Only for normal products, not special pages)

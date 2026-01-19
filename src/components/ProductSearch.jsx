@@ -185,7 +185,7 @@ function processtitle(description, maxLength = 50) {
   }, [searchTerm, products]);
 
   return (
-    <div className="w-full max-w-xl mx-auto relative">
+    <div className="w-full isolate max-w-xl mx-auto relative">
       <div className="relative">
         <input
           type="text"
@@ -194,16 +194,17 @@ function processtitle(description, maxLength = 50) {
           onFocus={() => setInputFocused(true)}
           onBlur={() => setTimeout(() => setInputFocused(false), 200)}
           placeholder="Search products..."
-          className="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 pl-10 rounded-lg border border-black/10 bg-white text-black placeholder:text-gray-500
+             focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <Search className="absolute left-3 top-2.5 h-5 w-5 text-[#b8b8b8]" />
+        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-700" />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-2.5 h-5 w-5 text-[#b8b8b8] animate-spin" />
+          <Loader2 className="absolute right-3 top-2.5 h-5 w-5 text-gray-700 animate-spin" />
         )}
       </div>
 
       {inputFocused && searchTerm && (
-        <div className="absolute z-[11] w-full mt-1 bg-white rounded-lg shadow-lg border touch-auto">
+        <div className="absolute left-0 isolate top-full z-[9999] w-full mt-2 bg-white rounded-lg shadow-xl border border-black/10">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
               <div 

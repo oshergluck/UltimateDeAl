@@ -644,299 +644,463 @@ const StorePage = () => {
 
     const [receipt, setReceipt] = useState(null);
 
-    return (<>{isLoading && <Loader />}
-        <div className="rounded-[15px] mx-auto px-2 sm:p-8 mt-[35px] overflow-x-hidden touch-auto w-full max-w-[100vw]">
+    return (<>
+        {isLoading && <Loader />}
+      
+        <div className=" mx-auto w-full max-w-[1200px] px-3 sm:px-6 lg:px-8 pt-8 pb-16 overflow-x-hidden">
+          
+          {/* Header Card */}
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
             
-            <div className='relative justify-center flex'>
-                {storeBanner && <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className='sm:h-[120px] h-[50px] !sm:rounded-[15px] flex !rounded-[15px] !md:rounded-[15px]' />}
-                <h1 className="text-center flex font-bold text-[#ff9900] drop-shadow-md sm:text-8xl text-5xl">{storeName}</h1>
-            </div>
-            <div className='my-[25px]'>
-                {address && address.toLowerCase() == owner ? (<a className={`bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out mt-[50px] mr-[15px]`} href={`/edit-store`}>Edit {storeName} Info</a>) : (<></>)}
-            </div>
-            <div className='my-[15px]'>
-                {StoreURL.toLocaleLowerCase() == 'fire' ? (<a className={`bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out mt-[50px] mr-[15px]`} target='_blank' href={`/register-new-store`}>List Your Business</a>) : (<></>)}
-            </div>
-            <div className='flex justify-center'>
-
-                <div className='my-[10px] w-full justify-center'>
-
-                    <div className='w-full gap-8 justify-center flex'>
-                        {enc ? (<>
-                            <div className='h-[50px] my-[10px]'>
-                                <img src={done_desktop} className='mx-auto w-[35px] h-[35px]'></img>
-                                <h2 className='text-[12px] text-center text-white font-bold'>Verified</h2>
-                            </div>
-                        </>) : (<>
-
-                        </>)}
-                    </div>
-                    <div>
-                        <ProductSearch contractAddress={storeContractByURL} />
-                    </div>
+            {/* Banner */}
+            <div className="relative h-[140px] sm:h-[220px] w-full">
+              {storeBanner ? (
+                <img
+                  src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${storeBanner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                  className="h-full w-full object-cover"
+                  alt="Store Banner"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-r from-blue-700/40 via-cyan-500/20 to-blue-900/40" />
+              )}
+      
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+      
+              {/* Title */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+                <div>
+                  <h1 className="text-white font-extrabold tracking-tight text-3xl sm:text-5xl drop-shadow-lg">
+                    {storeName}
+                  </h1>
+      
+                  <div className="mt-2 flex items-center gap-2">
+                    
+      
+                    {enc && (
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs sm:text-sm text-white/90 border border-white/10">
+                      🛡️ Verified Store
+                        </span>
+                    )}
+                  </div>
                 </div>
-            </div>
-            <div className='z-[1] w-11/12 m-auto my-[5px] overflow-hidden'>
-                {storeContractByURL == '0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d' || storeContractByURL == '0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (<></>) : (<>
-                    {reward !== 0 ? (<>
-                        <RewardBadge
-                            type={type}
-                            theSymbolOfReward={theSymbolOfReward}
-                            reward={reward}
-                        />
-                    </>) : (<></>)}
-                </>)}
-
-
-            </div>
-            <h2 className='text-[#FFDD00] sm:text-[18px] text-center text-[16px] mb-[15px]'>{renderDescriptionWithBreaks(dataOfStore.description)}</h2>
-            {address ? (<h2 className='text-[#C3C2C1] font-bold sm:text-[18px] text-[16px] mb-[15px]'>{renderDescriptionWithBreaks(dataOfStore.contactInfo)}</h2>
-            ) : (<h2 className='text-[#C3C2C1] font-bold sm:text-[18px] text-[16px] mb-[15px]'>Contact Info available only to connected users.</h2>
-            )}
-            {dataOfVoting?.votingSystemAddress ? (<button className={`bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out mt-[50px] mr-[15px]`} target='_blank' onClick={() => navigate('voting')}>{storeName} Decisions</button>) : (<></>)}
-            
-            <div className='my-[30px]'>
-                {responseData}
-            </div>
-
-            <div className="space-y-4 mt-8 h-[350px] overflow-auto touch-auto">
-                <h3 className="text-2xl text-orange-400">Shop Reviews</h3>
-                <h3 className="text-2xl text-[#FFDD00]">Average Rating:</h3>
-                <div className='border-b border-gray-700 pb-4 py-[20px]'>
-                    <StarRatingMain rating={userRatingAverage} />
-                </div>
-                {reviews && reviews.length > 0 ? (
-                    reviews.map((review, index) => (
-                        <div key={index} className="border-b border-gray-700 pb-4 pb-[20px]">
-                            <StarRating rating={Number(review.rating)} />
-                            <p className="text-white mt-2">{review.comment}</p>
-                            <a href={`https://base.blockscout.com/address/${review.user}`} className="text-white mt-2 text-[12px]">{review.user}</a>
-                            <p className='text-white mt-2'>Invoice: {review.receipt}</p>
-                        </div>
-                    ))
-                ) : (
-                    <p className="text-white">No reviews yet</p>
-                )}
-            </div>
-
-            {canLeaveReview && (
-                <div className="space-y-4 mt-8">
-                    <h1 className="text-white text-xl">Leave a Review</h1>
-                    <StarRatingForNewReview
-                        rating={selectedRating}
-                        onRatingChange={handleStarChange}
-                    />
-                    <p className="text-white">Selected Rating: {selectedRating}</p>
-                    <textarea
-                        className="w-full p-4 rounded-lg linear-gradient1 text-white h-[300px] placeholder:text-[#FFFFFF]"
-                        placeholder="Your review"
-                        value={form.review}
-                        onChange={(e) => handleFormFieldChange('review', e)}
-                    />
-                    <input
-                        className="w-8/12 p-4 rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                        type="text"
-                        placeholder="Receipt ID"
-                        value={receipt}
-                        onChange={e => setReceipt(e.target.value)}
-                    />
-                    <button
-                        className={`bg-gradient-to-r from-blue-500 to-yellow-500 text-black font-semibold rounded-lg px-4 py-2 shadow-md hover:opacity-90 transition-opacity duration-300 ease-in-out w-full sm:w-auto ${buttonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => addReview(selectedRating, form.review)}
-                        disabled={buttonDisabled}
+      
+                {/* Owner Buttons */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {address && address.toLowerCase() === owner ? (
+                    <a
+                      href={`/edit-store`}
+                      className="rounded-xl bg-white text-blue-700 font-bold px-4 py-2 text-sm sm:text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition"
                     >
-                        Add Review
-                    </button>
+                      ✏️ Edit Store
+                    </a>
+                  ) : null}
+      
+                  {StoreURL?.toLowerCase() === "fire" ? (
+                    <a
+                      target="_blank"
+                      href={`/register-new-store`}
+                      className="rounded-xl bg-blue-600 text-white font-bold px-4 py-2 text-sm sm:text-base shadow-lg hover:bg-blue-500 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition"
+                    >
+                      ➕ List Your Business
+                    </a>
+                  ) : null}
                 </div>
-            )}
-
-            <div className="mt-12 space-y-8">
-
-                <div className="gap-4">
-                    {isRegistered ? (<>
-                        {storeContractByURL == '0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d' || storeContractByURL == '0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (<></>) : (<>
-                            <button
-                                className="my-[30px] w-[150px] h-[50px] border-[1px] border-red-500 hover:bg-orange-400 bg-transparent text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1"
-                                onClick={() => setShowUnregisterModal(true)}
-                            >
-                                Unregister
-                            </button>
-                        </>)}
-                    </>
-                    ) : (<>
-                        {address ? (<div> <h2 className="text-2xl font-semibold text-white">Register as a client of {storeName}</h2>
-                            <p className="text-gray-300 mt-[10px]">All details are encrypted by the website</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {storeContractByURL == import.meta.env.VITE_ULTIMATEDEAL_STORE || storeContractByURL == '0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75' ? (<></>) : (<input
-                                    className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                                    type="text"
-                                    placeholder="Your Physical Address"
-                                    value={physicalAddressOfClient}
-                                    onChange={(e) => setPhysicalAddressOfClient(e.target.value)}
-                                />)}
-                                <input
-                                    className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                                    type="text"
-                                    placeholder="Your Email"
-                                    value={emailOfClient}
-                                    onChange={(e) => setEmailOfClient(e.target.value)}
-                                />
-                                <input
-                                    className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                                    type="text"
-                                    placeholder="Your Phone Number"
-                                    value={phoneNumOfClient}
-                                    onChange={(e) => setPhoneNumOfClient(e.target.value)}
-                                />
-                                <input
-                                    className="w-full p-4 mt-[10px] rounded-lg linear-gradient1 text-white placeholder:text-[#FFFFFF]"
-                                    type="text"
-                                    placeholder="Your Name"
-                                    value={nameOfClient}
-                                    onChange={(e) => setNameOfClient(e.target.value)}
-                                />
-                            </div>
-
-                            <button
-                                disabled={isLoading || !nameOfClient || !phoneNumOfClient} // וודא ש-isLoading כאן
-                                onClick={handleRegisterToDB}
-                                className={`mb-[20px] !bg-cyan-400 !mt-[30px] hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out flex-1 ${!nameOfClient || !emailOfClient || !phoneNumOfClient ? 'opacity-50 cursor-not-allowed' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {isLoading ? 'Registering...' : 'Register'}
-                            </button>
-                        </div>) : (<></>)}
-
-                    </>
-                    )}
+              </div>
+            </div>
+      
+            {/* Description / Contact */}
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                
+                {/* Description */}
+                <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                  <h2 className="text-white font-bold text-lg sm:text-xl mb-2">
+                    About {storeName}
+                  </h2>
+                  <p className="text-white/80 text-sm sm:text-base leading-relaxed">
+                    {renderDescriptionWithBreaks(dataOfStore.description)}
+                  </p>
                 </div>
+      
+                {/* Contact */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                  <h2 className="text-white font-bold text-lg sm:text-xl mb-2">
+                    Contact
+                  </h2>
+      
+                  {address ? (
+                    <p className="text-white/80 text-sm sm:text-base leading-relaxed">
+                      {renderDescriptionWithBreaks(dataOfStore.contactInfo)}
+                    </p>
+                  ) : (
+                    <p className="text-white/60 text-sm sm:text-base">
+                      🔒 Contact info available only to connected users.
+                    </p>
+                  )}
+                </div>
+              </div>
+      
+              {/* Voting */}
+              {dataOfVoting?.votingSystemAddress ? (
+                <div className="mt-4 flex justify-center sm:justify-start">
+                  <button
+                    onClick={() => navigate("voting")}
+                    className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 text-black font-extrabold px-5 py-3 shadow-lg hover:opacity-95 hover:shadow-xl transition"
+                  >
+                    🗳️ {storeName} Decisions
+                  </button>
+                </div>
+              ) : null}
             </div>
-
-            <div className='my-[35px]'>
-            </div>
-            <p className='text-center text-[#FFFFFF] sm:text-[30px] text-[12px] font-bold my-[25px]'>{theSymbolOfReward} address is {rewardAddress}</p>
-            <p className=''></p>
-            {theSymbolOfReward && rewardAddress ? (<>
-                <button className={`bg-[#FFDD00] text-[#000000] font-epilogue font-semibold text-[16px] py-[15px] px-[40px] rounded-[5px] opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out mt-[50px] mr-[15px]`} target='_blank' onClick={() => navigate('/coin/'+rewardAddress)}>{storeName} Coin</button></>) : (<></>)}
+          </div>
+      
+          {/* Search + Reward */}
+          <div className="relative z-[200] mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
             
-            {/* Moved Products Section Here */}
-            <div className="flex flex-col md:flex-row items-center gap-4 mb-8 mt-12">
-                <div className="flex-1 w-full flex flex-col">
-                    {allProducts !== null ? (
-                        <>
-                            {/* Category Dropdown */}
-                            <div className="flex flex-col w-full">
-                                <span className="font-epilogue font-medium text-[20px] leading-[22px] text-[#FFDD00] mb-[10px] mt-[20px]">
-                                    Category:
-                                </span>
-                                <div className="z-50 relative inline-block text-left mb-[20px] sm:w-3/12 w-10/12 ease-in-out duration-500 hover:opacity-[100%] opacity-[70%]">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-[#424242] px-3 py-2 text-sm font-semibold text-[#FFFFFF] ring-inset !text-[18px]"
-                                    >
-                                        {selectedCategoryName}
-                                        <svg className="-mr-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                                        </svg>
-                                    </button>
-
-                                    {isDropdownOpen && (
-                                        <div
-                                            className="absolute h-[325px] overflow-auto touch-auto left-0 z-50 mt-2 w-56 origin-top-right rounded-md linear-gradient shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                            role="menu"
-                                            aria-orientation="vertical"
-                                            aria-labelledby="menu-button"
-                                            tabIndex="50"
-                                        >
-                                            <div className="py-1" role="none">
-                                                {categories.map((category, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="text-[#FFFFFF] block px-4 z-50 py-2 text-sm hover:bg-[#FFFFFF] hover:bg-opacity-[25%] cursor-pointer"
-                                                        role="menuitem"
-                                                        tabIndex="50"
-                                                        onClick={async () => {
-                                                            await setIsDropdownOpen(false);
-                                                            await setSelectedCategoryName(category);
-                                                            await setSelectedCategory(category);
-                                                            await productsBarcodes(category);
-                                                        }}
-                                                    >
-                                                        {category}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Products Display */}
-                            <div className="flex gap-3 flex-wrap py-[25px] justify-center w-full">
-                                {allProducts && allProducts.length > 0 ? (
-                                    allProducts.map((product, index) => (
-                                        <ProductBox
-                                            contract={theStoreContract}
-                                            key={product.barcode ? product.barcode.toString() : index}
-                                            product={product.barcode}
-                                            productData={product} // Passing the full product object here
-                                            onClick={() => handleProductSelect(product.barcode)}
-                                            type={type}
-                                            paymentAddress={paymentAddress}
-                                            storeAddress={storeContractByURL}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="text-white text-center py-4">
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <></>
-                    )}
+            <div className="lg:col-span-2 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 sm:p-6 shadow-xl">
+              <h3 className="text-white font-bold text-lg sm:text-xl mb-3">
+                🔎 Search Products
+              </h3>
+              <div className="relative z-[50] rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+                <ProductSearch contractAddress={storeContractByURL} />
                 </div>
+
             </div>
-
-        </div>
-
-        {/* Unregister Confirmation Modal - Moved OUTSIDE the main container to ensure Fixed positioning works correctly */}
-        {showUnregisterModal && (
-                <div className="fixed top-0 left-0 w-full h-full z-[9999] flex items-center justify-center bg-black bg-opacity-70">
-                    <div className="bg-gray-800 p-8 rounded-xl border border-cyan-400 max-w-sm w-full mx-4 relative">
-                        <h3 className="text-xl text-white font-bold mb-4">Are you sure?</h3>
-                        <p className="text-gray-300 mb-6">This will delete your customer data from our database permanently.</p>
-
-                        <div className="flex items-center mb-6">
-                            <input
-                                type="checkbox"
-                                id="confirmDelete"
-                                checked={confirmUnregister}
-                                onChange={(e) => setConfirmUnregister(e.target.checked)}
-                                className="w-5 h-5 accent-cyan-400 mr-3"
-                            />
-                            <label htmlFor="confirmDelete" className="text-white">Yes, I want to unregister</label>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => setShowUnregisterModal(false)}
-                                className="px-4 py-2 rounded text-white hover:bg-gray-700"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleUnregisterFromDB}
-                                disabled={!confirmUnregister}
-                                className={`px-4 py-2 rounded font-bold ${confirmUnregister ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'}`}
-                            >
-                                Confirm Delete
-                            </button>
-                        </div>
-                    </div>
+      
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 sm:p-6 shadow-xl">
+              <h3 className="text-white font-bold text-lg sm:text-xl mb-3">
+                🎁 Rewards
+              </h3>
+      
+              {storeContractByURL === '0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d' ||
+              storeContractByURL === '0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD' ? (
+                <p className="text-white/60 text-sm">
+                  Rewards are disabled for this store.
+                </p>
+              ) : reward !== 0 ? (
+                <RewardBadge type={type} theSymbolOfReward={theSymbolOfReward} reward={reward} />
+              ) : (
+                <p className="text-white/60 text-sm">
+                  No rewards available right now.
+                </p>
+              )}
+            </div>
+          </div>
+      
+          {/* Reviews */}
+          <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h3 className="text-white font-extrabold text-xl sm:text-2xl">
+                ⭐ Shop Reviews
+              </h3>
+      
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 font-semibold">Average:</span>
+                <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                  <StarRatingMain rating={userRatingAverage} />
                 </div>
+              </div>
+            </div>
+      
+            <div className="mt-4 max-h-[380px] overflow-auto pr-1 space-y-4">
+              {reviews && reviews.length > 0 ? (
+                reviews.map((review, index) => (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-white/10 bg-black/20 p-4 hover:bg-black/30 transition"
+                  >
+                    <StarRating rating={Number(review.rating)} />
+                    <p className="text-white/90 mt-2 text-sm sm:text-base">
+                      {review.comment}
+                    </p>
+      
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-white/60">
+                      <a
+                        href={`https://base.blockscout.com/address/${review.user}`}
+                        className="hover:text-white underline underline-offset-4"
+                      >
+                        {review.user}
+                      </a>
+                      <span className="text-white/30">•</span>
+                      <span>Invoice: {review.receipt}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-white/60">No reviews yet</p>
+              )}
+            </div>
+          </div>
+      
+          {/* Leave Review */}
+          {canLeaveReview && (
+            <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+              <h2 className="text-white font-extrabold text-xl sm:text-2xl">
+                ✍️ Leave a Review
+              </h2>
+      
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 space-y-4">
+                <StarRatingForNewReview
+                  rating={selectedRating}
+                  onRatingChange={handleStarChange}
+                />
+      
+                <p className="text-white/70 text-sm">
+                  Selected Rating: <span className="text-white font-bold">{selectedRating}</span>
+                </p>
+      
+                <textarea
+                  className="w-full min-h-[180px] rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Write your review..."
+                  value={form.review}
+                  onChange={(e) => handleFormFieldChange("review", e)}
+                />
+      
+                <input
+                  className="w-full sm:w-8/12 rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                  type="text"
+                  placeholder="Receipt ID"
+                  value={receipt}
+                  onChange={(e) => setReceipt(e.target.value)}
+                />
+      
+                <button
+                  onClick={() => addReview(selectedRating, form.review)}
+                  disabled={buttonDisabled}
+                  className={`w-full sm:w-auto rounded-2xl px-6 py-3 font-extrabold shadow-lg transition 
+                    ${buttonDisabled 
+                      ? "bg-white/10 text-white/40 cursor-not-allowed" 
+                      : "bg-gradient-to-r from-blue-500 to-cyan-300 text-black hover:opacity-95 hover:shadow-xl"
+                    }`}
+                >
+                  Add Review
+                </button>
+              </div>
+            </div>
+          )}
+      
+          {/* Register / Unregister */}
+          <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+            {isRegistered ? (
+              <>
+                {(storeContractByURL === '0xd9Cc98ed8fD8dF69E4575260B6aa3bA9755e687d' ||
+                  storeContractByURL === '0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD') ? null : (
+                  <button
+                    className="rounded-2xl border border-red-400/40 bg-red-500/10 text-red-200 font-extrabold px-5 py-3 hover:bg-red-500/20 transition"
+                    onClick={() => setShowUnregisterModal(true)}
+                  >
+                    🚫 Unregister
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {address ? (
+                  <div>
+                    <h2 className="text-white font-extrabold text-xl sm:text-2xl">
+                      Register as a client of {storeName}
+                    </h2>
+                    <p className="text-white/60 mt-2">
+                      🔐 All details are encrypted by the website
+                    </p>
+      
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {storeContractByURL === import.meta.env.VITE_ULTIMATEDEAL_STORE ||
+                      storeContractByURL === '0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75' ? null : (
+                        <input
+                          className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                          type="text"
+                          placeholder="Your Physical Address"
+                          value={physicalAddressOfClient}
+                          onChange={(e) => setPhysicalAddressOfClient(e.target.value)}
+                        />
+                      )}
+      
+                      <input
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        type="text"
+                        placeholder="Your Email"
+                        value={emailOfClient}
+                        onChange={(e) => setEmailOfClient(e.target.value)}
+                      />
+      
+                      <input
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        type="text"
+                        placeholder="Your Phone Number"
+                        value={phoneNumOfClient}
+                        onChange={(e) => setPhoneNumOfClient(e.target.value)}
+                      />
+      
+                      <input
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                        type="text"
+                        placeholder="Your Name"
+                        value={nameOfClient}
+                        onChange={(e) => setNameOfClient(e.target.value)}
+                      />
+                    </div>
+      
+                    <button
+                      disabled={isLoading || !nameOfClient || !phoneNumOfClient}
+                      onClick={handleRegisterToDB}
+                      className={`mt-5 w-full sm:w-auto rounded-2xl px-6 py-3 font-extrabold shadow-lg transition
+                        ${isLoading || !nameOfClient || !phoneNumOfClient
+                          ? "bg-white/10 text-white/40 cursor-not-allowed"
+                          : "bg-gradient-to-r from-blue-500 to-cyan-300 text-black hover:opacity-95 hover:shadow-xl"
+                        }`}
+                    >
+                      {isLoading ? "Registering..." : "Register"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-white/60">
+                    Connect your wallet to register.
+                  </p>
+                )}
+              </>
             )}
-        </>
+          </div>
+      
+          {/* Reward Token Info */}
+          <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6 text-center">
+            <p className="text-white font-extrabold text-sm sm:text-xl">
+              {theSymbolOfReward} address is{" "}
+              <span className="text-blue-300 break-all">{rewardAddress}</span>
+            </p>
+      
+            {theSymbolOfReward && rewardAddress ? (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => navigate("/coin/" + rewardAddress)}
+                  className="rounded-2xl bg-white text-blue-700 font-extrabold px-6 py-3 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition"
+                >
+                  🪙 {storeName} Coin
+                </button>
+              </div>
+            ) : null}
+          </div>
+      
+          {/* Products Section */}
+          <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h2 className="text-white font-extrabold text-xl sm:text-2xl">
+                🛍️ Products
+              </h2>
+      
+              {allProducts !== null ? (
+                <div className="w-full sm:w-[280px]">
+                  <span className="block text-white/70 text-sm mb-2">
+                    Category
+                  </span>
+      
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white font-bold flex items-center justify-between hover:bg-black/40 transition"
+                    >
+                      <span className="truncate">{selectedCategoryName}</span>
+                      <svg className="h-5 w-5 text-white/70" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                          fillRule="evenodd"
+                          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+      
+                    {isDropdownOpen && (
+                      <div className="absolute left-0 mt-2 w-full max-h-[320px] overflow-auto rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl z-50">
+                        {categories.map((category, index) => (
+                          <button
+                            key={index}
+                            className="w-full text-left px-4 py-3 text-white/90 hover:bg-white/10 transition"
+                            onClick={async () => {
+                              await setIsDropdownOpen(false);
+                              await setSelectedCategoryName(category);
+                              await setSelectedCategory(category);
+                              await productsBarcodes(category);
+                            }}
+                          >
+                            {category}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+      
+            <div className="mt-6 flex gap-4 flex-wrap justify-center">
+              {allProducts && allProducts.length > 0 ? (
+                allProducts.map((product, index) => (
+                  <ProductBox
+                    contract={theStoreContract}
+                    key={product.barcode ? product.barcode.toString() : index}
+                    product={product.barcode}
+                    productData={product}
+                    onClick={() => handleProductSelect(product.barcode)}
+                    type={type}
+                    paymentAddress={paymentAddress}
+                    storeAddress={storeContractByURL}
+                  />
+                ))
+              ) : (
+                <div className="text-white/60 text-center py-10 w-full">
+                  No products found in this category.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      
+        {/* Unregister Modal */}
+        {showUnregisterModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-2xl p-6 relative">
+              <h3 className="text-white font-extrabold text-xl mb-2">Are you sure?</h3>
+              <p className="text-white/60 mb-5">
+                This will delete your customer data from our database permanently.
+              </p>
+      
+              <label className="flex items-center gap-3 mb-6 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={confirmUnregister}
+                  onChange={(e) => setConfirmUnregister(e.target.checked)}
+                  className="w-5 h-5 accent-blue-500"
+                />
+                <span className="text-white/90 font-semibold">Yes, I want to unregister</span>
+              </label>
+      
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowUnregisterModal(false)}
+                  className="rounded-2xl px-4 py-2 text-white/80 hover:bg-white/10 transition"
+                >
+                  Cancel
+                </button>
+      
+                <button
+                  onClick={handleUnregisterFromDB}
+                  disabled={!confirmUnregister}
+                  className={`rounded-2xl px-4 py-2 font-extrabold transition
+                    ${confirmUnregister
+                      ? "bg-red-500 text-white hover:bg-red-400"
+                      : "bg-white/10 text-white/40 cursor-not-allowed"
+                    }`}
+                >
+                  Confirm Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+      
     );
 }
 
