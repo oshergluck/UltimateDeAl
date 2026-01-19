@@ -20,7 +20,20 @@ import {
     smartWallet,
     DEFAULT_ACCOUNT_FACTORY_V0_7,
 } from "thirdweb/wallets/smart";
-
+const NavBtn = ({ children, onClick, accent }) => (
+    <button
+      onClick={onClick}
+      className={[
+        "px-3 py-2 rounded-full text-[14px] font-epilogue font-semibold transition",
+        "border border-transparent",
+        accent
+          ? "bg-[#FFDD00] text-black hover:bg-[#FFE766] shadow-[0_10px_30px_rgba(255,221,0,0.12)]"
+          : "text-gray-200 hover:text-white hover:bg-white/10",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
 const Header = () => {
     const { totalItems } = useCart(); 
 
@@ -346,7 +359,8 @@ const getCampaignRewardTokens = async () => {
   
   // Use it when combining all tokens
   const allSupportedTokens = {
-      [Base.chainId]: deduplicateTokens([...staticTokens, ...dynamicTokens])
+      [Base.chainId]: deduplicateTokens([...staticTokens//, ...dynamicTokens
+        ])
   };
 
     const handleNFTSNavigate = () => {
@@ -391,7 +405,7 @@ const getCampaignRewardTokens = async () => {
     }
 
     const naviateToShops = () => {
-        navigate('/home');
+        navigate('/');
     }
 
     const naviateToVip = () => {
@@ -407,7 +421,7 @@ const getCampaignRewardTokens = async () => {
         navigate('/shop/mainshop');
     }
     const naviateToStoreVip1 = () => {
-        navigate('/');
+        navigate('/all-coins');
     }
 
     const navigateToCompiler = () => {
@@ -422,132 +436,172 @@ const getCampaignRewardTokens = async () => {
 
     return (
         <>
-            <div className={`drop-shadow w-full relative  border-b-[1px] border-[#FFDD00] pb-[20px] fixed-header ${address ? ('h-[75px]') : ('h-[75px]')}`}>
-                <div className='flex py-[5px]'>
-                    <div className='flex cursor-pointer' onClick={()=> naviateToStoreVip1()}>
-                        <img src={logoOfWebsite} alt='logo' className='w-[50px] h-[50px] object-contain my-auto mx-[10px]' />
-                        <h1 className='text-white font-epilogue font-semibold text-[18px] my-auto'>Ultra</h1>
-                        <h1 className='text-[#FFDD00] font-epilogue font-semibold text-[18px] my-auto'>Shop</h1>
-                    </div>
+  {/* Desktop Header */}
+  <header className="fixed top-0 left-0 right-0 z-[999] border-b border-[#FFDD00]/40 bg-black/55 backdrop-blur-xl shadow-[0_12px_50px_rgba(0,0,0,0.35)]">
+    <div className="mx-auto flex h-[78px] w-full max-w-[1280px] items-center justify-between px-4 lg:px-6">
+      
+      {/* Logo */}
+      <div
+        className="group flex cursor-pointer items-center gap-2"
+        onClick={() => naviateToStoreVip1()}
+      >
+        <div className="relative">
+          <img
+            src={logoOfWebsite}
+            alt="logo"
+            className="h-11 w-11 object-contain drop-shadow"
+          />
+          <div className="pointer-events-none absolute -inset-2 rounded-full bg-[#FFDD00]/10 blur-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        </div>
 
-                    <div className='flex items-center justify-between h-full my-auto m-auto max-w-[1280px]'>
-                        <div className='textcolor flex items-center gap-5'>
-                            {/* <div className="lg:flex-1  bg-[#000000] flex flex-row pr-2 h-[52px] bg-transparent border-[1px] border-[#525252] duration-500 ease-in-out hover:border-[#FFFFFF] rounded-[15px]">
-                                <div className=" w-[50px] h-full rounded-[2px] bg-transparent flex justify-center items-center cursor-pointer  duration-500 ease-in-out rounded-[16px]" onClick={() => handleSearchClick()}>
-                                    <img src={search} alt="search" className="w-[15px] h-[15px] object-contain" />
-                                </div>
-                                <input type="text" placeholder="Search a Campaign" className="flex w-[220px] font-epilogue font-normal text-[16px] placeholder:text-[#ffffff] bg-transparent text-[#ffffff] outline-none ml-[15px]" value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)} />
-                            </div> */}
-                            <button onClick={naviateToStoreVip1} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Home</button>
-                            <button onClick={handleAboutNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>About</button>
-                            {address ? (<button onClick={naviateToMyCampaigns} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>My Coins</button>) : (<></>)}
-                            <button onClick={naviateToVip} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Launch Coin</button>
-                            <button onClick={naviateToCreateCampaign} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Create Coin</button>
-                            <button onClick={naviateToShops} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Shops</button>
-                            {address ? (<button onClick={handleDashboardNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>Dashboard</button>) : (<></>)}
-                            {address ? (<button onClick={handleNFTSNavigate} className='hover:text-[#FFFFFF] duration-500 ease-in-out font-epilogue font-semibold text-[14px]'>NFTs</button>) : (<></>)}
-                        </div>
-                    </div>
-                    <div className='mr-[20px] py-[5px] my-auto flex items-center gap-4'>
-                        
-                        <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white hover:text-[#FFDD00] transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            {totalItems > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                                    {totalItems}
-                                </span>
-                            )}
-                        </div>
+        <div className="flex items-baseline leading-none">
+          <span className="font-epilogue text-[18px] font-semibold tracking-wide text-white">
+            Ultra
+          </span>
+          <span className="ml-1 font-epilogue text-[18px] font-semibold tracking-wide text-[#FFDD00]">
+            Shop
+          </span>
+        </div>
+      </div>
 
-                    <ConnectButton
-    autoConnect={true}
-    client={client}
-    wallets={wallets}
-    theme="dark"
-    connectButton={{ label: "Connect" }}
-    auth={{
-        // 1. יצירת הודעת החתימה עם כל השדות החובה
-        getLoginPayload: async ({ address }) => {
-            const now = new Date();
-            const expiration = new Date(now.getTime() + 5 * 60 * 60 * 1000); // 5 שעות
-            
-            // יצירת מחרוזת רנדומלית (Nonce) - קריטי לאבטחה
-            const randomString = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      {/* Nav */}
+      <nav className="hidden lg:flex items-center gap-2">
+        <NavBtn onClick={naviateToShops}>Home</NavBtn>
+        <NavBtn onClick={naviateToStoreVip1}>All Coins</NavBtn>
+        <NavBtn onClick={handleAboutNavigate}>About</NavBtn>
 
-            return {
-                domain: window.location.host, // או "ultrashop.tech"
-                address: address,
-                statement: "I authorize this session for the UltraShop",
-                version: "1", // חובה!
-                nonce: randomString, // חובה!
-                chain_id: "8453", // Base Mainnet ID
-                issued_at: now.toISOString(), // חובה!
-                expiration_time: expiration.toISOString(),
-                uri: window.location.origin, // חובה!
-            };
-        },
-        
-        // 2. מה קורה אחרי חתימה מוצלחת
-        doLogin: async (params) => {
-            console.log("User signed in successfully", params);
-            // שומרים סימון שהמשתמש התחבר + זמן תפוגה בלוקל סטורג'
-            // זה גורם לכפתור להבין שאנחנו מחוברים
-            const expirationTime = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
-            localStorage.setItem("auth_token", "signed_in");
-            localStorage.setItem("auth_expiry", expirationTime);
-        },
+        {address && <NavBtn onClick={naviateToMyCampaigns}>My Coins</NavBtn>}
 
-        // 3. בדיקה האם המשתמש כבר מחובר (בודק גם תוקף של 5 שעות)
-        isLoggedIn: async () => {
-            const token = localStorage.getItem("auth_token");
-            const expiry = localStorage.getItem("auth_expiry");
-            
-            if (!token || !expiry) return false;
-            
-            // בדיקה אם עברו 5 שעות
-            if (new Date() > new Date(expiry)) {
+        <div className="mx-2 h-6 w-px bg-white/10" />
+
+        <NavBtn onClick={naviateToVip} accent>
+          Launch Coin
+        </NavBtn>
+        <NavBtn onClick={naviateToCreateCampaign}>Create Coin</NavBtn>
+
+        {address && <NavBtn onClick={handleDashboardNavigate}>Dashboard</NavBtn>}
+        {address && <NavBtn onClick={handleNFTSNavigate}>NFTs</NavBtn>}
+      </nav>
+
+      {/* Right actions */}
+      <div className="flex items-center gap-3">
+        {/* Cart */}
+        <button
+          type="button"
+          onClick={() => navigate("/cart")}
+          className="relative grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white transition hover:border-[#FFDD00]/40 hover:bg-[#FFDD00]/10"
+          aria-label="Open cart"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-[22px] w-[22px]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+
+          {totalItems > 0 && (
+            <span className="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-red-500 px-1 text-[11px] font-extrabold text-white shadow">
+              {totalItems}
+            </span>
+          )}
+        </button>
+
+        {/* Connect */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-1 py-1">
+          <ConnectButton
+            autoConnect={true}
+            client={client}
+            wallets={wallets}
+            theme="dark"
+            connectButton={{ label: "Connect" }}
+            auth={{
+              getLoginPayload: async ({ address }) => {
+                const now = new Date();
+                const expiration = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+                const randomString =
+                  Math.random().toString(36).substring(2, 15) +
+                  Math.random().toString(36).substring(2, 15);
+
+                return {
+                  domain: window.location.host,
+                  address,
+                  statement: "I authorize this session for the UltraShop",
+                  version: "1",
+                  nonce: randomString,
+                  chain_id: "8453",
+                  issued_at: now.toISOString(),
+                  expiration_time: expiration.toISOString(),
+                  uri: window.location.origin,
+                };
+              },
+              doLogin: async (params) => {
+                console.log("User signed in successfully", params);
+                const expirationTime = new Date(
+                  Date.now() + 5 * 60 * 60 * 1000
+                ).toISOString();
+                localStorage.setItem("auth_token", "signed_in");
+                localStorage.setItem("auth_expiry", expirationTime);
+              },
+              isLoggedIn: async () => {
+                const token = localStorage.getItem("auth_token");
+                const expiry = localStorage.getItem("auth_expiry");
+                if (!token || !expiry) return false;
+
+                if (new Date() > new Date(expiry)) {
+                  localStorage.removeItem("auth_token");
+                  localStorage.removeItem("auth_expiry");
+                  return false;
+                }
+                return true;
+              },
+              doLogout: async () => {
                 localStorage.removeItem("auth_token");
                 localStorage.removeItem("auth_expiry");
-                return false;
-            }
-            
-            return true;
-        },
+                console.log("User logged out");
+              },
+            }}
+            connectModal={{
+              size: "wide",
+              title: "UltraShop",
+              titleIcon: logoOfWebsite,
+              welcomeScreen: {
+                title: "UltraShop",
+                subtitle: "Create your own coin or invest in other coins",
+                img: { src: logoOfWebsite, width: 150, height: 150 },
+              },
+              termsOfServiceUrl: "https://ultrashop.tech/terms",
+              privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
+              showThirdwebBranding: true,
+            }}
+            supportedTokens={allSupportedTokens}
+            detailsButton={{
+              displayBalanceToken: {
+                [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS,
+              },
+            }}
+            chain={base}
+            chains={[base]}
+          />
+        </div>
+      </div>
+    </div>
 
-        // 4. התנתקות
-        doLogout: async () => {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("auth_expiry");
-            console.log("User logged out");
-        },
-    }}
-    connectModal={{
-        size: "wide",
-        title: "UltraShop",
-        titleIcon: logoOfWebsite,
-        welcomeScreen: {
-            title: "UltraShop",
-            subtitle: "Create your own coin or invest in other coins",
-            img: { src: logoOfWebsite, width: 150, height: 150 },
-        },
-        termsOfServiceUrl: "https://ultrashop.tech/terms",
-        privacyPolicyUrl: "https://ultrashop.tech/privacy-policy",
-        showThirdwebBranding: true,
-    }}
-    supportedTokens={allSupportedTokens}
-    detailsButton={{
-        displayBalanceToken: { [Base.chainId]: import.meta.env.VITE_DEAL_COIN_ADDRESS },
-    }}
-    chain={base}
-    chains={[base]}
-/>
-                    </div>
-                </div>
-            </div>
-        </>
+    {/* Subtle bottom glow line */}
+    <div className="h-px w-full bg-gradient-to-r from-transparent via-[#FFDD00]/60 to-transparent" />
+  </header>
+
+  {/* Spacer so content won't hide behind fixed header */}
+  <div className="h-[78px]" />
+</>
+
     )
 }
 

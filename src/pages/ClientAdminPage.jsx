@@ -11,8 +11,10 @@ import { createThirdwebClient, prepareContractCall, getContract } from "thirdweb
 import { useSendTransaction, TransactionButton } from 'thirdweb/react';
 import { format, addDays } from 'date-fns';
 import { PinataSDK } from "pinata";
+import { useNavigate } from 'react-router-dom';
 
 const ClientAdminPage = () => {
+    const navigate = useNavigate();
     // Product Images Upload State
     const [isUploadingImages, setIsUploadingImages] = useState([false]);
     const [imageUploadProgress, setImageUploadProgress] = useState([0]);
@@ -1056,6 +1058,8 @@ Wallet: ~${c.wallet}~
                     </h1>
                 </header>
 
+               
+
                 {/* Status Banners */}
                 <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                     <div className="p-3 sm:p-4 rounded-lg bg-yellow-500/90 text-black font-medium shadow-md">
@@ -1603,43 +1607,115 @@ Wallet: ~${c.wallet}~
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center min-h-[50vh] sm:min-h-[60vh] p-3 sm:p-4">
-                        <div className="w-full max-w-sm sm:max-w-md p-5 sm:p-8 bg-slate-800 rounded-lg shadow-md border border-slate-700">
-                            <h2 className="text-xl sm:text-2xl font-bold text-center text-yellow-400 mb-4 sm:mb-6">Admin Login</h2>
-                            <div className="space-y-3 sm:space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Contract Address</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter contract address"
-                                        value={userContract}
-                                        onChange={e => setUserContract(e.target.value)}
-                                        className="w-full p-2 sm:p-3 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                                    <input
-                                        type="password"
-                                        placeholder="Enter password"
-                                        value={userPass}
-                                        onChange={e => setUserPass(e.target.value)}
-                                        className="w-full p-2 sm:p-3 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm"
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => SettingAContract(userContract)}
-                                    disabled={!userContract}
-                                    className="w-full mt-2 px-4 py-2 sm:py-3 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-800 disabled:cursor-not-allowed text-black font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center text-sm sm:text-base"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Login
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <div className="flex items-center justify-center min-h-[55vh] sm:min-h-[65vh] px-3 sm:px-6 py-6">
+  <div className="relative w-full max-w-sm sm:max-w-md">
+    
+    {/* glow */}
+    <div className="pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-r from-yellow-400/20 via-amber-500/10 to-yellow-400/20 blur-2xl" />
+
+    <div className="relative w-full rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-5 sm:p-8">
+      
+      {/* Header */}
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-yellow-400/15 border border-yellow-400/20">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-yellow-300"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          Admin Login
+        </h2>
+        <p className="mt-1 text-sm text-gray-300">
+          Enter your shop contract + admin password
+        </p>
+      </div>
+
+      <div className="space-y-4 sm:space-y-5">
+        {/* Contract */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-200 mb-2">
+            Contract Address
+          </label>
+          <input
+            type="text"
+            placeholder="0x..."
+            value={userContract}
+            onChange={(e) => setUserContract(e.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-gray-400 outline-none transition
+                       focus:border-yellow-400/40 focus:ring-2 focus:ring-yellow-400/20"
+          />
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-200 mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={userPass}
+            onChange={(e) => setUserPass(e.target.value)}
+            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-gray-400 outline-none transition
+                       focus:border-yellow-400/40 focus:ring-2 focus:ring-yellow-400/20"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="pt-1 space-y-3">
+          <button
+            onClick={() => SettingAContract(userContract)}
+            disabled={!userContract}
+            className="w-full rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-3 font-extrabold text-black
+                       shadow-[0_15px_40px_rgba(255,221,0,0.15)]
+                       transition hover:brightness-110 active:scale-[0.99]
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="flex items-center justify-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Login
+            </span>
+          </button>
+
+          <button
+            onClick={() => navigate("/shop/ultrashop/products/LISTESH/extra/")}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white
+                       transition hover:bg-white/10 hover:border-yellow-400/30"
+          >
+            Register
+          </button>
+        </div>
+
+        {/* small note */}
+        <p className="text-center text-xs text-gray-400 pt-2">
+          Tip: paste the contract address exactly (0x...) for fastest login.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
                 )}
             </div>
         </div>

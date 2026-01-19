@@ -301,7 +301,8 @@ useEffect(() => {
   };
 
   const allSupportedTokens = {
-    [Base.chainId]: deduplicateTokens([...staticTokens, ...dynamicTokens])
+    [Base.chainId]: deduplicateTokens([...staticTokens//, ...dynamicTokens
+      ])
 };
 
   // --- Icons ---
@@ -542,9 +543,14 @@ useEffect(() => {
             {/* Links */}
             <nav className="px-4 py-6 overflow-y-auto custom-scrollbar">
               <ul className="space-y-3">
-                <li>
+              <li>
                   <button onClick={go("/")} className={navBtnClass}>
-                    <HomeIcon /> <span className={navTextClass}>Home</span>
+                    <WalletIcon /> <span className={navTextClass}>Home</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={go("/all-coins")} className={navBtnClass}>
+                    <HomeIcon /> <span className={navTextClass}>All Coins</span>
                   </button>
                 </li>
                 <li>
@@ -583,11 +589,7 @@ useEffect(() => {
                     </button>
                   </li>
                 )}
-                <li>
-                  <button onClick={go("/home")} className={navBtnClass}>
-                    <WalletIcon /> <span className={navTextClass}>Shops</span>
-                  </button>
-                </li>
+                
               </ul>
             </nav>
 

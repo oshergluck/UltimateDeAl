@@ -109,7 +109,7 @@ const Terms = () => {
               </div>
               <div className="rounded-xl border border-white/10 bg-black/30 p-4">
                 <div className="text-white/60 text-xs uppercase">UltraShop (BondingCurveDEX)</div>
-                <code className="mt-1 block">0xd05d21870Ce6E57254aA15b5055bE91e2dd0a7eC</code>
+                <code className="mt-1 block">0x2bbedb2778996B849BaEebd0d81d55e31c1b29C8</code>
               </div>
             </div>
             <p className="text-white/70 text-xs mt-3">

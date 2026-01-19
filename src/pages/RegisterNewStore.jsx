@@ -9,6 +9,22 @@ import { PinataSDK } from "pinata";
 
 const RegisterNewStore = () => {
   const navigate = useNavigate();
+  const [passStatus, setPassStatus] = useState('idle'); // idle | loading | success | error
+const [passError, setPassError] = useState('');
+const [retryCount, setRetryCount] = useState(0);
+
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+};
+
   const pinata = new PinataSDK({
     pinataJwt: import.meta.env.VITE_PINATA_JWT,
     pinataGateway: "bronze-sticky-guanaco-654.mypinata.cloud",
@@ -109,29 +125,51 @@ const RegisterNewStore = () => {
   };
 
   const generateStorePassword = async () => {
-      try {
-          const response = await fetch(`${API_URL}/register-store`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  smartContractAddress: form._smartContractAddress,
-                  ownerAddress: address
-              })
-          });
-          
-          const data = await response.json();
-          if(data.success) {
-              return data.password;
-          } else {
-              throw new Error("Server failed to generate password");
-          }
-      } catch (error) {
-          console.error("DB Error:", error);
-          alert("Error generating password via DB");
-          return null;
+    setPassStatus('loading');
+    setPassError('');
+  
+    try {
+      const response = await fetchWithTimeout(`${API_URL}/register-store`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          smartContractAddress: form._smartContractAddress,
+          ownerAddress: address,
+        }),
+      }, 12000);
+  
+      // If server is down / gateway / etc
+      if (!response.ok) {
+        // try to read json error, but don’t crash if it’s not json
+        let msg = `Server error (${response.status})`;
+        try {
+          const maybe = await response.json();
+          msg = maybe?.message || maybe?.error || msg;
+        } catch {}
+        throw new Error(msg);
       }
+  
+      const data = await response.json();
+  
+      if (data?.success && data?.password) {
+        setPass(data.password);
+        setPassStatus('success');
+        return data.password;
+      }
+  
+      throw new Error(data?.message || "Server failed to generate password");
+    } catch (error) {
+      const isTimeout = error?.name === 'AbortError';
+      const msg = isTimeout
+        ? "Request timed out. Server may be temporarily unavailable."
+        : (error?.message || "Failed to generate password.");
+  
+      setPassStatus('error');
+      setPassError(msg);
+      return null;
+    }
   };
-
+  
   const PasswordPopup = () => (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl transform transition-all">
@@ -338,10 +376,9 @@ const RegisterNewStore = () => {
               onTransactionConfirmed={async (receipt) => {
                 console.log("Transaction confirmed", receipt.transactionHash);
                 setPopUp(true);
-                const generatedPass = await generateStorePassword();
-                if (generatedPass) {
-                    setPass(generatedPass);
-                }
+                setPass('');              // clear old pass 
+                setRetryCount(0);
+                await generateStorePassword();
               }}
               onError={(error) => {
                 console.error("Transaction error", error);

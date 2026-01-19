@@ -194,7 +194,7 @@ export default function App() {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/create-campaign" element={<CreateCampaign />} />
                 <Route path="/my-campaigns" element={<Profile />} />
-                <Route path="/home" element={<Home />} />
+                <Route path="/" element={<Home />} />
                 <Route path="/campaign-details/:id" element={<CampaignDetails />} />
                 <Route path="/all-campaigns" element={<AllCampaigns />} />
                 <Route path="/blog" element={<News />} />
@@ -202,7 +202,7 @@ export default function App() {
                 <Route path="/post/:id" element={<Post />} />
                 <Route path="/search/:term" element={<Search key={term} />} />
                 <Route path="/vip" element={<VIPRegister />} />
-                <Route path="/" element={<RecentCoins />} />
+                <Route path="/all-coins" element={<RecentCoins />} />
                 <Route path="/my-coins" element={<MyCoins />} />
                 <Route path="/super-admin" element={<Admin />} />
                 <Route path="/dashboard" element={<ClientAdminPage />} />

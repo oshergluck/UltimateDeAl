@@ -828,7 +828,7 @@ return (
                   paymentAddress === "0xE1CbE71D2e56aAc7d50eB0ef855Fe5E4B51DF26c";
                 const price = HexToInteger(product?.price._hex);
                 const discount = HexToInteger(product?.discountPercentage._hex);
-                const multiplier = type === "Renting" || type === "Rentals" ? 1 : 1;
+                const multiplier = type === "Renting" || type === "Rentals" ? 30 : 1;
 
                 const formattedPrice = isWETH
                   ? (price / 1e18 * multiplier).toFixed(2)
@@ -842,7 +842,7 @@ return (
 
                 const label =
                   type === "Renting" || type === "Rentals"
-                    ? "Price Per Day"
+                    ? "Price Per Month"
                     : type === "Sales"
                     ? "Sales Price"
                     : type === "Liquidity"

@@ -153,33 +153,33 @@ function processDescription(description, maxLength = 180)
                   </p>
                 </div>
               </button>
-      
-              {/* Cities */}
-              <div className="mt-10">
+{/*       
+                Cities
+                <div className="mt-10">
                 <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
-                  Explore Cities
+                    Explore Cities
                 </h2>
-      
+        
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                  {getUniqueCities().map((city, index) => (
+                    {getUniqueCities().map((city, index) => (
                     <button
-                      key={index}
-                      type="button"
-                      onClick={() => navigate(`/city/${city}`)}
-                      className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition p-4 text-center shadow-lg"
+                        key={index}
+                        type="button"
+                        onClick={() => navigate(`/city/${city}`)}
+                        className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition p-4 text-center shadow-lg"
                     >
-                      <h3 className="text-[#FFDD00] font-extrabold text-base sm:text-lg truncate">
+                        <h3 className="text-[#FFDD00] font-extrabold text-base sm:text-lg truncate">
                         {city}
-                      </h3>
-                      <p className="text-white/70 text-sm mt-1">
+                        </h3>
+                        <p className="text-white/70 text-sm mt-1">
                         {Object.values(allStores).filter((store) => store.city === city).length} stores
-                      </p>
+                        </p>
                     </button>
-                  ))}
+                    ))}
                 </div>
-              </div>
-      
-              {/* Promoted Stores */}
+                </div>
+         */}
+                {/* Promoted Stores */}
               <div className="mt-12">
                 <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
                   Promoted Stores

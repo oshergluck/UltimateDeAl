@@ -21,7 +21,7 @@ const ProductBox = ({ product, onClick, contract, type, paymentAddress, storeAdd
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    autoplay: false,
+    autoplay: true,
     arrows: false,
     lazyLoad: 'ondemand',
     swipe: true,
@@ -137,7 +137,14 @@ const ProductBox = ({ product, onClick, contract, type, paymentAddress, storeAdd
             {/* 2. Price */}
             <div className="bg-gradient-to-r from-gray-800 to-black border border-cyan-500/30 text-white font-bold py-2 px-4 rounded-lg shadow-md flex items-center gap-2">
                   <span className="text-3xl text-yellow-300 tracking-wide">
-                    {(HexToInteger(productData.price._hex) / 1e6).toFixed(2)}
+                    {type == "Rentals" ? (<>
+                        {(HexToInteger(productData.price._hex) * 30 / 1e6).toFixed(2)}
+                    </>) :(
+                        <>
+                        {(HexToInteger(productData.price._hex) / 1e6).toFixed(2)}
+                        </>
+                    )}
+                    
                   </span>
                   <img src={usdcoinusdclogo} className="h-[28px] w-[28px]" alt="USDC" />
             </div>
