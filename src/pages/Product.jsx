@@ -750,7 +750,7 @@ return (<>
         {ownerShip ? (<>   <div className='mt-[20px] ml-[25px] sm:mb-[90px]'>
         <img src={VerifiedIcon} className='mx-auto w-[70px] h-[70px] sm:w-[35px] sm:h-[35px]'></img>
         <h2 className='text-[12px] text-white font-bold text-center'>Owned</h2>
-        <button onClick={async() => await navigateToReactJS()} className='w-[250px] h-[35px] flex justify-center items-center z-5 font-bold text-[#FFFFF2] !mx-auto rounded-[15px] bg-[#00FFFF]'>Click Here</button>
+        <button onClick={async() => await navigateToReactJS()} className='w-[250px] h-[35px] flex justify-center items-center z-5 font-bold text-[#FFFFF2] !mx-auto rounded-[15px] bg-[#00FFFF]'>To Hidden Contents</button>
     </div>
   </>):(<></>)}
         {reward!==0 ? (<>
