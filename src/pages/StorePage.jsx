@@ -967,7 +967,7 @@ const StorePage = () => {
           <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6 text-center">
             <p className="text-white font-extrabold text-sm sm:text-xl">
               {theSymbolOfReward} address is{" "}
-              <span className="text-blue-300 break-all">{rewardAddress}</span>
+              <span className="text-blue-300 break-all">{theERCUltra}</span>
             </p>
       
             {theSymbolOfReward && rewardAddress ? (
