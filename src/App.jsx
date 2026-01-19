@@ -13,6 +13,7 @@ import {
   HeaderMobile,
   FooterMobile,
   SearchEngine,
+  MatrixCursor,
 } from "./components";
 import { useStateContext } from "./context";
 import {
@@ -101,7 +102,7 @@ export default function App() {
   }, [CrowdFunding]);
 
   return (
-    <>
+    <><MatrixCursor />
       <CookieAlert />
       {isLoading && <Loader />}
 

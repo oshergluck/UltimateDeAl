@@ -44,3 +44,4 @@ export {default as CandleChart15mAdvanced} from "./Chart";
 export {default as CoinBox} from "./CoinBox";
 export {default as CookieAlert} from "./CookieAlert"
 export {default as ProtectedBox} from "./ProtectedBox"
+export {default as MatrixCursor} from "./MatrixCursor"

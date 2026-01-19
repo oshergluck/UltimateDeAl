@@ -970,10 +970,10 @@ const StorePage = () => {
               <span className="text-blue-300 break-all">{theERCUltra}</span>
             </p>
       
-            {theSymbolOfReward && rewardAddress ? (
+            { theERCUltra ? (
               <div className="mt-4 flex justify-center">
                 <button
-                  onClick={() => navigate("/coin/" + rewardAddress)}
+                  onClick={() => navigate("/coin/" + theERCUltra)}
                   className="rounded-2xl bg-white text-blue-700 font-extrabold px-6 py-3 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition"
                 >
                   🪙 {storeName} Coin
