@@ -8,7 +8,7 @@ import { useContract} from '@thirdweb-dev/react';
 import { useNavigate } from 'react-router-dom';
 import { fontSizes } from '../components/AccessibilityMenu';
 import {createThirdwebClient,prepareContractCall, getContract,defineChain } from "thirdweb";
-import { useSendTransaction,useReadContract ,TransactionButton,ConnectButton,MediaRenderer} from 'thirdweb/react';
+import { useSendTransaction,useReadContract ,TransactionButton,ConnectButton,MediaRenderer,useActiveAccount} from 'thirdweb/react';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -20,6 +20,7 @@ import {
 } from "thirdweb/wallets";
 
 const Product = () => {
+  const account = useActiveAccount();
   const wallets = [
     createWallet("io.metamask"),
     createWallet("com.coinbase.wallet"),
@@ -283,7 +284,9 @@ const Product = () => {
     // New Function: Unregister via API (Store Specific)
     const handleUnregisterFromDB = async () => {
       if (!confirmUnregister) return;
-      if (!address) {
+      
+      // 1. Check if account exists (v5 way)
+      if (!account) {
           alert("Wallet not connected");
           return;
       }
@@ -291,22 +294,17 @@ const Product = () => {
       setIsLoading(true);
 
       try {
-          // 1. הכנת ההודעה לחתימה (חייבת להיות זהה בול למה שהשרת מצפה)
           const timestamp = Date.now();
           const message = `I confirm that I want to delete my account: ${address.toLowerCase()} at ${timestamp}`;
 
-          // 2. יצירת החתימה באמצעות הארנק המחובר
-          // מניחים ש-window.ethereum קיים (MetaMask וכו')
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const signer = provider.getSigner();
-          const signature = await signer.signMessage(message);
+          // 2. Sign using the v5 account object
+          // The v5 SDK handles Mobile/Desktop/WalletConnect automatically
+          const signature = await account.signMessage({ message: message });
 
-          // 3. שליחה לשרת (POST במקום DELETE)
+          // 3. Send to server (Same as before)
           const response = await fetch(`${API_URL}/unregister`, {
               method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                   walletAddress: address,
                   signature: signature,
@@ -317,10 +315,10 @@ const Product = () => {
           const data = await response.json();
 
           if (data.success) {
-              // ניקוי ה-State במקרה של הצלחה
               setIsRegistered(false);
               setShowUnregisterModal(false);
               setConfirmUnregister(false);
+              // Reset user state...
               setNameOfClient('');
               setEmailOfClient('');
               setPhoneNumOfClient('');

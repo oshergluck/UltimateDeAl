@@ -5,9 +5,11 @@ import { RegisterNewStore, City, SnakeGame, MemoryGame, TexasHoldemGame } from '
 import { useMediaQuery } from 'react-responsive';
 import { useStateContext } from '../context';
 import { useContract } from '@thirdweb-dev/react';
+import { useActiveAccount } from 'thirdweb/react';
 import { ethers } from 'ethers'; // חובה עבור החתימה
 
 const Extra = () => {
+    const account = useActiveAccount();
     const navigate = useNavigate();
     const [rendered,setRendered] = useState(false);
     const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -75,7 +77,8 @@ const Extra = () => {
 
     // --- New Function: Unlock Content via API ---
     const handleUnlockContent = async () => {
-        if (!address) {
+        // 1. Check account existence (replaces !address check)
+        if (!account) {
             alert("Please connect your wallet first.");
             return;
         }
@@ -88,26 +91,25 @@ const Extra = () => {
             setIsLoading(true);
             setError(null);
 
-            // 1. Prepare Data
+            // 2. Prepare Data
             const timestamp = Date.now();
             const barcode = decodeUrlString(ProductURL);
-            
-            // הודעה זהה בדיוק למה שהוגדר בשרת
             const message = `I confirm ownership check for product ${barcode} at ${timestamp}`;
 
-            // 2. Sign Message
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const signature = await signer.signMessage(message);
+            // 3. Sign Message using v5 SDK (Works on Mobile & Desktop)
+            // DELETED: const provider = new ethers.providers.Web3Provider(window.ethereum);
+            // DELETED: const signature = await signer.signMessage(message);
+            
+            const signature = await account.signMessage({ message: message });
 
-            // 3. Call API
+            // 4. Call API
             const response = await fetch(`${API_URL}/access-hidden-content`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    walletAddress: address,
+                    walletAddress: account.address, // Safer to use account.address here
                     signature: signature,
                     timestamp: timestamp,
                     storeAddress: storeContractByURL,
@@ -127,26 +129,25 @@ const Extra = () => {
             }
 
         } catch (err) {
-            console.error(err);
+            console.error("Unlock failed:", err);
             setError(err.message || "Failed to verify ownership");
             setOwnerShip(false);
         } finally {
             setIsLoading(false);
         }
     };
-
     // Render Special Pages (Games/Register)
     const renderContent = () => {
-        if (StoreURL === 'USP' && ProductURL === 'LISTESH') {
+        if (StoreURL === 'ultrashop' && ProductURL === 'LISTESH') {
             return (<div><RegisterNewStore /></div>);
         }
-        if (StoreURL === 'USP' && ProductURL === 'LOTERRY') {
+        if (StoreURL === 'ultrashop' && ProductURL === 'LOTERRY') {
             return <City />;
         }
-        if (StoreURL === 'USP' && ProductURL === 'PROS') {
+        if (StoreURL === 'ultrashop' && ProductURL === 'PROS') {
             return <SnakeGame/>;
         }
-        if (StoreURL === 'USP' && ProductURL === 'FUNDPROS') {
+        if (StoreURL === 'ultrashop' && ProductURL === 'FUNDPROS') {
             return <MemoryGame/>;
         }
         return null;

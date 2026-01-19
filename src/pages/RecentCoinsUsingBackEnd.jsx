@@ -111,7 +111,7 @@ const withTimeout = (promise, ms = 3000) => {
     if (!u) return ''
     if (u.startsWith('ipfs://')) {
       const cidPath = u.slice('ipfs://'.length)
-      const base = `https://${pinataGateway}/ipfs/${cidPath}`
+      const base = ``
       return pinataToken ? `${base}?pinataGatewayToken=${pinataToken}` : base
     }
     if (u.startsWith('//')) return `https:${u}`
@@ -123,7 +123,7 @@ const withTimeout = (promise, ms = 3000) => {
     if (!uri) return ''
     if (uri.startsWith('ipfs://')) {
       const cid = uri.replace('ipfs://', '')
-      return `https://${PINATA_GATEWAY_FALLBACK}/ipfs/${cid}${pinataToken ? `?pinataGatewayToken=${pinataToken}` : ''}`
+      return cid
     }
     return uri
   }
@@ -177,7 +177,7 @@ const withTimeout = (promise, ms = 3000) => {
       const metaURL = gatewayURLFromURI(apiCoin.URI)
       if (metaURL) {
         const m = await fetchJSON(`https://${pinataGateway}/ipfs/${metaURL}?pinataGatewayToken=${pinataToken}`)
-        const rawLogo = m?.media?.logo_gateway
+        const rawLogo = m?.media?.logo_gateway;
         const rawBanner = m?.media?.banner_gateway ?? m?.media?.banner ?? ''
 
         meta = {

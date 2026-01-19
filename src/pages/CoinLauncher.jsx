@@ -1,43 +1,60 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Featured from '../components/Featured'
-import { useStateContext } from '../context'
-import { logoOfWebsite, usdcoinusdclogo } from '../assets'
-import { FormField, Loader, FeaturedMobile, IPFSMediaViewer } from '../components'
-import { TransactionButton } from 'thirdweb/react'
 import { createThirdwebClient, getContract, prepareContractCall, readContract } from 'thirdweb'
 import { base } from 'thirdweb/chains'
+import { TransactionButton } from 'thirdweb/react'
 import { useMediaQuery } from 'react-responsive'
 import { PinataSDK } from 'pinata'
 import { ethers } from 'ethers'
 
+// Assets and Components (Assumed imports based on your project structure)
+import { logoOfWebsite, usdcoinusdclogo } from '../assets'
+import { IPFSMediaViewer } from '../components' 
+
 /**
- * Coin Launcher Page — ethers.utils edition (ethers v5)
- * - Uses ethers.utils.parseUnits / ethers.utils.formatUnits
- * - Converts BigNumber -> BigInt for thirdweb tx params
- * - Live preview w/ fallback to initial price (36) if coin not created yet
- * - Immediate upload of logo/banner files to Pinata
- * - Fixed JSON viewer link
- *
- * ENV expected:
- *  - VITE_THIRDWEB_CLIENT_ID  (or fallback VITE_THIRDWEB_CLIENT)
- *  - VITE_DEX_ADDRESS         (BondingCurveDEX)
- *  - VITE_PINATA_JWT
- *  - Optional: VITE_PINATA_GATEWAY
+ * Coin Launcher Page
+ * Fixed for 6-decimal USDC Bonding Curve compatibility.
  */
 
+// ---------------- Constants ----------------
 const ONE_ETHER_N = 10n ** 18n
-const INITIAL_PRICE_UNITS_N = 36n // matches contract's INITIAL_PRICE = 36 (see comment)
-const MIN_PURCHASE_RAW_N = 360000n   // 0.000360 USDC in 6 decimals
 
-// helpers to bridge ethers v5 BigNumber <-> bigint (thirdweb expects bigint)
+// 1 Billion Tokens (18 decimals)
+const REQUIRED_TOKEN_A_AMOUNT_N = 1000000000n * ONE_ETHER_N 
+
+// 6000 USDC (6 decimals) - Matches Contract "vUSDC"
+const VIRTUAL_USDC_SEED_N = 6000n * 1000000n 
+
+const PLATFORM_FEE_BPS_N = 200n // 2%
+const CREATOR_FEE_BPS_N = 100n  // 1%
+
+// Minimum purchase 1.0 USDC (6 decimals)
+const MIN_PURCHASE_RAW_N = 1000000n 
+
+// ---------------- Helpers ----------------
+
+// Bridge ethers BigNumber -> BigInt
 const toBigInt = (bn) => BigInt(bn.toString())
-const bnFromBigInt = (bi) => ethers.BigNumber.from(bi.toString())
+
+// Calculate Net USDC after fees (Contract Logic)
+const getNetUsdcAfterFees = (usdcIn) => {
+  const platformFee = (usdcIn * PLATFORM_FEE_BPS_N) / 10000n
+  const creatorFee  = (usdcIn * CREATOR_FEE_BPS_N) / 10000n
+  return usdcIn - platformFee - creatorFee
+}
+
+// Bonding Curve Formula (Constant Product)
+const calcBuyReturn = (tokenReserve, usdcReserve, usdcIn) => {
+  if (tokenReserve === 0n || usdcReserve === 0n) return 0n
+  // Output = (TokenRes * USDC_In) / (USDC_Res + USDC_In)
+  return (tokenReserve * usdcIn) / (usdcReserve + usdcIn)
+}
 
 const CoinLauncher = () => {
   const navigate = useNavigate()
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' })
 
+  // ---------------- Thirdweb & Pinata Config ----------------
   const client = useMemo(
     () =>
       createThirdwebClient({
@@ -47,6 +64,7 @@ const CoinLauncher = () => {
   )
 
   const DEX_ADDRESS = import.meta.env.VITE_DEX_ADDRESS
+  // Base Mainnet USDC Address
   const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
 
   const pinata = useMemo(
@@ -58,45 +76,48 @@ const CoinLauncher = () => {
     []
   )
 
-  // -------------------- Local State --------------------
+  // ---------------- State ----------------
   const [form, setForm] = useState({
     tokenA: '',
-    initialUSDC: '', // human units (6-decimal token)
+    initialUSDC: '', // Human readable (e.g., "6000")
     name: '',
     website: '',
     x: '',
     telegram: '',
     description: '',
   })
+
   const [logoFile, setLogoFile] = useState(null)
   const [bannerFile, setBannerFile] = useState(null)
 
   const [uploading, setUploading] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingBanner, setUploadingBanner] = useState(false)
+  
   const [tokenInfoURI, setTokenInfoURI] = useState('')
   const [logoCid, setLogoCid] = useState('')
   const [bannerCid, setBannerCid] = useState('')
+  
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
 
-  // -------- Preview state (how many tokens user will receive) --------
+  // Live Preview State
   const [tokenPreview, setTokenPreview] = useState({
     loading: false,
-    out: 0n, // bigint
+    out: 0n,         // BigInt
     symbol: 'TOKEN',
     tokenDecimals: 18,
     usdcOk: true,
-    price: 0n, // bigint, USDC per token in 18 decimals
+    price: 0n,       // BigInt
   })
 
-  // Contracts
-  const dex = useMemo(() => getContract({ client: client, chain: base, address: DEX_ADDRESS }), [client, DEX_ADDRESS])
+  const dex = useMemo(() => getContract({ client, chain: base, address: DEX_ADDRESS }), [client, DEX_ADDRESS])
 
-  // Constants (BigNumber for ui/math via ethers, then convert to bigint for calls)
-  const APPROVE_TOKEN_A_AMOUNT_BN = ethers.utils.parseUnits('1000000000', 18) // 1,000,000,000 * 1e18
+  // Amount of TokenA to Approve: 1 Billion * 1e18
+  const APPROVE_TOKEN_A_AMOUNT_BN = ethers.utils.parseUnits('1000000000', 18)
 
-  // -------------------- Helpers --------------------
+  // ---------------- Event Handlers ----------------
+
   const onChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
@@ -105,18 +126,17 @@ const CoinLauncher = () => {
   const prettyGatewayURL = (cidOrPath) =>
     `https://${pinata.config?.pinataGateway || 'bronze-sticky-guanaco-654.mypinata.cloud'}/ipfs/${cidOrPath}`
 
+  // Safe formatting helper
   const formatUnitsSafe = (valueLike, decimals, maxDecimals = 3) => {
     try {
-      // Accepts bigint, BigNumber, string; normalize to string
       const asString =
         typeof valueLike === 'bigint'
           ? valueLike.toString()
           : ethers.BigNumber.isBigNumber(valueLike)
           ? valueLike.toString()
           : (valueLike ?? '0').toString()
-      const formatted = ethers.utils.formatUnits(asString, decimals)
       
-      // Limit decimal places
+      const formatted = ethers.utils.formatUnits(asString, decimals)
       const parts = formatted.split('.')
       if (parts.length === 2 && parts[1].length > maxDecimals) {
         return `${parts[0]}.${parts[1].substring(0, maxDecimals)}`
@@ -129,7 +149,7 @@ const CoinLauncher = () => {
 
   const shortAddr = (a) => (a && a.startsWith('0x') ? `${a.slice(0, 6)}…${a.slice(-4)}` : a)
 
-  // Pin a single file (logo or banner)
+  // ---------------- Pinata Logic ----------------
   const pinFile = async (file) => {
     const upload = await pinata.upload.file(file, {
       pinataMetadata: { name: `coin-launcher-${file.name}` },
@@ -137,7 +157,6 @@ const CoinLauncher = () => {
     return upload.cid || upload.IpfsHash || upload.hash
   }
 
-  // Pin JSON with project data
   const pinJSON = async (payload) => {
     const res = await pinata.upload.json(payload, {
       pinataMetadata: { name: `coin-launcher-${payload?.name || 'metadata'}` },
@@ -145,16 +164,13 @@ const CoinLauncher = () => {
     return res.cid || res.IpfsHash || res.hash
   }
 
-  // Handle immediate logo upload
   const handleLogoChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
     setLogoFile(file)
     setUploadingLogo(true)
     setError('')
     setToast('')
-    
     try {
       const cid = await pinFile(file)
       setLogoCid(cid)
@@ -167,16 +183,13 @@ const CoinLauncher = () => {
     }
   }
 
-  // Handle immediate banner upload
   const handleBannerChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
     setBannerFile(file)
     setUploadingBanner(true)
     setError('')
     setToast('')
-    
     try {
       const cid = await pinFile(file)
       setBannerCid(cid)
@@ -188,10 +201,6 @@ const CoinLauncher = () => {
       setUploadingBanner(false)
     }
   }
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  },[]);
 
   const handleUploadMetadata = async () => {
     setError('')
@@ -220,8 +229,9 @@ const CoinLauncher = () => {
       }
 
       const jsonCid = await pinJSON(jsonPayload)
+      // Store full URI
       const uri = `ipfs://${jsonCid}`
-      setTokenInfoURI(jsonCid)
+      setTokenInfoURI(jsonCid) // Storing just CID for easier display, usually we store full URI in contract
       setToast('Metadata uploaded to IPFS ✔')
     } catch (e) {
       console.error(e)
@@ -231,27 +241,30 @@ const CoinLauncher = () => {
     }
   }
 
-  // Get the JSON CID from the tokenInfoURI
   const getJsonCid = () => {
     if (!tokenInfoURI) return ''
     return tokenInfoURI.replace('ipfs://', '')
   }
 
-  // -------------------- Build TXs (convert BN -> bigint for thirdweb) --------------------
+  // ---------------- Transaction Builders ----------------
+
+  // 1. Approve TokenA (1 Billion, 18 decimals)
   const buildApproveTokenATx = () => {
     if (!form.tokenA) throw new Error('TokenA address required')
     const amount = toBigInt(APPROVE_TOKEN_A_AMOUNT_BN)
     return prepareContractCall({
-      contract: getContract({ client:client, chain: base, address: form.tokenA }),
+      contract: getContract({ client, chain: base, address: form.tokenA }),
       method: 'function approve(address spender, uint256 value) returns (bool)',
       params: [DEX_ADDRESS, amount],
     })
   }
 
+  // 2. Approve USDC (User input, 6 decimals)
   const buildApproveUSDCTx = () => {
     const amountBN = form.initialUSDC
       ? (() => {
           try {
+            // STRICTLY 6 DECIMALS FOR USDC
             return ethers.utils.parseUnits(String(form.initialUSDC).trim(), 6)
           } catch {
             return ethers.constants.Zero
@@ -260,34 +273,47 @@ const CoinLauncher = () => {
       : ethers.constants.Zero
     const amount = toBigInt(amountBN)
     return prepareContractCall({
-      contract: getContract({ client:client, chain: base, address: USDC }),
+      contract: getContract({ client, chain: base, address: USDC }),
       method: 'function approve(address spender, uint256 value) returns (bool)',
       params: [DEX_ADDRESS, amount],
     })
   }
 
+  // 3. Deposit Coin (User input, 6 decimals)
   const buildDepositCoinTx = () => {
     if (!form.tokenA) throw new Error('TokenA address required')
     if (!form.initialUSDC) throw new Error('Initial USDC required')
     if (!tokenInfoURI) throw new Error('Token info URI is empty. Upload metadata first.')
-        console.log(tokenInfoURI);
+
     const amountBN = (() => {
       try {
+        // STRICTLY 6 DECIMALS FOR USDC
         return ethers.utils.parseUnits(String(form.initialUSDC).trim(), 6)
       } catch {
         return ethers.constants.Zero
       }
     })()
     const amount = toBigInt(amountBN)
+    
+    // Pass full URI scheme
+    const fullURI = `ipfs://${tokenInfoURI}`
 
     return prepareContractCall({
       contract: dex,
       method: 'function depositCoin(address tokenA, uint256 initialUSDC, string tokenInfo)',
-      params: [form.tokenA, amount, tokenInfoURI],
+      params: [form.tokenA, amount, fullURI],
     })
   }
 
-  // -------------------- Live Preview + Price Card --------------------
+  const navigateToCoin = () => {
+    navigate(`/coin/${form.tokenA}`)
+  }
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  // ---------------- Live Preview Logic ----------------
   useEffect(() => {
     let cancel = false
     const run = async () => {
@@ -298,7 +324,7 @@ const CoinLauncher = () => {
         }
         setTokenPreview((p) => ({ ...p, loading: true }))
 
-        // USDC amount (bigint) via ethers.utils.parseUnits -> BigNumber -> bigint
+        // Parse USDC Input (6 Decimals)
         const usdcAmount = (() => {
           try {
             const bn = ethers.utils.parseUnits(String(form.initialUSDC).trim() || '0', 6)
@@ -308,50 +334,66 @@ const CoinLauncher = () => {
           }
         })()
 
-        // token symbol & decimals
+        // Fetch Symbol & Decimals
         let symbol = 'TOKEN'
         let tokenDecimals = 18
         try {
           symbol = await readContract({
-            contract: getContract({ client:client, chain: base, address: form.tokenA }),
+            contract: getContract({ client, chain: base, address: form.tokenA }),
             method: 'function symbol() view returns (string)',
             params: [],
           })
         } catch {}
         try {
           const dec = await readContract({
-            contract: getContract({ client:client, chain: base, address: form.tokenA }),
+            contract: getContract({ client, chain: base, address: form.tokenA }),
             method: 'function decimals() view returns (uint8)',
             params: [],
           })
           tokenDecimals = Number(dec) || 18
         } catch {}
 
-        // expected output from DEX (bigint)
+        // Check expected output
         let out = 0n
+        let isExisting = false
+        
+        // 1. Try reading from contract (if coin exists)
         try {
-          out = await readContract({
+           // We check if coin info exists first
+           const info = await readContract({
             contract: dex,
-            method: 'function calculateTokenOutput(address tokenA, uint256 usdcAmount) view returns (uint256)',
-            params: [form.tokenA, usdcAmount],
+            method: 'function getCoinInfo(address) view returns (uint256,uint256,uint256,bool,uint256,uint256,string,uint256,uint256,uint256,uint256,address)',
+            params: [form.tokenA],
           })
+          
+          // info[1] is usdcReserve. If > 0, coin exists.
+          if (info && info[1] > 0n) {
+             isExisting = true
+             out = await readContract({
+                contract: dex,
+                method: 'function calculateTokenOutput(address tokenA, uint256 usdcAmount) view returns (uint256)',
+                params: [form.tokenA, usdcAmount],
+              })
+          }
         } catch {}
 
-        // Fallback: simulate initial price if DEX returned 0 (coin not created yet)
-        if (out === 0n && usdcAmount > 0n) {
-          // tokens = usdcAmount * 1e18 / 36
-          try {
-            out = (usdcAmount * ONE_ETHER_N) / INITIAL_PRICE_UNITS_N
-          } catch {}
+        // 2. Fallback: JS Simulation (Bonding Curve) if coin doesn't exist
+        if (!isExisting && usdcAmount > 0n) {
+           // Logic must match Smart Contract `depositCoin` logic
+           // 1. Calculate Net USDC (remove fees)
+           const netUSDC = getNetUsdcAfterFees(usdcAmount)
+           // 2. Calculate return based on seed reserves
+           //    Seed vToken: 1,000,000,000 (1e18)
+           //    Seed vUSDC:  6,000 (1e6)
+           out = calcBuyReturn(REQUIRED_TOKEN_A_AMOUNT_N, VIRTUAL_USDC_SEED_N, netUSDC)
         }
 
-        // current price from getCoinInfo (bigint in 18 decimals)
+        // Get Current Price (for display)
         let price = 0n
         try {
           const info = await readContract({
             contract: dex,
-            method:
-              'function getCoinInfo(address) view returns (uint256,uint256,uint256,bool,uint256,uint256,string,uint256,uint256)',
+            method: 'function getCoinInfo(address) view returns (uint256,uint256,uint256,bool,uint256,uint256,string,uint256,uint256,uint256,uint256,address)',
             params: [form.tokenA],
           })
           price = info?.[5] ?? 0n
@@ -372,18 +414,14 @@ const CoinLauncher = () => {
       }
     }
 
-    const t = setTimeout(run, 250)
+    const t = setTimeout(run, 300)
     return () => {
       cancel = true
       clearTimeout(t)
     }
   }, [form.tokenA, form.initialUSDC, dex, client])
 
-  const navigateToCoin = () => {
-    navigate(`/coin/${form.tokenA}`);
-}
-
-  // -------------------- UI --------------------
+  // ---------------- Render ----------------
   return (
     <div className='w-full min-h-screen py-6 md:py-10'>
       <div className='mx-auto px-4 md:px-6'>
@@ -406,9 +444,9 @@ const CoinLauncher = () => {
           )}
         </div>
 
-        {/* Main grid */}
+        {/* Main Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 mt-6'>
-          {/* Left: form */}
+          {/* Left Column: Form */}
           <div className='lg:col-span-2 bg-white/5 backdrop-blur rounded-2xl p-5 md:p-7 shadow-lg border border-white/10'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -426,20 +464,20 @@ const CoinLauncher = () => {
               </div>
               <div>
                 <label className='text-sm text-white/80 flex items-center gap-2'>
-                  Initial USDC <img src={usdcoinusdclogo} className='w-5 h-5' />
+                  Initial USDC <img src={usdcoinusdclogo} className='w-5 h-5' alt="USDC" />
                 </label>
                 <input
                   name='initialUSDC'
                   value={form.initialUSDC}
                   onChange={onChange}
-                  placeholder='e.g. 25'
+                  placeholder='e.g. 6000'
                   className='mt-1 w-full rounded-xl bg-black/40 text-white p-3 border border-white/10 outline-none focus:ring-2 focus:ring-blue-400/50'
                 />
                 <p className='text-[11px] text-white/50 mt-1'>
-                  Approved as 6-decimals on-chain. Minimum {formatUnitsSafe(MIN_PURCHASE_RAW_N, 6, 6)} USDC.
+                  Approved as 6-decimals. Min {formatUnitsSafe(MIN_PURCHASE_RAW_N, 6, 6)} USDC.
                 </p>
 
-                {/* Live preview */}
+                {/* Live Preview Text */}
                 {form.initialUSDC && form.tokenA && (
                   <div className='mt-2 text-xs'>
                     {!tokenPreview.usdcOk ? (
@@ -566,21 +604,21 @@ const CoinLauncher = () => {
               </button>
               {tokenInfoURI && (
                 <a
-                    href={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${tokenInfoURI}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                  href={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${tokenInfoURI}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-3 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/15"
                 >
-                    View JSON (Gateway)
+                  View JSON (Gateway)
                 </a>
-                )}
+              )}
             </div>
 
             {error && <p className='text-red-400 mt-3 text-sm'>{error}</p>}
             {toast && <p className='text-emerald-300 mt-3 text-sm'>{toast}</p>}
           </div>
 
-          {/* Right: Preview & Steps */}
+          {/* Right Column: Steps & Preview */}
           <div className='space-y-5'>
             {/* Price & Preview Card */}
             <div className='bg-black/40 rounded-2xl p-5 border border-white/10'>
@@ -609,11 +647,11 @@ const CoinLauncher = () => {
                 </div>
               </div>
               <p className='text-[11px] text-white/50 mt-3'>
-                Preview uses <code>calculateTokenOutput()</code> (fallback to initial price if coin isn't created). No wallet pop-ups.
+                Preview uses bonding curve logic. Sending {form.initialUSDC || '0'} USDC (6 dec) should return correct amount.
               </p>
             </div>
 
-            {/* Upload Status Card */}
+            {/* Upload Status */}
             {(logoCid || bannerCid) && (
               <div className='bg-emerald-500/10 rounded-2xl p-4 border border-emerald-500/20'>
                 <div className='text-emerald-300 font-semibold mb-2'>Upload Status</div>
@@ -640,7 +678,7 @@ const CoinLauncher = () => {
               </div>
             )}
 
-            {/* Stepper */}
+            {/* Transaction Steps */}
             <div className='space-y-4'>
               <div className='bg-black/40 rounded-2xl p-4 border border-white/10'>
                 <div className='text-white font-semibold mb-2'>Step 1: Approve TokenA</div>
@@ -671,15 +709,14 @@ const CoinLauncher = () => {
               <div className='bg-black/40 rounded-2xl p-4 border border-white/10'>
                 <div className='text-white font-semibold mb-2'>Step 3: Deposit & Launch</div>
                 <p className='text-white/70 text-xs mb-3'>
-                  Calls <code>depositCoin(tokenA, initialUSDC, tokenInfoURI)</code>.
+                  Calls <code>depositCoin</code> with 6-decimal USDC value.
                 </p>
                 <TransactionButton
                   disabled={!tokenInfoURI}
-                  
                   transaction={() => buildDepositCoinTx()}
                   onError={(e) => setError(e?.message || 'Deposit failed')}
                   onTransactionSent={() => setError('')}
-                  onTransactionConfirmed={() =>navigateToCoin()}
+                  onTransactionConfirmed={() => navigateToCoin()}
                 >
                   Launch Coin
                 </TransactionButton>

@@ -69,7 +69,7 @@ const HeaderMobile = () => {
         ]);
 
         // Return object based on token address
-        if (tokenAddress === '0xA03e84dE600Ea42c2F43cf8A8b198BF5a3650240') {
+        if (tokenAddress === '0x18b67dd7409d3a3f4f3dde7a6a01c4db4b9ba5cd') {
             return {
                 address: tokenAddress,
                 name: name,

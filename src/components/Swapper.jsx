@@ -424,225 +424,263 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
     }, [form.sellAmount, form.sellToken, form.buyToken, address, BUYTOKENCONTRACT, SELLTOKENCONTRACT, decimals, buyDecimals, isETH]);
 
     return (
-        <div className='rounded-[15px] mx-auto sm:w-8/12 my-[20px]'>
-            {isLoading && <Loader />}
-            {showTokenPopup && (
-                <TokenSelectPopup 
-                    onSelect={handleTokenSelect}
-                    onClose={() => setShowTokenPopup(false)}
-                    SYMBOL={SYMBOL}
-                    ERCULTRA={ERCUltraAddress}
-                />
-            )}
-            <div className="text-center mb-6">
-                <p className='text-[22px] font-bold text-gray-200 mb-2'>🚀 Multi-DEX V2 Aggregator</p>
-                <p className='text-[16px] text-gray-400'>Scanning {totalRoutersChecked > 0 ? totalRoutersChecked : '5+'} V2 DEXs for Best Prices</p>
-                <p className='text-[14px] text-cyan-400'>BaseSwap • Uniswap V2 • SushiSwap • HorizonDEX • SwapBased</p>
-            </div>
-            
-            <div className='sm:flex'>
-                <div className='mx-[15px] mb-[5px] flex-1'>
-                    <label className="block text-white text-[22px] font-medium mb-2 ml-[-20px]">Sell</label>
-                    <div
-                        onClick={() => setShowTokenPopup(true)}
-                        className="w-full p-[15px] linear-gradient1 rounded-lg text-white cursor-pointer opacity-[100%] hover:opacity-[80%] transition-colors border-[1px] border-gray-600"
-                    >
-                        {getDisplayToken(form.sellToken)}
-                    </div>
-                </div>
-                <FormField
-                    labelName="Amount"
-                    inputType="text" // Changed from "number" to "text" for better decimal control
-                    placeholder="0.000000"
-                    value={form.sellAmount}
-                    handleChange={(e) => handleFormFieldChange('sellAmount', e)}
-                    style={`mx-[15px] my-[5px] ${form.sellAmount > theBalance ? 'bg-red-500' : ''}`}
-                />
-            </div>
-                <span className='text-white cursor-pointer' onClick={() => setForm({ ...form, sellAmount: String(theBalance)})}>
-                    Balance: {theBalance}
-                </span>
+        <div className="mx-auto w-[400px] max-w-full h-[300px] overflow-hidden rounded-2xl border border-gray-700/60 bg-gray-900/60 p-3 shadow-lg">
+  {/* Scrollable content area so everything stays inside 400x300 */}
+  <div className="h-full overflow-y-auto pr-1">
+    {isLoading && <Loader />}
 
-            <div className="flex justify-center my-[25px]">
-                <button onClick={swapTokens} className="flex items-center opacity-[75%] hover:opacity-[100%] duration-500 ease-in-out bg-cyan-500 text-white p-2 rounded-full">
-                    {loading ? (
-                        <img src={loader} className='w-[32px] h-[32px] mx-auto'/>
-                    ) : (
-                        <>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5 mr-1">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                            </svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                            </svg>
-                        </>
-                    )}
-                </button>
-            </div>
+    {showTokenPopup && (
+      <TokenSelectPopup
+        onSelect={handleTokenSelect}
+        onClose={() => setShowTokenPopup(false)}
+        SYMBOL={SYMBOL}
+        ERCULTRA={ERCUltraAddress}
+      />
+    )}
 
-            <div className='sm:flex mt-[15px] mb-[8px]'>
-                <FormField
-                    labelName="Buy"
-                    value={getDisplayToken(form.buyToken)}
-                    style='mx-[15px] my-[5px] cursor-not-allowed'
-                    readOnly
-                />
-                <FormField
-                    labelName="Amount"
-                    value={buyAmount}
-                    style='mx-[15px] my-[5px] cursor-not-allowed'
-                    readOnly
-                />
-            </div>
+    {/* Header */}
+    <div className="text-center mb-3">
+      <p className="text-base sm:text-lg font-bold text-gray-200 leading-tight">
+        🚀 Multi-DEX V2 Aggregator
+      </p>
+      <p className="text-xs sm:text-sm text-gray-400">
+        Scanning {totalRoutersChecked > 0 ? totalRoutersChecked : "5+"} V2 DEXs for Best Prices
+      </p>
+      <p className="text-[10px] sm:text-xs text-cyan-400">
+        BaseSwap • Uniswap V2 • SushiSwap • HorizonDEX • SwapBased
+      </p>
+    </div>
 
-            {bestRouter && (
-                <div className="my-4 p-3 bg-gradient-to-r from-green-600 to-green-500 rounded-lg">
-                    <p className="text-white font-bold">🏆 Best Route: {bestRouter}</p>
-                    <p className="text-green-100 text-sm">Out of {totalRoutersChecked} DEXs checked</p>
-                </div>
-            )}
-
-            {routeComparison.length > 0 && (
-                <div className="my-4">
-                    <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-white font-bold">📊 DEX Comparison:</h4>
-                        <button 
-                            onClick={() => setShowAllRoutes(!showAllRoutes)}
-                            className="text-cyan-400 text-sm hover:text-cyan-300 underline"
-                        >
-                            {showAllRoutes ? 'Show Less' : `Show All (${routeComparison.length})`}
-                        </button>
-                    </div>
-                    <div className="bg-gray-800 rounded-lg p-3 max-h-64 overflow-y-auto">
-                        {(showAllRoutes ? routeComparison : routeComparison.slice(0, 5)).map((route, index) => (
-                            <div key={index} className={`flex justify-between items-center py-2 px-3 rounded-lg mb-2 ${
-                                route.isBest ? 'bg-gradient-to-r from-green-700 to-green-600' : 
-                                route.isValid ? 'bg-gray-700' : 'bg-red-900'
-                            }`}>
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-lg">{getRouterTypeIcon(route.routerType)}</span>
-                                    <div>
-                                        <span className="text-white font-medium">{route.router}</span>
-                                        <span className="text-xs text-gray-300 ml-2">
-                                            {getRouterTypeText(route.routerType)}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <span className={`font-mono ${route.isValid ? 'text-green-300' : 'text-red-300'}`}>
-                                        {route.isValid ? formatAmount(route.amountOut) : 'No Liquidity'}
-                                    </span>
-                                    {route.isBest && <span className="ml-2 text-yellow-400">👑</span>}
-                                    {index === 0 && route.isValid && !route.isBest && (
-                                        <div className="text-xs text-green-200">Best Available</div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                        
-                        {!showAllRoutes && routeComparison.length > 5 && (
-                            <div className="text-center text-gray-400 text-sm pt-2">
-                                ... and {routeComparison.length - 5} more DEXs
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {priceError && (
-                <div className="my-4 p-3 bg-red-900 rounded-lg">
-                    <p className="text-red-300">❌ {priceError}</p>
-                    <p className="text-red-200 text-sm mt-1">Try different tokens or check back later</p>
-                </div>
-            )}
-
-            {isUpdating && !priceError && (
-                <div className="my-4 flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-400"></div>
-                    <p className="text-cyan-400">Updating prices in {secondsLeft}s...</p>
-                </div>
-            )}
-
-            <div>
-                {Number(form.sellAmount) > 0 && address && Number(buyAmount) > 0 && (
-                    <>  
-                        {!isETH && Number(form.sellAmount) <= theBalance && (
-                            <TransactionButton
-                                transaction={async() => {
-                                    const tx = prepareContractCall({
-                                        contract: SELL,
-                                        method: "function approve(address,uint256) returns (bool)",
-                                        params: [AGGREGATOR_CONTRACT_ADDRESS, ethers.utils.parseUnits(form.sellAmount, decimals)],
-                                    });
-                                    return tx;
-                                }}
-                                className={`!bg-cyan-400 !text-black mb-3 ${Number(allowance) >= ethers.utils.parseUnits(form.sellAmount, decimals) ? '!hidden' : ''}`}
-                            >
-                                Approve {getDisplayToken(form.sellToken)}
-                            </TransactionButton>
-                        )}
-                        
-                        <TransactionButton
-                            transaction={async() => {
-                                const amountInWei = ethers.utils.parseUnits(form.sellAmount, decimals);
-                                const deadline = Math.floor(Date.now() / 1000) + 600;
-                                const actualSellToken = isETH ? WETH_ADDRESS : form.sellToken;
-                                
-                                // Get the minimum expected output (99% of quoted amount for slippage)
-                                const [bestAmountOut] = await readContract({
-                                    contract: AGGREGATOR_CONTRACT,
-                                    method: "function getOptimalAmountOut(address,address,uint256) returns (uint256, address[])",
-                                    params: [actualSellToken, form.buyToken, amountInWei]
-                                });
-                                
-                                const minAmountOut = ethers.BigNumber.from(bestAmountOut).mul(99).div(100);
-
-                                if (isETH) {
-                                    return prepareContractCall({
-                                        contract: AGGREGATOR_CONTRACT,
-                                        method: "function swapExactETHForTokens(address,uint256,address,uint256)",
-                                        params: [
-                                            form.buyToken,
-                                            minAmountOut.toString(),
-                                            address,
-                                            deadline
-                                        ],
-                                        value: amountInWei
-                                    });
-                                } else {
-                                    return prepareContractCall({
-                                        contract: AGGREGATOR_CONTRACT,
-                                        method: "function swapExactTokensForTokens(address,address,uint256,uint256,address,uint256)",
-                                        params: [
-                                            form.sellToken,
-                                            form.buyToken,
-                                            amountInWei,
-                                            minAmountOut.toString(),
-                                            address,
-                                            deadline
-                                        ]
-                                    });
-                                }
-                            }}
-                            className={`!bg-gradient-to-r !from-green-500 !to-green-600 !text-white !font-bold ${
-                                !isETH && (Number(allowance) < ethers.utils.parseUnits(form.sellAmount, decimals)) ? '!hidden' : ''
-                            }`}
-                        >
-                            🚀 Swap via {bestRouter} (Best Price)
-                        </TransactionButton>
-                    </>
-                )}
-                {Number(form.sellAmount) > theBalance && (
-                    <p className='text-[16px] text-red-500 font-bold'>❌ Balance Is Not Enough</p>
-                )}
-                {Number(form.sellAmount) > 0 && Number(buyAmount) === 0 && !priceError && (
-                    <div className="flex items-center justify-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
-                        <p className='text-yellow-400 font-bold'>🔍 Scanning all DEXs for best price...</p>
-                    </div>
-                )}
-            </div>
+    {/* Sell + Amount */}
+    <div className="grid grid-cols-1 gap-2">
+      <div>
+        <label className="block text-gray-100 text-sm font-medium mb-1">Sell</label>
+        <div
+          onClick={() => setShowTokenPopup(true)}
+          className="w-full cursor-pointer rounded-xl border border-gray-600/70 bg-gradient-to-r from-gray-800/80 to-gray-900/80 px-3 py-2 text-sm text-white transition-opacity hover:opacity-90"
+        >
+          {getDisplayToken(form.sellToken)}
         </div>
+      </div>
+
+      <FormField
+        labelName="Amount"
+        inputType="text"
+        placeholder="0.000000"
+        value={form.sellAmount}
+        handleChange={(e) => handleFormFieldChange("sellAmount", e)}
+        style={`w-full px-0 py-0 ${Number(form.sellAmount || 0) > theBalance ? "bg-red-500/20" : ""}`}
+      />
+
+      <button
+        type="button"
+        className="text-left text-xs text-gray-200/90 hover:text-white underline underline-offset-2"
+        onClick={() => setForm({ ...form, sellAmount: String(theBalance) })}
+      >
+        Balance: <span className="font-mono">{theBalance}</span>
+      </button>
+    </div>
+
+    {/* Swap button */}
+    <div className="flex justify-center my-3">
+      <button
+        onClick={swapTokens}
+        className="flex items-center rounded-full bg-cyan-500/90 px-3 py-2 text-white shadow hover:bg-cyan-500 transition"
+      >
+        {loading ? (
+          <img src={loader} className="w-6 h-6" />
+        ) : (
+          <>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="w-4 h-4 mr-1"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </>
+        )}
+      </button>
+    </div>
+
+    {/* Buy + Amount */}
+    <div className="grid grid-cols-1 gap-2">
+      <FormField
+        labelName="Buy"
+        value={getDisplayToken(form.buyToken)}
+        style="w-full cursor-not-allowed opacity-90 !bg-cyan-500/90"
+        readOnly
+      />
+      <FormField
+        labelName="Amount"
+        value={buyAmount}
+        style="w-full cursor-not-allowed opacity-90"
+        readOnly
+      />
+    </div>
+
+    {/* Best router */}
+    {bestRouter && (
+      <div className="mt-3 rounded-xl border border-green-400/20 bg-gradient-to-r from-green-700/70 to-green-600/60 p-2">
+        <p className="text-white text-sm font-bold">🏆 Best Route: {bestRouter}</p>
+        <p className="text-green-100 text-xs">Out of {totalRoutersChecked} DEXs checked</p>
+      </div>
+    )}
+
+    {/* Routes list */}
+    {routeComparison.length > 0 && (
+      <div className="mt-3">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-white text-sm font-bold">📊 DEX Comparison</h4>
+          <button
+            onClick={() => setShowAllRoutes(!showAllRoutes)}
+            className="text-cyan-300 text-xs hover:text-cyan-200 underline underline-offset-2"
+          >
+            {showAllRoutes ? "Show Less" : `Show All (${routeComparison.length})`}
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-gray-700/60 bg-gray-900/60 p-2 max-h-32 overflow-y-auto">
+          {(showAllRoutes ? routeComparison : routeComparison.slice(0, 5)).map((route, index) => (
+            <div
+              key={index}
+              className={`mb-2 flex items-center justify-between rounded-lg px-2 py-2 ${
+                route.isBest
+                  ? "bg-gradient-to-r from-green-700/70 to-green-600/60"
+                  : route.isValid
+                    ? "bg-gray-800/60"
+                    : "bg-red-900/50"
+              }`}
+            >
+              <div className="min-w-0 flex items-center gap-2">
+                <span className="text-base">{getRouterTypeIcon(route.routerType)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-white text-xs font-medium">{route.router}</div>
+                  <div className="text-[10px] text-gray-300">{getRouterTypeText(route.routerType)}</div>
+                </div>
+              </div>
+
+              <div className="ml-2 text-right">
+                <div className={`font-mono text-xs ${route.isValid ? "text-green-200" : "text-red-200"}`}>
+                  {route.isValid ? formatAmount(route.amountOut) : "No Liquidity"}
+                  {route.isBest && <span className="ml-1 text-yellow-300">👑</span>}
+                </div>
+                {index === 0 && route.isValid && !route.isBest && (
+                  <div className="text-[10px] text-green-200">Best Available</div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {!showAllRoutes && routeComparison.length > 5 && (
+            <div className="text-center text-gray-400 text-[11px] pt-1">
+              ... and {routeComparison.length - 5} more DEXs
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* Errors / updating */}
+    {priceError && (
+      <div className="mt-3 rounded-xl border border-red-400/20 bg-red-950/50 p-2">
+        <p className="text-red-300 text-xs">❌ {priceError}</p>
+        <p className="text-red-200 text-[11px] mt-1">Try different tokens or check back later</p>
+      </div>
+    )}
+
+    {isUpdating && !priceError && (
+      <div className="mt-3 flex items-center justify-center gap-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyan-400" />
+        <p className="text-cyan-300 text-xs">Updating prices in {secondsLeft}s...</p>
+      </div>
+    )}
+
+    {/* Actions */}
+    <div className="mt-3">
+      {Number(form.sellAmount) > 0 && address && Number(buyAmount) > 0 && (
+        <>
+          {!isETH && Number(form.sellAmount) <= theBalance && (
+            <TransactionButton
+              transaction={async () => {
+                const tx = prepareContractCall({
+                  contract: SELL,
+                  method: "function approve(address,uint256) returns (bool)",
+                  params: [AGGREGATOR_CONTRACT_ADDRESS, ethers.utils.parseUnits(form.sellAmount, decimals)],
+                })
+                return tx
+              }}
+              className={`!w-full !rounded-xl !py-2 !text-sm !font-bold !bg-cyan-300 !text-black mb-2 ${
+                Number(allowance) >= ethers.utils.parseUnits(form.sellAmount, decimals) ? "!hidden" : ""
+              }`}
+            >
+              Approve {getDisplayToken(form.sellToken)}
+            </TransactionButton>
+          )}
+
+          <TransactionButton
+            transaction={async () => {
+              const amountInWei = ethers.utils.parseUnits(form.sellAmount, decimals)
+              const deadline = Math.floor(Date.now() / 1000) + 600
+              const actualSellToken = isETH ? WETH_ADDRESS : form.sellToken
+
+              const [bestAmountOut] = await readContract({
+                contract: AGGREGATOR_CONTRACT,
+                method: "function getOptimalAmountOut(address,address,uint256) returns (uint256, address[])",
+                params: [actualSellToken, form.buyToken, amountInWei],
+              })
+
+              const minAmountOut = ethers.BigNumber.from(bestAmountOut).mul(99).div(100)
+
+              if (isETH) {
+                return prepareContractCall({
+                  contract: AGGREGATOR_CONTRACT,
+                  method: "function swapExactETHForTokens(address,uint256,address,uint256)",
+                  params: [form.buyToken, minAmountOut.toString(), address, deadline],
+                  value: amountInWei,
+                })
+              } else {
+                return prepareContractCall({
+                  contract: AGGREGATOR_CONTRACT,
+                  method: "function swapExactTokensForTokens(address,address,uint256,uint256,address,uint256)",
+                  params: [form.sellToken, form.buyToken, amountInWei, minAmountOut.toString(), address, deadline],
+                })
+              }
+            }}
+            className={`!w-full !rounded-xl !py-2 !text-sm !font-bold !text-white !bg-gradient-to-r !from-green-500 !to-green-600 ${
+              !isETH && Number(allowance) < ethers.utils.parseUnits(form.sellAmount, decimals) ? "!hidden" : ""
+            }`}
+          >
+            🚀 Swap via {bestRouter} (Best Price)
+          </TransactionButton>
+        </>
+      )}
+
+      {Number(form.sellAmount) > theBalance && (
+        <p className="mt-2 text-xs text-red-400 font-bold">❌ Balance Is Not Enough</p>
+      )}
+
+      {Number(form.sellAmount) > 0 && Number(buyAmount) === 0 && !priceError && (
+        <div className="mt-2 flex items-center justify-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400" />
+          <p className="text-yellow-300 text-xs font-bold">🔍 Scanning all DEXs for best price...</p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
     );
 };
 
