@@ -91,78 +91,103 @@ const SearchEngine = ({ searchEngineAddress, listingContractAddress }) => {
       )}
 
       {/* Results Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {results.map((product, index) => (
-          <div 
-            key={`${product.barcode}-${index}`}
-            className="!ease-in-out !duration-500 opacity-[80%] hover:opacity-[100%] border-[1px] border-gray-500 cursor-pointer rounded-lg linear-gradient shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-            onClick={()=> handleNavigate(product.barcode,product.storeUrl)}
-          >
-            {/* Product Images Carousel */}
-            <div className="relative h-48">
-              {product.productImages && product.productImages.length > 0 ? (
-                <IPFSMediaViewer
-                  ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${product.productImages[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                  className='h-[220px]'
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package2 className="h-12 w-12 text-white" />
-                </div>
+<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+  {results.map((product, index) => (
+    <button
+      key={`${product.barcode}-${index}`}
+      type="button"
+      onClick={() => handleNavigate(product.barcode, product.storeUrl)}
+      className="
+        group relative w-full text-left overflow-hidden rounded-3xl
+        border border-white/10 bg-white/5 backdrop-blur-xl
+        shadow-[0_12px_40px_rgba(0,0,0,0.35)]
+        transition-all duration-300 ease-out
+        hover:-translate-y-1 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_18px_60px_rgba(0,0,0,0.45)]
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60
+      "
+    >
+      {/* Media */}
+      <div className="relative h-52 overflow-hidden">
+        {/* soft gradient overlay */}
+        <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-90" />
+
+        {product.productImages && product.productImages.length > 0 ? (
+          <IPFSMediaViewer
+            ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${product.productImages[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-black/30">
+            <Package2 className="h-12 w-12 text-white/70" />
+          </div>
+        )}
+
+        {/* Discount badge */}
+        {Number(product.discountPercentage) > 0 && (
+          <div className="absolute left-3 top-3 z-[2] inline-flex items-center gap-2 rounded-full border border-white/10 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-200 backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-emerald-300" />
+            {Number(product.discountPercentage)}% OFF
+          </div>
+        )}
+
+        {/* Category chip */}
+        {product.category && (
+          <div className="absolute right-3 top-3 z-[2] inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur">
+            <Tag className="h-3.5 w-3.5 text-cyan-300" />
+            <span className="max-w-[160px] truncate">{product.category}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-base sm:text-lg font-semibold text-white leading-snug line-clamp-2">
+            {product.name}
+          </h3>
+
+          {/* Price box */}
+          <div className="shrink-0 rounded-2xl border border-white/10 bg-black/30 px-3 py-2 backdrop-blur">
+            <div className="flex items-baseline gap-2">
+              {Number(product.discountPercentage) > 0 && (
+                <span className="text-xs font-semibold text-rose-300 line-through">
+                  {Number(product.price / 1e6)}
+                </span>
               )}
-            </div>
-
-            {/* Product Info */}
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-white my-4">
-                {product.name}
-              </h3>
-              
-              <div className="flex items-center mb-2">
-                <Store className="h-4 w-4 text-gray-200 mr-1" />
-                <span className="text-sm text-white">
-                  {product.storeName}
-                </span>
-              </div>
-
-              <p className="text-sm text-white mb-3 line-clamp-2">
-                {cleanDescription(product.description)}
-              </p>
-
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center">
-                  <Tag className="h-4 w-4 text-blue-500 mr-1" />
-                  <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                    {product.category}
-                  </span>
-                </div>
-                <div className="flex items-center bg-green-600 rounded-[5px] p-2">
-                  <span className="mx-[10px] line-through font-semibold text-red-600">
-                    {Number(product.price/1e6)}
-                  </span>
-                  <span className="font-semibold text-white">
-                    {Number(product.price*(100-product.discountPercentage)/(100*1e6))} USDC
-                  </span>
-                </div>
-              </div>
-
-              {/* Additional Info */}
-              <div className="flex justify-between text-sm">
-                <span className="text-white">
-                  In Stock: {Number(product.quantity)}
-                </span>
-                {Number(product.discountPercentage) > 0 && (
-                  <div className='flex items-center bg-green-600 rounded-[5px] p-2'>
-                    <span className="text-white font-bold">
-                      {Number(product.discountPercentage)}% OFF
-                    </span>
-                  </div>
-                )}
-              </div>
+              <span className="text-sm font-bold text-white">
+                {Number((product.price * (100 - product.discountPercentage)) / (100 * 1e6))} USDC
+              </span>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Store */}
+        <div className="mt-3 flex items-center gap-2 text-sm text-white/80">
+          <Store className="h-4 w-4 text-white/70" />
+          <span className="truncate">{product.storeName}</span>
+        </div>
+
+        {/* Description */}
+        <p className="mt-3 text-sm text-white/70 leading-relaxed line-clamp-2">
+          {cleanDescription(product.description)}
+        </p>
+
+        {/* Footer */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
+            <span className="h-2 w-2 rounded-full bg-cyan-300/80" />
+            In Stock: {Number(product.quantity)}
+          </div>
+
+          <div className="text-xs font-semibold text-white/70 opacity-0 translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+            View →
+          </div>
+        </div>
       </div>
+    </button>
+  ))}
+</div>
+
 
       {/* No Results Message */}
       {!loading && results.length === 0 && hasSearched && (

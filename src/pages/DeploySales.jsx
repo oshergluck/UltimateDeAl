@@ -64,8 +64,14 @@ export default function DeploySales() {
       const params = {
         ESHToken: formData.ESHToken,
         ESHInvoicesMinter: formData.ESHInvoicesMinter,
-        contractOwner: formData.contractOwner
+        'Contract Owner': formData.contractOwner
       };
+
+      console.log("PARAM TYPES", {
+        ESHToken: [formData.ESHToken, typeof formData.ESHToken],
+        ESHInvoicesMinter: [formData.ESHInvoicesMinter, typeof formData.ESHInvoicesMinter],
+        contractOwner: [formData.contractOwner, typeof formData.contractOwner],
+      });
 
       const address = await deployPublishedContract({
         client: client,

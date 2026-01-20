@@ -31,7 +31,7 @@ const City = () => {
     const [story, setStory] = useState('');
     const [mayor, setMayor] = useState('');
     const [high,setHighesBalance] = useState(0);
-    const {contract: highContract} = useContract('0xA03e84dE600Ea42c2F43cf8A8b198BF5a3650240'); //Main platform token
+    const {contract: highContract} = useContract('0x18b67dd7409d3a3f4f3dde7a6a01c4db4b9ba5cd'); //Main platform token
     const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
     const { contract: invoicesContract } = useContract('0x7C14154C6fd0636742344D5Ee69297bDC2218ceb'); //invoices contract address of the main shop to check NFT approves ownership
     const [ownerShip,setOwnerShip] = useState(false);
@@ -49,7 +49,7 @@ const City = () => {
     const DEALShare = getContract({
         client: client,
         chain: { id: 8453, rpc: POLYRPC },
-        address: '0xA03e84dE600Ea42c2F43cf8A8b198BF5a3650240',
+        address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     });
 
     useEffect(() => {
@@ -302,7 +302,7 @@ const City = () => {
         if (!cityStartDate) return;
         const otherCitiesInfo = citiesAndMayors
         .filter(cm => cm.city.toLowerCase() !== cityName.toLowerCase())
-        .map(cm => `${cm.city} (Mayor: ${cm.mayor}, Balance: ${formatNumberWithCommas(Math.round(cm.balance*1e18))} $USP)`)
+        .map(cm => `${cm.city} (Mayor: ${cm.mayor}, Balance: ${formatNumberWithCommas(Math.round(cm.balance*1e18))} $*)`)
         .join(', ');
         try {
             setIsLoading(true);
@@ -408,7 +408,7 @@ const City = () => {
             </p>
             <p className="text-white text-lg leading-relaxed mb-8">
                 In the bustling city of {cityName}, where magic and technology intertwine, 
-                the $USP Spinner stands as a beacon of hope and excitement. This mystical device, 
+                the $USDC Spinner stands as a beacon of hope and excitement. This mystical device, 
                 powered by ancient runes and cutting-edge circuitry, offers citizens a chance to 
                 escape the daily grind and dream of a brighter future.
             </p>
@@ -418,11 +418,11 @@ const City = () => {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">Day Cost</h2>
-                            <p className="text-3xl font-semibold">{Math.round(registrationCost)} USP</p>
+                            <p className="text-3xl font-semibold">{Math.round(registrationCost)} USDC</p>
                         </div>
                         <div className="bg-gradient-to-r from-blue-400 to-indigo-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">{cityName} has</h2>
-                            <p className="text-3xl font-semibold">{Math.round(totalDeposited)} USP</p>
+                            <p className="text-3xl font-semibold">{Math.round(totalDeposited)} USDC</p>
                         </div>
                         <div className="bg-gradient-to-r from-green-400 to-teal-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
                             <h2 className="text-2xl font-bold mb-2">{cityName} Residents</h2>
@@ -455,7 +455,7 @@ const City = () => {
 
                                 let registrationCostForApproval;
                                 if(registrationCost==0) {
-                                    registrationCostForApproval = 91*1e18;
+                                    registrationCostForApproval = 91*1e6;
                                 }
                                 else {
                                     registrationCostForApproval = registrationCost*1e18;
@@ -519,7 +519,7 @@ const City = () => {
                                 <h2 className="text-xl font-bold text-white mb-4">Current Mayor:</h2>
                                 <h2 className="text-xl text-white mb-4"> {renderDescriptionWithBreaks(mayor)}</h2>
                                 <h2 className='text-[36px] text-yellow-400 mb-4'>Holding:</h2>
-                                <h2 className='text-[36px] text-yellow-400 mb-4'>{formatNumberWithCommas(Math.round(high))} $USP Stocks</h2>
+                                <h2 className='text-[36px] text-yellow-400 mb-4'>{formatNumberWithCommas(Math.round(high))} $* Stocks</h2>
                             {story && (
                         <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
                             <h2 className="text-2xl font-bold text-white mb-4">City Fake News</h2>

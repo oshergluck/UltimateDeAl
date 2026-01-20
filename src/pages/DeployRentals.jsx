@@ -4,7 +4,7 @@ import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { deployPublishedContract } from "thirdweb/deploys";
 import { base } from "thirdweb/chains";
 import { Wallet, Rocket, CheckCircle2, AlertCircle, Coins } from "lucide-react";
-
+import { getAddress } from "thirdweb/utils";
 const client = createThirdwebClient({
   clientId: import.meta.env.VITE_THIRDWEB_CLIENT,
 });
@@ -38,63 +38,42 @@ export default function DeployRentals() {
   };
 
   const handleDeploy = async () => {
-    if (!account) {
-      setError("Please connect your wallet first");
-      return;
-    }
-
-    if (!formData.ESHToken.trim()) {
-      setError("Please enter a ESH Token Address");
-      return;
-    }
-    if (!formData.ESHInvoicesMinter.trim()) {
-      setError("Please enter a ESH Invoice Address");
-      return;
-    }
-    if (!formData.contractOwner.trim()) {
-      setError("Please enter a contract owner address");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setDeployedAddress("");
-
     try {
+      if (!account) throw new Error("Please connect your wallet first");
+  
+      const ESHToken = getAddress(String(formData.ESHToken).trim());
+      const ESHInvoicesMinter = getAddress(String(formData.ESHInvoicesMinter).trim());
+      const contractOwner = getAddress(String(formData.contractOwner ?? account.address).trim());
+  
+      // IMPORTANT: keys must match your published contract initializer param names
       const params = {
-        ESHToken: formData.ESHToken,
-        ESHInvoicesMinter: formData.ESHInvoicesMinter,
-        contractOwner: formData.contractOwner
+        _ESHToken: ESHToken,
+        _ESHInvoicesMinter: ESHInvoicesMinter,
+        _contractOwner: contractOwner,
       };
-
+  
       const address = await deployPublishedContract({
-        client: client,
+        client : client,
         chain: base,
-        account: account,
+        account :account,
         publisher: "0xfb311Eb413a49389a2078284B57C8BEFeF6aFF67",
         contractId: "ESHStoreRentals",
-        contractParams: params
+        contractParams: params,
       });
+
+      console.log("PARAM TYPES", {
+        ESHToken: [formData.ESHToken, typeof formData.ESHToken],
+        ESHInvoicesMinter: [formData.ESHInvoicesMinter, typeof formData.ESHInvoicesMinter],
+        contractOwner: [formData.contractOwner, typeof formData.contractOwner],
+      });
+  
       setDeployedAddress(address);
     } catch (err) {
-      console.log(err);
-      
-      if (err.message && err.message.includes("Could not find deployed contract address")) {
-        const txHashMatch = err.message.match(/0x[a-fA-F0-9]{64}/);
-        if (txHashMatch) {
-          const txHash = txHashMatch[0];
-          setError(`Deployment transaction sent! Check BaseScan: https://basescan.org/tx/${txHash}`);
-          setDeployedAddress("Check transaction on BaseScan");
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError(err.message || "Deployment failed");
-      }
+      setError(err?.message || String(err));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
   return (
     <div className="min-h-screen  py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">

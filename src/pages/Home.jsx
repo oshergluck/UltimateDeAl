@@ -153,8 +153,8 @@ function processDescription(description, maxLength = 180)
                   </p>
                 </div>
               </button>
-{/*       
-                Cities
+      
+                {/* Cities */}
                 <div className="mt-10">
                 <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
                     Explore Cities
@@ -178,7 +178,7 @@ function processDescription(description, maxLength = 180)
                     ))}
                 </div>
                 </div>
-         */}
+        
                 {/* Promoted Stores */}
               <div className="mt-12">
                 <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
