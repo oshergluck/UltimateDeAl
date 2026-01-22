@@ -80,6 +80,7 @@ const enc = async (urlPath) => {
     const data = await checkIfEncrypted(urlPath);
     return data;
 }
+const [activeTab, setActiveTab] = useState('featured');
 
 function processDescription(description, maxLength = 180)
   
@@ -108,198 +109,312 @@ function processDescription(description, maxLength = 180)
 
       return (
         <>
+        {/* Hero Section */}
+        <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pt-6">
+          <div className="text-center mb-6">
+            <h1 className="hidden sm:block text-[44px] sm:text-[64px] lg:text-[80px] font-extrabold text-[#FFDD00] leading-[1.05]">
+              UltraShop Marketplace
+            </h1>
+            <h1 className="sm:hidden block text-[36px] font-extrabold text-[#FFDD00] leading-[1.05]">
+              Marketplace
+            </h1>
+            <p className="mt-3 text-white/70 text-sm sm:text-base">
+              Discover stores, explore cities, and shop on-chain.
+            </p>
+          </div>
+      
           {/* Search */}
-          <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pt-6">
-            <SearchEngine
-              searchEngineAddress={"0x3646F77A96A1eBb0e04eE494053e38599eE66FC4"}
-              listingContractAddress={import.meta.env.VITE_STORE_REGISTERY}
-            />
-          </div>
+          <SearchEngine
+            searchEngineAddress={"0x3646F77A96A1eBb0e04eE494053e38599eE66FC4"}
+            listingContractAddress={import.meta.env.VITE_STORE_REGISTERY}
+          />
+        </div>
       
-          {/* Featured */}
-          <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pt-6">
-            {isMobile ? <FeaturedMobile /> : <Featured />}
-          </div>
+        {/* Featured */}
+        <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pt-6">
+          {isMobile ? <FeaturedMobile /> : <Featured />}
+        </div>
       
-          <div className="min-h-screen">
-            {isLoading && <Loader />}
+        {/* Main CTA - Above the fold */}
+        <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 py-8">
+          <button
+            type="button"
+            onClick={() => navigate("/shop/ultrashop/products/LISTESH")}
+            className="w-full rounded-3xl border-2 border-[#FFDD00]/30 bg-gradient-to-br from-[#FFDD00]/10 via-transparent to-[#FFDD00]/5 backdrop-blur-xl shadow-2xl hover:border-[#FFDD00]/50 hover:shadow-[0_0_30px_rgba(255,221,0,0.3)] transition-all duration-300 p-8 sm:p-12 group"
+          >
+            <div className="text-center">
+              <h2 className="text-white font-extrabold text-3xl sm:text-5xl lg:text-6xl group-hover:text-[#FFDD00] transition-colors">
+                Launch Your Online StartUp
+              </h2>
+              <p className="mt-4 text-[#FFDD00] font-bold text-base sm:text-xl">
+                Buy/Sell Products And Earn From Almost Every Transaction
+              </p>
+              <div className="mt-6 inline-flex items-center gap-2 text-white/80 text-sm">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                Start earning today - No fees to get started
+              </div>
+            </div>
+          </button>
+        </div>
       
-            <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 py-8">
-              {/* Title */}
-              <div className="text-center mb-8">
-                <h1 className="hidden sm:block text-[44px] sm:text-[64px] lg:text-[80px] font-extrabold text-[#FFDD00] leading-[1.05]">
-                  UltraShop Marketplace
-                </h1>
-                <h1 className="sm:hidden block text-[36px] font-extrabold text-[#FFDD00] leading-[1.05]">
-                  Marketplace
-                </h1>
-                <p className="mt-3 text-white/70 text-sm sm:text-base">
-                  Discover stores, explore cities, and shop on-chain.
-                </p>
+        {/* Content Sections */}
+        <div className="min-h-screen">
+          {isLoading && <Loader />}
+      
+          <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 pb-16">
+            
+            {/* Social Proof / Stats */}
+            <div className="mb-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#FFDD00]">
+                  {Object.values(allStores).length}+
+                </div>
+                <div className="text-white/70 text-sm mt-2">Active Stores</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#FFDD00]">
+                  {getUniqueCities().length}+
+                </div>
+                <div className="text-white/70 text-sm mt-2">Cities Worldwide</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#FFDD00]">100%</div>
+                <div className="text-white/70 text-sm mt-2">On-Chain Verified</div>
+              </div>
+            </div>
+      
+            {/* Tabs Section */}
+            <section>
+              {/* Tab Navigation */}
+              <div className="flex flex-wrap gap-3 mb-8 justify-center">
+                <button
+                  onClick={() => setActiveTab('featured')}
+                  className={`px-6 py-3 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 ${
+                    activeTab === 'featured'
+                      ? 'bg-[#FFDD00] text-black shadow-lg shadow-[#FFDD00]/30'
+                      : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  Featured Stores
+                </button>
+                <button
+                  onClick={() => setActiveTab('cities')}
+                  className={`px-6 py-3 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 ${
+                    activeTab === 'cities'
+                      ? 'bg-[#FFDD00] text-black shadow-lg shadow-[#FFDD00]/30'
+                      : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  Explore Cities
+                </button>
+                <button
+                  onClick={() => setActiveTab('new')}
+                  className={`px-6 py-3 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 ${
+                    activeTab === 'new'
+                      ? 'bg-[#FFDD00] text-black shadow-lg shadow-[#FFDD00]/30'
+                      : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  New Arrivals
+                </button>
               </div>
       
-              {/* CTA */}
-              <button
-                type="button"
-                onClick={() => navigate("/shop/ultrashop/products/LISTESH")}
-                className="w-full rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl hover:bg-white/10 transition p-6 sm:p-10"
-              >
-                <div className="text-center">
-                  <h2 className="text-white font-extrabold text-3xl sm:text-5xl lg:text-6xl">
-                    Launch Your Online StartUp
-                  </h2>
-                  <p className="mt-4 text-[#FFDD00] font-bold text-base sm:text-xl">
-                    Buy/Sell Products And Earn From Almost Every Transaction
-                  </p>
-                </div>
-              </button>
-      
-                {/* Cities */}
-                <div className="mt-10">
-                <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
-                    Explore Cities
-                </h2>
-        
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                    {getUniqueCities().map((city, index) => (
-                    <button
-                        key={index}
-                        type="button"
-                        onClick={() => navigate(`/city/${city}`)}
-                        className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition p-4 text-center shadow-lg"
-                    >
-                        <h3 className="text-[#FFDD00] font-extrabold text-base sm:text-lg truncate">
-                        {city}
-                        </h3>
-                        <p className="text-white/70 text-sm mt-1">
-                        {Object.values(allStores).filter((store) => store.city === city).length} stores
-                        </p>
-                    </button>
-                    ))}
-                </div>
-                </div>
-        
-                {/* Promoted Stores */}
-              <div className="mt-12">
-                <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
-                  Promoted Stores
-                </h2>
-      
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {Object.values(promotedStores).map((store, index) => (
-                    <div
-                      key={index}
-                      onClick={() => navigate("/shop/" + store.urlPath)}
-                      className="cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 transition overflow-hidden"
-                    >
-                      <div className="p-5">
-                        <h3 className="text-[#FFDD00] font-extrabold text-xl text-center truncate">
-                          {store.name}
-                        </h3>
-      
-                        {/* Image */}
-                        <div className="mt-4 rounded-2xl overflow-hidden border border-white/10 bg-black/20">
-                          <img
-                            src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${store.picture}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                            className="w-full h-[220px] object-cover"
-                            alt={store.name}
-                            loading="lazy"
-                          />
-                        </div>
-      
-                        {/* Verified */}
-                        <div className="mt-4 flex justify-center">
-                          {encryptionStatus[store.urlPath] ? (
-                            <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-200 border border-blue-400/20">
-                              <img src={done_desktop} className="w-4 h-4" alt="verified" />
-                              Verified
-                            </div>
-                          ) : null}
-                        </div>
-      
-                        {/* Contact */}
-                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/80">
-                          <div className="font-bold text-white mb-1">Contact Info</div>
-                          {address ? (
-                            <div className="break-words">
-                              {formatTextWithLineBreaks(processDescription(store.contactInfo))}
-                            </div>
-                          ) : (
-                            <div>Available only to connected users.</div>
-                          )}
-      
-                          <div className="mt-3 text-white/60">
-                            Creation Date:{" "}
-                            <span className="text-white/80">
-                              {store?.creationDate ? hexToTimestamp(store.creationDate._hex) : "N/A"}
-                            </span>
-                          </div>
-                        </div>
-      
-                        {/* Description */}
-                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                          <p className="text-white/80 text-sm leading-relaxed line-clamp-6 text-center">
-                            {formatTextWithLineBreaks(processDescription(store.description))}
-                          </p>
-                        </div>
-      
-                        <div className="mt-5 flex justify-center">
-                          <CustomButton
-                            btnType="button"
-                            title="View Store"
-                            styles="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-xl text-sm"
-                            handleClick={(e) => {
-                              e?.stopPropagation?.();
-                              navigate("/shop/" + store.urlPath);
-                            }}
-                          />
-                        </div>
-                      </div>
+              {/* Tab Content */}
+              <div className="min-h-[400px]">
+                {/* Featured Stores Tab */}
+                {activeTab === 'featured' && (
+                  <div className="animate-fadeIn">
+                    <div className="text-center mb-8">
+                      <h2 className="text-3xl sm:text-4xl font-extrabold text-[#FFDD00] mb-3">
+                        Featured Stores
+                      </h2>
+                      <p className="text-white/60 text-sm sm:text-base">
+                        Verified sellers you can trust
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </div>
       
-              {/* New Stores */}
-              <div className="mt-12">
-                <h2 className="text-2xl font-extrabold text-[#FFDD00] mb-4 text-center">
-                  New Stores
-                </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                      {Object.values(promotedStores).map((store, index) => (
+                        <div
+                          key={index}
+                          onClick={() => navigate("/shop/" + store.urlPath)}
+                          className="cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 hover:border-[#FFDD00]/30 hover:shadow-[0_0_20px_rgba(255,221,0,0.2)] transition-all duration-300 overflow-hidden group"
+                        >
+                          <div className="p-5">
+                            {/* Store Image */}
+                            <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/20 mb-4">
+                              <img
+                                src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${store.picture}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                                className="w-full h-[200px] object-cover group-hover:scale-105 transition-transform duration-300"
+                                alt={store.name}
+                                loading="lazy"
+                              />
+                            </div>
       
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {Object.values(allNewStores)
-                    .reverse()
-                    .map((store, index) => (
-                      <div
-                        key={index}
-                        onClick={() => navigate("/shop/" + store.urlPath)}
-                        className="cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 transition"
-                      >
-                        <div className="p-5">
-                          <div className="flex justify-center mb-3">
-                            {encryptionStatus[store.urlPath] ? (
-                              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-200 border border-blue-400/20">
-                                <img src={done_desktop} className="w-4 h-4" alt="verified" />
-                                Verified
+                            {/* Store Name */}
+                            <h3 className="text-[#FFDD00] font-extrabold text-xl text-center truncate mb-3 group-hover:text-[#FFE933]">
+                              {store.name}
+                            </h3>
+      
+                            {/* Verified Badge */}
+                            {encryptionStatus[store.urlPath] && (
+                              <div className="flex justify-center mb-4">
+                                <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1.5 text-xs text-blue-200 border border-blue-400/30">
+                                  <img src={done_desktop} className="w-4 h-4" alt="verified" />
+                                  Verified Store
+                                </div>
                               </div>
-                            ) : null}
+                            )}
+      
+                            {/* Description */}
+                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 mb-4">
+                              <p className="text-white/80 text-sm leading-relaxed line-clamp-4 text-center">
+                                {formatTextWithLineBreaks(processDescription(store.description))}
+                              </p>
+                            </div>
+      
+                            {/* Contact Info */}
+                            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-xs text-white/70 mb-4">
+                              {address ? (
+                                <div className="break-words">
+                                  {formatTextWithLineBreaks(processDescription(store.contactInfo))}
+                                </div>
+                              ) : (
+                                <div className="text-center italic">Connect wallet to view contact</div>
+                              )}
+                            </div>
+      
+                            {/* Creation Date */}
+                            <div className="text-center text-xs text-white/50 mb-4">
+                              Joined {store?.creationDate ? hexToTimestamp(store.creationDate._hex) : "N/A"}
+                            </div>
+      
+                            {/* CTA Button */}
+                            <CustomButton
+                              btnType="button"
+                              title="Visit Store"
+                              styles="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-5 rounded-xl text-sm shadow-lg hover:shadow-xl transition-all"
+                              handleClick={(e) => {
+                                e?.stopPropagation?.();
+                                navigate("/shop/" + store.urlPath);
+                              }}
+                            />
                           </div>
-      
-                          <h3 className="text-[#FFDD00] font-extrabold text-base text-center truncate">
-                            {store.name}
-                          </h3>
-      
-                          <p className="mt-3 text-white/80 text-sm text-center line-clamp-6">
-                            {formatTextWithLineBreaks(processDescription(store.description))}
-                          </p>
                         </div>
-                      </div>
-                    ))}
-                </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+      
+                {/* Cities Tab */}
+                {activeTab === 'cities' && (
+                  <div className="animate-fadeIn">
+                    <div className="text-center mb-8">
+                      <h2 className="text-3xl sm:text-4xl font-extrabold text-[#FFDD00] mb-3">
+                        Explore Cities
+                      </h2>
+                      <p className="text-white/60 text-sm sm:text-base">
+                        Shop locally on the blockchain
+                      </p>
+                    </div>
+      
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                      {getUniqueCities().map((city, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => navigate(`/city/${city}`)}
+                          className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-[#FFDD00]/10 hover:border-[#FFDD00]/30 transition-all duration-300 p-5 text-center shadow-lg"
+                        >
+                          <h3 className="text-[#FFDD00] font-extrabold text-base sm:text-lg truncate group-hover:scale-105 transition-transform">
+                            {city}
+                          </h3>
+                          <p className="text-white/70 text-sm mt-2">
+                            {Object.values(allStores).filter((store) => store.city === city).length} stores
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+      
+                {/* New Stores Tab */}
+                {activeTab === 'new' && (
+                  <div className="animate-fadeIn">
+                    <div className="text-center mb-8">
+                      <h2 className="text-3xl sm:text-4xl font-extrabold text-[#FFDD00] mb-3">
+                        New Arrivals
+                      </h2>
+                      <p className="text-white/60 text-sm sm:text-base">
+                        Fresh stores joining the marketplace
+                      </p>
+                    </div>
+      
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {Object.values(allNewStores)
+                        .reverse()
+                        .map((store, index) => (
+                          <div
+                            key={index}
+                            onClick={() => navigate("/shop/" + store.urlPath)}
+                            className="cursor-pointer rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl hover:bg-white/10 hover:border-[#FFDD00]/30 transition-all duration-300 group"
+                          >
+                            <div className="p-5">
+                              {/* Badge */}
+                              <div className="flex justify-center gap-2 mb-3">
+                                <div className="inline-flex items-center gap-1 rounded-full bg-[#FFDD00]/20 px-3 py-1 text-xs text-[#FFDD00] border border-[#FFDD00]/30 font-bold">
+                                  ⭐ NEW
+                                </div>
+                                {encryptionStatus[store.urlPath] && (
+                                  <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-200 border border-blue-400/30">
+                                    <img src={done_desktop} className="w-4 h-4" alt="verified" />
+                                    Verified
+                                  </div>
+                                )}
+                              </div>
+      
+                              <h3 className="text-[#FFDD00] font-extrabold text-lg text-center truncate mb-3 group-hover:text-[#FFE933]">
+                                {store.name}
+                              </h3>
+      
+                              <p className="text-white/80 text-sm text-center line-clamp-5 leading-relaxed">
+                                {formatTextWithLineBreaks(processDescription(store.description))}
+                              </p>
+      
+                              <div className="mt-4 text-center">
+                                <span className="text-xs text-white/50">
+                                  Click to explore →
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+      
+            {/* Secondary CTA */}
+            <div className="mt-16 text-center">
+              <div className="inline-block rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 sm:p-10">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
+                  Ready to Start Selling?
+                </h3>
+                <p className="text-white/70 mb-6 text-sm sm:text-base">
+                  Join thousands of entrepreneurs on UltraShop
+                </p>
+                <CustomButton
+                  btnType="button"
+                  title="Create Your Store Now"
+                  styles="bg-[#FFDD00] hover:bg-[#FFE933] text-black font-bold py-3 px-8 rounded-xl text-base shadow-lg hover:shadow-xl transition-all"
+                  handleClick={() => navigate("/shop/ultrashop/products/LISTESH")}
+                />
               </div>
             </div>
           </div>
-        </>
+        </div>
+      </>
       );
       
 

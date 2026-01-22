@@ -104,6 +104,7 @@ const StorePage = () => {
             
             if (storeRegistery && theStoreContract) {
                 canUserLeaveReview();
+                fetchShareDetails();
             }
         }
     }, [address]); 
@@ -470,10 +471,10 @@ const StorePage = () => {
 
         const fetchRewardSymbol = async () => {
             setIsLoading(true);
-            const data = await rewardContract.call('symbol');
+            const data = await ShareContract.call('symbol');
             setTheSymbolOfReward(data);
-            setTheSymbol(data);
             setIsLoading(false);
+            setTheSymbol(data);
         }
 
         if (Stores && storeRegistery) {
@@ -489,7 +490,7 @@ const StorePage = () => {
                 productsBarcodes(selectedCategory);
                 fetchRewardAddress();
                 fetchCategories();
-                if (rewardContract) {
+                if (ShareContract) {
                     fetchRewardSymbol();
                 }
             }
@@ -966,7 +967,7 @@ const StorePage = () => {
           {/* Reward Token Info */}
           <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6 text-center">
             <p className="text-white font-extrabold text-sm sm:text-xl">
-              {theSymbolOfReward} address is{" "}
+              {theSymbol} address is{" "}
               <span className="text-blue-300 break-all">{theERCUltra}</span>
             </p>
       
