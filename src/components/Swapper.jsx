@@ -424,7 +424,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
     }, [form.sellAmount, form.sellToken, form.buyToken, address, BUYTOKENCONTRACT, SELLTOKENCONTRACT, decimals, buyDecimals, isETH]);
 
     return (
-        <div className="mx-auto w-[400px] max-w-full h-[300px] overflow-hidden rounded-2xl border border-gray-700/60 bg-gray-900/60 p-3 shadow-lg">
+        <div className="mx-auto w-[400px] max-w-full h-[600px] overflow-hidden rounded-2xl border border-gray-700/60 bg-gray-900/60 p-3 shadow-lg">
   {/* Scrollable content area so everything stays inside 400x300 */}
   <div className="h-full overflow-y-auto pr-1">
     {isLoading && <Loader />}
@@ -519,7 +519,7 @@ const Swapper = ({ERCUltraAddress, SYMBOL }) => {
       <FormField
         labelName="Buy"
         value={getDisplayToken(form.buyToken)}
-        style="w-full cursor-not-allowed opacity-90 !bg-cyan-500/90"
+        style="w-full cursor-not-allowed opacity-90"
         readOnly
       />
       <FormField

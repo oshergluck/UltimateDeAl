@@ -8,13 +8,112 @@ import { fontSizes } from '../components/AccessibilityMenu';
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import { createThirdwebClient, prepareContractCall, getContract } from "thirdweb";
-import { useSendTransaction, TransactionButton } from 'thirdweb/react';
+import { useSendTransaction, TransactionButton, useActiveAccount } from 'thirdweb/react';
 import { format, addDays } from 'date-fns';
 import { PinataSDK } from "pinata";
 import { useNavigate } from 'react-router-dom';
 
+
 const ClientAdminPage = () => {
+    function normAddr(a) {
+        return String(a || '').trim().toLowerCase();
+      }
+    const account = useActiveAccount();
+
+const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_TOKEN") || "");
+
+  
+
     const navigate = useNavigate();
+    const adminLogin = async (userContract) => {
+        try {
+        SettingAContract(userContract)
+          if (!account?.address) return alert("Connect wallet first");
+          if (!userContract) return alert("Enter valid store contract (0x...)");
+      
+          // 1) challenge
+          const chRes = await fetch(`${API_URL}/admin/challenge`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              walletAddress: account.address,
+              storeAddress: userContract,
+              chainId: 8453,
+            }),
+          });
+      
+          const ch = await chRes.json().catch(() => ({}));
+          if (!chRes.ok || !ch?.success) throw new Error(ch?.error || "Challenge failed");
+      
+          // 2) sign message
+          const ts = Date.now();
+          const msg = [
+            "UltraShop Admin Login",
+            `Domain: ${window.location.origin}`,
+            `Wallet: ${String(normAddr(account.address))}`,
+            `Store: ${String(normAddr(userContract))}`,
+            `Timestamp: ${ts}`,
+            `Nonce: ${ch.nonce}`,
+            "ChainId: 8453",
+          ].join("\n");
+      
+          const signature = await account.signMessage({ message: msg,chainId:8453 });
+      
+          // 3) login verify -> token
+          const lgRes = await fetch(`${API_URL}/admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              walletAddress: account.address,
+              storeAddress: userContract,
+              signature,
+              timestamp: ts,
+              nonce: ch.nonce,
+              chainId: 8453,
+            }),
+          });
+      
+          const lg = await lgRes.json().catch(() => ({}));
+          if (!lgRes.ok || !lg?.success || !lg?.token) throw new Error(lg?.error || "Login failed");
+      
+          localStorage.setItem("ADMIN_TOKEN", lg.token);
+          setAdminToken(lg.token);
+      
+          // עכשיו תתחבר ללוגיקה שלך של החוזה + receipts וכו'
+          await SettingAContract(userContract);
+        } catch (e) {
+          console.error(e);
+          alert(e?.message || "Admin login error");
+        }
+      };
+
+      const adminLogout = () => {
+        localStorage.removeItem("ADMIN_TOKEN");
+        setAdminToken("");
+        setConnectedto(false);
+      };
+      
+      const authFetch = async (path, body = {}) => {
+        const token = adminToken || localStorage.getItem("ADMIN_TOKEN");
+        if (!token) throw new Error("Not logged in (missing admin token)");
+      
+        const res = await fetch(`${API_URL}${path}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        });
+      
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data?.success === false) {
+          const msg = data?.error || data?.message || `HTTP ${res.status}`;
+          throw new Error(msg);
+        }
+        return data;
+      };
+      
     // Product Images Upload State
     const [isUploadingImages, setIsUploadingImages] = useState([false]);
     const [imageUploadProgress, setImageUploadProgress] = useState([0]);
@@ -75,7 +174,7 @@ const ClientAdminPage = () => {
     const [inv, setInvoices] = useState();
     const [invoicesaddress, setinvoiceaddress] = useState('');
     const { contract: contract } = useContract(userContract);
-
+    
     const API_URL = import.meta.env.VITE_MONGO_SERVER_API + "/api";;
 
     const [adminContract, setAdminContract] = useState(null);
@@ -94,6 +193,12 @@ const ClientAdminPage = () => {
         });
         setInvoices(theData);
     }
+
+    useEffect(() => {
+        if (adminToken && userContract && ethers.utils.isAddress(userContract)) {
+          setConnectedto(true);
+        }
+      }, [adminToken, userContract]);
 
     useEffect(() => {
         if (userContract && ethers.utils.isAddress(userContract)) {
@@ -512,143 +617,242 @@ const ClientAdminPage = () => {
             setIsLoading(true);
             clearResponseData();
             setcontractPassword('');
-            const data = await contract.call('receipts', [indexOfReceipt]);
-            const moreData = await contract.call('infos', [indexOfReceipt]);
-
-            // Fetch Client from Server
-            const response = await fetch(`${API_URL}/store/get-client-details`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeAddress: userContract,
-                    password: userPass,
-                    clientAddress: data[2]
-                })
-            });
-            const dbData = await response.json();
-            const client = dbData.success ? dbData.data : { name: "Unknown", email: "Unknown", phone: "Unknown", physicalAddress: "Unknown" };
-
-            const formattedData = await {
-                rId: data[0],
-                time: data[1],
-                wallet: data[2],
+    
+            console.log("🔍 Fetching invoice ID:", indexOfReceipt);
+    
+            // 1. שליפת מידע מהחוזה (Blockchain - האמת המוחלטת לקיום העסקה)
+            const receiptData = await contract.call('receipts', [indexOfReceipt]);
+            const extraData = await contract.call('infos', [indexOfReceipt]);
+            const ownerAddress = await contract.call('contractOwner');
+    
+            // 2. בדיקת בעלות
+            const currentAddressLower = normAddr(address); 
+            const ownerAddressLower = normAddr(ownerAddress);
+            const isOwner = currentAddressLower === ownerAddressLower;
+            setContractOwner(ownerAddress);
+    
+            // שליפת כתובת הלקוח מהחוזה
+            const clientWallet = receiptData[2]; 
+            console.log("💳 Client Wallet from Contract:", clientWallet);
+    
+            // 3. הגדרת משתנה לקוח כברירת מחדל
+            let client = { 
+                name: "Unknown (Not in DB)", 
+                email: "Unknown", 
+                phone: "Unknown", 
+                physicalAddress: "Unknown" 
+            };
+    
+            // 4. ניסיון לשליפת ההזמנה מהשרת (שימוש ב-Order Snapshot)
+            try {
+                const token = localStorage.getItem("ADMIN_TOKEN");
+                if (token) {
+                    // שינוי: קריאה ל-get-order במקום get-client-details
+                    const response = await fetch(`${API_URL}/store/get-order`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ receiptId: indexOfReceipt }) 
+                    });
+    
+                    const dbData = await response.json();
+                    console.log("📡 Server Order Response:", dbData);
+    
+                    if (dbData.success && dbData.order) {
+                        // בדיקה אם יש Snapshot (הזמנות חדשות)
+                        if (dbData.order.clientSnapshot) {
+                            client = {
+                                name: dbData.order.clientSnapshot.name || "Unknown",
+                                email: dbData.order.clientSnapshot.email || "Unknown",
+                                phone: dbData.order.clientSnapshot.phone || "Unknown",
+                                physicalAddress: dbData.order.clientSnapshot.physicalAddress || "Unknown"
+                            };
+                            console.log("✅ Client details loaded from Order Snapshot (Safe from deletion)");
+                        } 
+                        // תמיכה לאחור בהזמנות ישנות שאולי אין להן סנאפשוט
+                        else if (dbData.order.clientAddress) {
+                             console.warn("⚠️ Old order without snapshot, client details might be missing if deleted.");
+                        }
+                    } else {
+                        console.warn("⚠️ Order not found in DB (might be an old manual transaction):", dbData.error);
+                    }
+                } else {
+                    console.warn("⚠️ No ADMIN_TOKEN found in localStorage");
+                }
+            } catch (err) {
+                console.error("❌ Failed to fetch order details:", err);
+            }
+    
+            // 5. המרת סכומים
+            const amountPaidFormatted = ethers.utils 
+                ? ethers.utils.formatUnits(receiptData[4], 6) 
+                : ethers.formatUnits(receiptData[4], 6);
+    
+            // 6. בניית האובייקט לתצוגה
+            const formattedData = {
+                rId: receiptData[0],
+                time: receiptData[1],
+                wallet: clientWallet,
                 name: client.name,
                 email: client.email,
-                poductbarcode: data[3],
-                amountpayed: ethers.BigNumber.from(data[4].toString()) / 1e6.toString(),
-                pysicaladdress: client.physicalAddress,
+                productBarcode: receiptData[3],
+                amountPaid: amountPaidFormatted,
+                physicalAddress: client.physicalAddress,
                 phone: client.phone,
             };
-            const data2 = await contract.call('contractOwner');
-            await setContractOwner(data2);
+    
+            // 7. בניית המחרוזת לתצוגה
             if (formattedData) {
-                await setResponseData(`Receipt ID: ~${formattedData.rId}~\nTime: ~${formatDate(formattedData.time * 1000)}~\nWallet: ~${data[2]}~\nName: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.name) : ('')}~\nEmail: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.email) : ('You are not the contractOwner!')}~\nProduct Barcode: ~${formattedData.poductbarcode}~\nAmount Payed: ~${formattedData.amountpayed} USDC~\nAddress: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.pysicaladdress) : ('')}~\nPhone: ~${address.toLowerCase() == data2.toLowerCase() ? (await formattedData.phone) : ('')}~\n ${address.toLowerCase() == data2.toLowerCase() ? (moreData) : ('')}`);
-                setIsLoading(false);
+                const sensitiveData = isOwner 
+                    ? `\nName: ~${formattedData.name}~\nEmail: ~${formattedData.email}~\nAddress: ~${formattedData.physicalAddress}~\nPhone: ~${formattedData.phone}~\n${extraData}`
+                    : `\nName: [Hidden]\nEmail: You are not the contractOwner!\nAddress: [Hidden]\nPhone: [Hidden]`;
+    
+                setResponseData(
+                    `Receipt ID: ~${formattedData.rId}~` +
+                    `\nTime: ~${formatDate(formattedData.time * 1000)}~` +
+                    `\nWallet: ~${formattedData.wallet}~` +
+                    `\nProduct Barcode: ~${formattedData.productBarcode}~` +
+                    `\nAmount Paid: ~${formattedData.amountPaid} USDC~` +
+                    sensitiveData
+                );
             }
-
-            return await formattedData;
-        }
-        catch (error) {
-            alert(error);
+    
+            setIsLoading(false);
+            return formattedData;
+    
+        } catch (error) {
+            console.error("❌ Critical Error in getReceipt:", error);
+            alert(error.message || "An error occurred fetching the receipt");
             setIsLoading(false);
         }
     };
 
     const getAllDecryptedEmails = async () => {
-        // בדיקת התחברות
-        if (!userContract || !userPass) {
-            alert("Please login first.");
-            return;
-        }
-
         try {
-            setIsLoading(true);
-            setResponseData('');
-
-            // פנייה לשרת לשליפת כל הלקוחות
-            const response = await fetch(`${API_URL}/store/get-all-clients`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeAddress: userContract,
-                    password: userPass
-                })
-            });
-
-            const result = await response.json();
-
-            if (!result.success) {
-                setResponseData(`Error: ${result.error}`);
-            } else {
-                const clients = result.clients;
-
-                if (clients.length === 0) {
-                    setResponseData("No clients registered for this store yet.");
-                } else {
-                    // פירמוט יפה של הרשימה להצגה (שימוש ב-~ להדגשה צהובה לפי הלוגיקה שלך)
-                    const formattedList = clients.map((c, i) =>
-                        `${i + 1}. Name: ~${c.name}~ \n   Email: ~${c.email}~ \n   Phone: ${c.phone} \n   Wallet: ${c.walletAddress}`
-                    ).join('\n\n-------------------\n\n');
-
-                    setResponseData(`Found ${clients.length} Clients:\n\n${formattedList}`);
-                }
-            }
-
-        } catch (error) {
-            console.error("Process failed:", error);
-            alert("Failed to fetch client list");
+          setIsLoading(true);
+          setResponseData("");
+      
+          const result = await authFetch("/store/get-all-clients", {});
+          const clients = result.clients || [];
+      
+          if (!clients.length) {
+            setResponseData("No clients registered for this store yet.");
+            return;
+          }
+      
+          const formattedList = clients.map((c, i) =>
+            `${i + 1}. Name: ~${c.name}~\n   Email: ~${c.email}~\n   Phone: ${c.phone}\n   Wallet: ${c.walletAddress}`
+          ).join("\n\n-------------------\n\n");
+      
+          setResponseData(`Found ${clients.length} Clients:\n\n${formattedList}`);
+        } catch (e) {
+          console.error(e);
+          alert(e?.message || "Failed to fetch client list");
         } finally {
-            setIsLoading(false);
+          setIsLoading(false);
         }
-    };
-
-    const getReceiptsByAddress = async () => {
+      };
+      
+      const getReceiptsByAddress = async () => {
         try {
             setIsLoading(true);
             clearResponseData();
             setCustomerAddress(customerAddress);
-            const moreData = await contract.call('infos', [indexOfReceipt]);
-            // Fetch Client Orders from Server (DB) securely
+    
+            const token = localStorage.getItem("ADMIN_TOKEN");
+            if (!token) throw new Error("Admin not logged in (missing token)");
+    
+            // 1) שליפת הזמנות מהשרת (כולל Snapshot אם קיים)
             const ordersResponse = await fetch(`${API_URL}/store/get-client-orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
-                    storeAddress: userContract,
-                    password: userPass,
-                    clientAddress: customerAddress
-                })
+                    clientAddress: customerAddress,
+                }),
             });
-
-            const ordersData = await ordersResponse.json();
-
-            if (!ordersData.success) {
-                throw new Error(ordersData.error || "Failed to fetch orders");
+    
+            const ordersData = await ordersResponse.json().catch(() => ({}));
+            if (!ordersResponse.ok || !ordersData?.success) {
+                throw new Error(ordersData?.error || ordersData?.message || "Failed to fetch orders");
             }
-
-            const dbOrders = ordersData.orders;
-
-            // Fetch Client Details from Server
-            const response = await fetch(`${API_URL}/store/get-client-details`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+    
+            const dbOrders = ordersData.orders || [];
+    
+            // 2) שליפת פרטי לקוח חיים (גיבוי להזמנות ישנות)
+            const clientResponse = await fetch(`${API_URL}/store/get-client-details`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
-                    storeAddress: userContract,
-                    password: userPass,
-                    clientAddress: customerAddress
-                })
+                    clientAddress: customerAddress,
+                }),
             });
-            const dbData = await response.json();
-            const client = dbData.success ? dbData.data : { name: "Unknown", email: "Unknown", phone: "Unknown", physicalAddress: "Unknown" };
-
-            let formattedReceipts = '';
-            const data2 = await contract.call('contractOwner');
-
+    
+            const dbClientData = await clientResponse.json().catch(() => ({}));
+            const liveClient = dbClientData?.success ? dbClientData.data : null;
+    
+            let formattedReceipts = "";
+            
+            // שליפת ה-Owner פעם אחת מחוץ ללולאה
+            const contractOwnerAddress = await contract.call("contractOwner");
+            const isOwner = address && contractOwnerAddress && address.toLowerCase() === contractOwnerAddress.toLowerCase();
+    
             for (let i = 0; i < dbOrders.length; i++) {
                 const order = dbOrders[i];
-                formattedReceipts += `\n\n\nReceipt ID: ${order.receiptId}\nTime: ${formatDate(order.timestamp * 1000)}\nWallet: ${order.clientAddress}\nName: ${address.toLowerCase() == data2.toLowerCase() ? (client.name) : ("Your'e not the Contract Owner")}\nEmail: ${address.toLowerCase() == data2.toLowerCase() ? (client.email) : ("Your'e not the Contract Owner")}\nProduct Barcode: ${order.productBarcode}\nAmount Payed: ~${order.price} USDC~\nAddress: ${address.toLowerCase() == data2.toLowerCase() ? (client.physicalAddress) : ("Your'e not the Contract Owner")}\nMore info ${moreData}\nPhone: ${address.toLowerCase() == data2.toLowerCase() ? (client.phone) : ("Your'e not the Contract Owner")}\nStatus: ${order.isRefunded ? "~REFUNDED~" : "Completed"}\n\n\n\n\n`;
+    
+                // --- בחירת מקור המידע (Snapshot או Live) ---
+                let displayClient = { 
+                    name: "Unknown", 
+                    email: "Unknown", 
+                    phone: "Unknown", 
+                    physicalAddress: "Unknown" 
+                };
+    
+                if (order.clientSnapshot && order.clientSnapshot.name) {
+                    displayClient = order.clientSnapshot;
+                } else if (liveClient) {
+                    displayClient = liveClient;
+                }
+    
+                // --- שליפת מידע נוסף (Infos) ספציפית להזמנה הזו ---
+                let specificMoreData = "";
+                try {
+                    // הגנה: בודקים שה-ID הוא מספר הגיוני (קטן מ-100 מיליון) כדי לא לשלוח כתובות לחוזה
+                    if (order.receiptId < 100000000) {
+                        specificMoreData = await contract.call("infos", [order.receiptId]);
+                    } else {
+                        specificMoreData = "Invalid Receipt ID (Data Error)";
+                    }
+                } catch (err) {
+                    console.log(`Failed to fetch infos for receipt ${order.receiptId}`, err);
+                }
+    
+                // --- בניית התצוגה ---
+                formattedReceipts += `\n\n\nReceipt ID: ${order.receiptId}
+          Time: ${formatDate(order.timestamp * 1000)}
+          Wallet: ${order.clientAddress}
+          Name: ${isOwner ? displayClient.name : "Hidden (Not Owner)"}
+          Email: ${isOwner ? displayClient.email : "Hidden (Not Owner)"}
+          Product Barcode: ${order.productBarcode}
+          Amount Payed: ~${order.price} USDC~
+          Address: ${isOwner ? displayClient.physicalAddress : "Hidden (Not Owner)"}
+          More info: ${specificMoreData}
+          Phone: ${isOwner ? displayClient.phone : "Hidden (Not Owner)"}
+          Status: ${order.isRefunded ? "~REFUNDED~" : "Completed"}\n\n\n\n\n`;
             }
-
-            await setResponseData(formattedReceipts);
+    
+            if (formattedReceipts === "") {
+                formattedReceipts = "No orders found for this address.";
+            }
+    
+            setResponseData(formattedReceipts);
             setIsLoading(false);
         } catch (error) {
             alert(error.message);
@@ -656,81 +860,32 @@ const ClientAdminPage = () => {
         }
     };
 
-    const LoadProduct = async (barcode) => {
-        setIsLoading(true);
+    const getClientDetails = async (clientAddress) => {
         try {
-            const data = await contract.call('products', [barcode]);
-            const images = await contract.call('getProductPics', [barcode]);
-            const formattedData = await {
-                name: data[0],
-                barcode: data[1],
-                price: data[2],
-                quantity: data[3],
-                description: data[4],
-                discount: data[5],
-                category: data[6],
-                images: images
-            };
-            setProductCategory(formattedData.category);
-            setProductDiscount(formattedData.discount);
-            setProductDescription(formattedData.description);
-            setProductName(formattedData.name);
-            setProductPrice(formattedData.price * 1e-6);
-            setProdutQuantity(formattedData.quantity);
-            alert('Must put again the CIDs, The last ones are in F12 at the console');
-            console.log('CIDs: ' + formattedData.images);
-            setImages(formattedData.images);
-            setIsLoading(false);
-        }
-        catch (error) {
-            console.log(error);
-            setIsLoading(false);
-        }
-    }
-
-    const getClientDetails = async (customerAddress) => {
-        if (!userContract || !userPass) {
-            alert("Please login first.");
-            return;
-        }
-        try {
-            setIsLoading(true);
-            setResponseData('');
-
-            const response = await fetch(`${API_URL}/store/get-client-details`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeAddress: userContract,
-                    password: userPass,
-                    clientAddress: customerAddress
-                })
-            });
-
-            const result = await response.json();
-
-            if (!result.success) {
-                alert(result.error);
-                setResponseData(`Error: ${result.error}`);
-            } else {
-                const c = result.data;
-                const data1 = await contract.call('contractOwner');
-                setResponseData(`
-Name: ${data1.toLowerCase() == address.toLowerCase() ? (`~` + c.name + `~`) : ('')}
-Email: ${data1.toLowerCase() == address.toLowerCase() ? (`~` + c.email + `~`) : ('')}
-Phone: ${data1.toLowerCase() == address.toLowerCase() ? (`~` + c.phone + `~`) : ('')}
-Address: ${data1.toLowerCase() == address.toLowerCase() ? (`~` + c.physicalAddress + `~`) : ('')}
-Wallet: ~${c.wallet}~
-                `);
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Connection Error");
+          setIsLoading(true);
+          setResponseData("");
+      
+          const result = await authFetch("/store/get-client-details", {
+            clientAddress: clientAddress,
+          });
+      
+          const c = result.data;
+      
+          setResponseData(`
+      Name: ~${c.name}~
+      Email: ~${c.email}~
+      Phone: ~${c.phone}~
+      Address: ~${c.physicalAddress}~
+      Wallet: ~${c.wallet}~
+          `);
+        } catch (e) {
+          console.error(e);
+          alert(e?.message || "Connection Error");
         } finally {
-            setIsLoading(false);
+          setIsLoading(false);
         }
-    };
-
+      };
+      
 
     const handleDepostMoney = async () => {
         try {
@@ -968,7 +1123,7 @@ Wallet: ~${c.wallet}~
 
     // --- Upload Hidden Content Record to Database ---
     const handleUploadHiddenContent = async () => {
-        if (!userContract || !userPass) {
+        if (!userContract) {
             alert("Please login first.");
             return;
         }
@@ -980,18 +1135,11 @@ Wallet: ~${c.wallet}~
         try {
             setIsLoading(true);
 
-            const response = await fetch(`${API_URL}/store/upload-hidden-content`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeAddress: userContract,
-                    password: userPass,
-                    productBarcode: productBarcode,
-                    ipfsHash: hiddenIPFS 
-                })
-            });
-
-            const data = await response.json();
+            const data = await authFetch("/store/upload-hidden-content", {
+                productBarcode,
+                ipfsHash: hiddenIPFS,
+              });
+              
 
             if (data.success) {
                 alert("Hidden content linked successfully in Database!");
@@ -1085,7 +1233,7 @@ Wallet: ~${c.wallet}~
                     </div>
                 </div>
 
-                {connectedto ? (
+                {connectedto && adminToken  ? (
                     <div className="p-3 sm:p-4">
                         {receipts ? (
                             <div className="space-y-4 sm:space-y-6">
@@ -1605,6 +1753,9 @@ Wallet: ~${c.wallet}~
                                 </div>
                             </section>
                         </div>
+                        <button onClick={adminLogout} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold">
+                        Logout
+                        </button>
                     </div>
                 ) : (
                     <div className="flex items-center justify-center min-h-[55vh] sm:min-h-[65vh] px-3 sm:px-6 py-6">
@@ -1636,7 +1787,7 @@ Wallet: ~${c.wallet}~
           Admin Login
         </h2>
         <p className="mt-1 text-sm text-gray-300">
-          Enter your shop contract + admin password
+        Connect wallet + sign message to receive Admin Token
         </p>
       </div>
 
@@ -1656,25 +1807,10 @@ Wallet: ~${c.wallet}~
           />
         </div>
 
-        {/* Password */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-200 mb-2">
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={userPass}
-            onChange={(e) => setUserPass(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-gray-400 outline-none transition
-                       focus:border-yellow-400/40 focus:ring-2 focus:ring-yellow-400/20"
-          />
-        </div>
-
         {/* Buttons */}
         <div className="pt-1 space-y-3">
           <button
-            onClick={() => SettingAContract(userContract)}
+            onClick={() => adminLogin(userContract)}
             disabled={!userContract}
             className="w-full rounded-2xl bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-3 font-extrabold text-black
                        shadow-[0_15px_40px_rgba(255,221,0,0.15)]

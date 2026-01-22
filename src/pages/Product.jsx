@@ -1276,9 +1276,45 @@ return (
                       onTransactionSent={(result) => {
                         console.log("Transaction submitted", result.transactionHash);
                       }}
-                      onTransactionConfirmed={() => {
-                        refreshPage();
-                      }}
+                      onTransactionConfirmed={async (receipt) => {
+                        try {
+                            console.log("Transaction Confirmed");
+                    
+                            // תיקון: שימוש ב-Counter הקיים במקום ניחוש מהלוגים
+                            // (בהנחה ש-invoiceCounter מחזיק את המספר הנוכחי, והחדש הוא הוא או +1)
+                            // אם החוזה מעדכן את ה-Counter לאחר הרכישה, המספר של הקבלה הוא ה-Counter הנוכחי
+                            let receiptId = invoiceCounter; 
+                            
+                            // גיבוי: אם ה-Counter הוא 0 (לא נטען), ננסה לקרוא מהחוזה שוב
+                            if (!receiptId || receiptId === 0) {
+                                 const currentCount = await theStoreContract.call('receiptCounter');
+                                 receiptId = HexToInteger(currentCount._hex) - 1; // מינוס 1 כי הוא כבר התקדם
+                            }
+                    
+                            const productUrlDecoded = decodeUrlString(productUrl);
+                            const finalPrice = (HexToInteger(product?.price._hex) * (100 - HexToInteger(product?.discountPercentage._hex))) / 100;
+                    
+                            await fetch(`${API_URL}/register-order`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    receiptId: receiptId, // עכשיו זה מספר נורמלי (למשל 5)
+                                    walletAddress: address,
+                                    storeAddress: storeContractByURL,
+                                    productBarcode: productUrlDecoded,
+                                    productName: product?.name,
+                                    price: finalPrice / 1e6*amountOfProduct,
+                                    timestamp: Math.floor(Date.now() / 1000)
+                                })
+                            });
+                            
+                            console.log("Order registered manually with ID:", receiptId);
+                    
+                        } catch (err) {
+                            console.error("Failed to register order in DB:", err);
+                        }
+                        setOwnerShip(true);
+                    }}
                       onError={(error) => {
                         console.error("Transaction error", error);
                         if (error.message && error.message.includes("Not authorized")) {

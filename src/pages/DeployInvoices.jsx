@@ -59,7 +59,7 @@ export default function DeployInvoices() {
         client: client,
         chain: base,
         account: account,
-        publisher: "0xfb311Eb413a49389a2078284B57C8BEFeF6aFF67",
+        publisher: "0xBDEda0d0a434C2C21ED532Bc64aDE1a136b65847",
         contractId: "ESHInvoicesMinter",
         contractParams: params
       });
