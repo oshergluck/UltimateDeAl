@@ -610,6 +610,37 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
         }
     };
 
+    const LoadProduct = async (barcode) => {
+        setIsLoading(true);
+        try {
+            const data = await contract.call('products', [barcode]);
+            const images = await contract.call('getProductPics', [barcode]);
+            const formattedData = await {
+                name: data[0],
+                barcode: data[1],
+                price: data[2],
+                quantity: data[3],
+                description: data[4],
+                discount: data[5],
+                category: data[6],
+                images: images
+            };
+            setProductCategory(formattedData.category);
+            setProductDiscount(formattedData.discount);
+            setProductDescription(formattedData.description);
+            setProductName(formattedData.name);
+            setProductPrice(formattedData.price * 1e-6);
+            setProdutQuantity(formattedData.quantity);
+            console.log('CIDs: ' + formattedData.images);
+            setImages(formattedData.images);
+            setIsLoading(false);
+        }
+        catch (error) {
+            console.log(error);
+            setIsLoading(false);
+        }
+    }
+
 
 
     const getReceipt = async () => {
