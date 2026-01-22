@@ -7,6 +7,7 @@ import { useStateContext } from '../context';
 import { useContract } from '@thirdweb-dev/react';
 import { useActiveAccount } from 'thirdweb/react';
 import { ethers } from 'ethers'; // חובה עבור החתימה
+import { fontSizes } from '../components/AccessibilityMenu';
 
 const Extra = () => {
     const account = useActiveAccount();
@@ -58,6 +59,88 @@ const Extra = () => {
 
         setContract();
     }, [storeRegistery, StoreURL]);
+
+    function renderDescriptionWithBreaks(description) {
+        if (!description) return <p>No description provided.</p>;
+    
+        const processText = (text) => {
+          const sanitizedText = text.replace(/[\s\uFEFF\xA0]+/g, ' ');
+            const nodes = [];
+            let currentText = '';
+            let styles = [];
+    
+            for (let i = 0; i < sanitizedText.length; i++) {
+              const char = sanitizedText[i];
+      
+              if (char === '~' || char === '*' || char === '^' || char === '$') {
+                  if (currentText) {
+                      nodes.push({ text: currentText, styles: [...styles] });
+                      currentText = '';
+                  }
+                  const styleIndex = styles.indexOf(char);
+                  if (styleIndex > -1) {
+                      styles.splice(styleIndex, 1);
+                  } else {
+                      styles.push(char);
+                  }
+                  continue;
+              }
+      
+              currentText += char;
+          }
+    
+          if (currentText) {
+            nodes.push({ text: currentText, styles: [...styles] });
+        }
+    
+        return nodes.map((node, index) => {
+          let element = <span key={index}>{node.text}</span>;
+      
+          node.styles.forEach(style => {
+              const defaultFontSizeIndex = fontSizes.indexOf('sm');
+              const defaultSize = fontSizes[defaultFontSizeIndex-7];
+      
+              switch (style) {
+                  case '~':
+                      element = <span key={index} className={`!text-[#FFDD00] text-${defaultSize}`}>{element}</span>;
+                      break;
+                  case '*':
+                      element = <strong key={index} className={`text-${defaultSize}`}>{element}</strong>;
+                      break;
+                  case '$':
+                      element = <span key={index} className={`text-center block my-[10px] text-${defaultSize}`}>{element}</span>;
+                      break;
+                  case '^':
+                      const fontSizeIndex = fontSizes.indexOf('sm') + 4;
+                      const size = fontSizes[fontSizeIndex];
+                      element = <span key={index} className={`text-${size}`}>{element}</span>;
+                      break;
+                  default:
+                      element = <span key={index} className={`text-${defaultSize}`}>{element}</span>;
+                      break;
+              }
+          });
+      
+          return element;
+      });
+      
+      
+        };
+    
+        const lines = description.split('\n').map((line, index) => (
+            <div key={index} className="whitespace-pre-wrap">
+                {processText(line)}
+            </div>
+        ));
+    
+        return (
+            <div className="font-epilogue text-[#FFFFFF]">
+                {lines}
+            </div>
+        );
+    }
+  
+  
 
     // Step 2: Get invoices address from Store Contract
     useEffect(() => {
@@ -200,7 +283,7 @@ const Extra = () => {
                 </h2>
 
                 {/* If we have access -> Show Media */}
-                {ownerShip && media ? (
+                {ownerShip && media ? (<>
                     <div className="animate-fade-in">
                         <p className="text-center text-green-400 mb-4">Access Granted ✅</p>
                         <ProtectedBox>
@@ -209,7 +292,14 @@ const Extra = () => {
                             className='my-[50px] !w-11/12 mx-auto'
                         />
                         </ProtectedBox>
+                        
+                        <div className='w-6/12 mx-auto'>
+                        {StoreURL === 'ultrashop' && ProductURL === 'LISTESH' && renderDescriptionWithBreaks("$^*🚀 Welcome to Your New Business!*^$\n$Follow these steps to deploy your smart contracts and activate your store.$\n\n*~Step 1: Deploy Essential Tools~*\nBefore creating the shop, you need these helper contracts:\n• *Deploy Your Coin (Stock):* https://ultrashop.tech/deploy-esh\n• *Deploy Invoice Minter:* https://ultrashop.tech/deploy-invoices\n• *Deploy Voting Contract:* https://ultrashop.tech/deploy-votes\n*~Step 2: Choose Your Shop Type~*\nRegister to thirdweb.com (with email) and deploy *ONE* of the following contracts based on your business model:\n\n*Option A: Retail Store (Standard)*\nBest for selling items like T-shirts, Digital Files, or Keys.\n👉 *Deploy Sales Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreSales\n\n*Option B: Rental Store (Time-Based)*\nBest for Subscriptions, Memberships, or Renting assets.\n👉 *Deploy Rentals Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals\n\n$*Got your contracts?*\nGreat! Copy the contract addresses and fill out the registration form below.$")}
+                        
                     </div>
+                    {renderContent()}
+                    </div>
+                    </>
                 ) : (
                     // If no access yet -> Show Unlock Button (Only for normal products, not special pages)
                     !rendered && (
@@ -230,7 +320,6 @@ const Extra = () => {
                 )}
 
                 {/* Render Special Content (Games etc) */}
-                {renderContent()}
             </div>
         </>
     );
