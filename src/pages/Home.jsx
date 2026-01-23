@@ -151,7 +151,7 @@ function processDescription(description, maxLength = 180)
               </p>
               <div className="mt-6 inline-flex items-center gap-2 text-white/80 text-sm">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                Start earning today - No fees to get started
+                Start earning today!
               </div>
             </div>
           </button>
@@ -408,7 +408,7 @@ function processDescription(description, maxLength = 180)
                   btnType="button"
                   title="Create Your Store Now"
                   styles="bg-[#FFDD00] hover:bg-[#FFE933] text-black font-bold py-3 px-8 rounded-xl text-base shadow-lg hover:shadow-xl transition-all"
-                  handleClick={() => navigate("/shop/ultrashop/products/LISTESH")}
+                  handleClick={() => navigate("/shop/main/products/LISTESH")}
                 />
               </div>
             </div>

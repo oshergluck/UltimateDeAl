@@ -58,6 +58,7 @@ import {
   DeployInvoices,
   DeployVotes,
   RecentCoins,
+  ActivatePromotion,
 } from "./pages";
 import { useMediaQuery } from "react-responsive";
 
@@ -217,6 +218,7 @@ export default function App() {
                 <Route path="/set-official-store" element={<SetOfficialStore />} />
                 <Route path="/edit-official-store" element={<EditOfficialStore />} />
                 <Route path="/edit-store" element={<EditStore />} />
+                <Route path="/activate-pro" element={<ActivatePromotion/>}/>
                 <Route
                   path="/shop/:storepath/products/:productBarCode"
                   element={<Product />}

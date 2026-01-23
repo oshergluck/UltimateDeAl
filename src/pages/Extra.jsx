@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Featured, FeaturedMobile, IPFSMediaViewer,ProtectedBox } from '../components';
-import { RegisterNewStore, City, SnakeGame, MemoryGame, TexasHoldemGame } from '../pages';
+import { RegisterNewStore, City, ActivatePromotion, MemoryGame, TexasHoldemGame } from '../pages';
 import { useMediaQuery } from 'react-responsive';
 import { useStateContext } from '../context';
 import { useContract } from '@thirdweb-dev/react';
@@ -248,16 +248,16 @@ const Extra = () => {
     };
     // Render Special Pages (Games/Register)
     const renderContent = () => {
-        if (StoreURL === 'ultrashop' && ProductURL === 'LISTESH') {
+        if (StoreURL === 'main' && ProductURL === 'LISTESH') {
             return (<div><RegisterNewStore /></div>);
         }
-        if (StoreURL === 'ultrashop' && ProductURL === 'LOTERRY') {
+        if (StoreURL === 'main' && ProductURL === 'LOTERRY') {
             return <City />;
         }
-        if (StoreURL === 'ultrashop' && ProductURL === 'PROS') {
-            return <SnakeGame/>;
+        if (StoreURL === 'main' && ProductURL === 'PROS') {
+            return <ActivatePromotion/>;
         }
-        if (StoreURL === 'ultrashop' && ProductURL === 'FUNDPROS') {
+        if (StoreURL === 'main' && ProductURL === 'FUNDPROS') {
             return <MemoryGame/>;
         }
         return null;
@@ -294,7 +294,7 @@ const Extra = () => {
                         </ProtectedBox>
                         
                         <div className='w-6/12 mx-auto'>
-                        {StoreURL === 'ultrashop' && ProductURL === 'LISTESH' && renderDescriptionWithBreaks("$^*🚀 Welcome to Your New Business!*^$\n$Follow these steps to deploy your smart contracts and activate your store.$\n\n*~Step 1: Deploy Essential Tools~*\nBefore creating the shop, you need these helper contracts:\n• *Deploy Your Coin (Stock):* https://ultrashop.tech/deploy-esh\n• *Deploy Invoice Minter:* https://ultrashop.tech/deploy-invoices\n• *Deploy Voting Contract:* https://ultrashop.tech/deploy-votes\n*~Step 2: Choose Your Shop Type~*\nRegister to thirdweb.com (with email) and deploy *ONE* of the following contracts based on your business model:\n\n*Option A: Retail Store (Standard)*\nBest for selling items like T-shirts, Digital Files, or Keys.\n👉 *Deploy Sales Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreSales\n\n*Option B: Rental Store (Time-Based)*\nBest for Subscriptions, Memberships, or Renting assets.\n👉 *Deploy Rentals Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals\n\n$*Got your contracts?*\nGreat! Copy the contract addresses and fill out the registration form below.$")}
+                        {StoreURL === 'main' && ProductURL === 'LISTESH' && renderDescriptionWithBreaks("$^*🚀 Welcome to Your New Business!*^$\n$Follow these steps to deploy your smart contracts and activate your store.$\n\n*~Step 1: Deploy Essential Tools~*\nBefore creating the shop, you need these helper contracts:\n• *Deploy Your Coin (Stock):* https://ultrashop.tech/deploy-esh\n• *Deploy Invoice Minter:* https://ultrashop.tech/deploy-invoices\n• *Deploy Voting Contract:* https://ultrashop.tech/deploy-votes\n*~Step 2: Choose Your Shop Type~*\nRegister to thirdweb.com (with email) and deploy *ONE* of the following contracts based on your business model:\n\n*Option A: Retail Store (Standard)*\nBest for selling items like T-shirts, Digital Files, or Keys.\n👉 *Deploy Sales Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreSales\n\n*Option B: Rental Store (Time-Based)*\nBest for Subscriptions, Memberships, or Renting assets.\n👉 *Deploy Rentals Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals\n\n$*Got your contracts?*\nGreat! Copy the contract addresses and fill out the registration form below.$")}
                         
                     </div>
                     {renderContent()}

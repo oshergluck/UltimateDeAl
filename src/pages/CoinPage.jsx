@@ -20,9 +20,10 @@ const CoinPage = () => {
   const ThirdWEBAPI = import.meta.env.VITE_THIRDWEB_CLIENT_ID || import.meta.env.VITE_THIRDWEB_CLIENT
   const POLYRPC = `https://8453.rpc.thirdweb.com/${ThirdWEBAPI}`
   const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+  const MIN_PURCHASE_USDC = 1.0; // From contract constant
+  const API_BASE = (import.meta.env.VITE_API_BASE || "http://localhost:3001").replace(/\/+$/, "");
+  const API_URL = `${API_BASE}/api`;
   
-  // כתובת השרת שלך (וודא שהפורט תואם לבקאנד)
-  const API_URL = import.meta.env.VITE_API_BASE+`/api` 
 
   // thirdweb + pinata
   const client = useMemo(
@@ -89,10 +90,10 @@ const CoinPage = () => {
   const [holders, setHolders] = useState([])
 
   // Refresh “signals” (only re-fetch slices that change)
-  const [txTick, setTxTick] = useState(0) // triggers re-fetch of transactions (and chart)
-  const [infoTick, setInfoTick] = useState(0) // triggers re-fetch of coin info (price/reserves)
+  const [txTick, setTxTick] = useState(0)
+  const [infoTick, setInfoTick] = useState(0)
   const [autoRefreshTick, setAutoRefreshTick] = useState(0)
-  
+
   // Quotes
   const [buyQuote, setBuyQuote] = useState({
     tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
@@ -102,7 +103,7 @@ const CoinPage = () => {
     usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
     pricePerTokenGross: 0n, enoughUSDCReserve: true
   })
-  
+
   const [buyAmount, setBuyAmount] = useState('')
   const [sellAmount, setSellAmount] = useState('')
   const [buyPreview, setBuyPreview] = useState({ tokens: '0', fees: '0' })
@@ -144,7 +145,7 @@ const CoinPage = () => {
     const [intPart, decPart] = str.split('.');
     const match = decPart.match(/^(0+)(\d.*)?$/);
     if (match && match[1].length >= 3) {
-      const zeroCount = match[1].length - 1; 
+      const zeroCount = match[1].length - 1;
       const rest = match[2] || '';
       return (
         <>
@@ -175,103 +176,123 @@ const CoinPage = () => {
 
   const applyNegSlippage = (amountBig, percent) => {
     // returns floor(amount * (100 - percent)/100)
+    // Used to calculate MINIMUM output
     const bps = BigInt(Math.round((100 - Number(percent)) * 100)); // (100 - p) in bps
     return (amountBig * bps) / 10000n;
   };
 
-  const pctToBps = (p) => Math.round(Number(p) * 100);
-
   // ---------- Fetchers ----------
 
-  // New: Fetch main data from Backend to reduce RPC calls
   const fetchAllDataFromAPI = async () => {
     try {
-        const res = await fetch(`${API_URL}/coins/${tokenAddress}?t=${Date.now()}`);
-        if(!res.ok) return;
-        const data = await res.json();
-        
-        if (data && data.address) {
-            setTokenInfo(prev => ({
-                ...prev,
-                name: data.tokenName || prev.name,
-                symbol: data.tokenSymbol || prev.symbol,
-                decimals: prev.decimals || 18,
-                totalSupply: prev.totalSupply !== '0' ? prev.totalSupply : (data.totalSupply || '0')
-            }));
+      const res = await fetch(`${API_URL}/coins/${tokenAddress}?t=${Date.now()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.holders && Array.isArray(data.holders)) {
+        const dec = Number(tokenInfo.decimals || 18);
+      
+        const parsedHolders = data.holders.map((h) => {
+          const qtyStr = String(h.balance || "0"); // decimal string from Etherscan
+          let raw = 0n;
+      
+          try {
+            // ethers v5: parseUnits returns BigNumber; convert -> BigInt safely
+            raw = BigInt(ethers.utils.parseUnits(qtyStr, dec).toString());
+          } catch {
+            raw = 0n;
+          }
+      
+          return {
+            holder: h.holder,
+            balanceRaw: raw,      // BigInt (smallest units)
+            balanceDisplay: qtyStr // original decimal string (optional)
+          };
+        });
+      
+        setHolders(parsedHolders);
+      }
 
-            setCoinData(prev => ({
-                ...prev,
-                currentPrice: BigInt(data.currentPrice || 0),
-                usdcReserve: BigInt(data.usdcReserve || 0),
-                tokenAReserve: BigInt(data.tokenAReserve || 0),
-                percentagePurchased: Number(data.percentagePurchased || 0),
-                lpCreated: Boolean(data.lpCreated),
-                creator: data.creator,
-                URI: data.URI,
-                virtualTokenReserve: BigInt(data.virtualTokenReserve || 0),
-                virtualUSDCReserve: BigInt(data.virtualUSDCReserve || 0),
-                creatorFeesUSDC: BigInt(data.creatorFeesUSDC || 0),
-                creatorFeesTokenA: BigInt(data.creatorFeesTokenA || 0),
-            }));
+      if (data && data.address) {
+        setTokenInfo(prev => ({
+          ...prev,
+          name: data.tokenName || prev.name,
+          symbol: data.tokenSymbol || prev.symbol,
+          decimals: prev.decimals || 18,
+          totalSupply: prev.totalSupply !== '0' ? prev.totalSupply : (data.totalSupply || '0')
+        }));
 
-            if (data.holders && Array.isArray(data.holders)) {
-               const parsedHolders = data.holders.map(h => ({
-                 holder: h.holder,
-                 balance: BigInt(h.balance) 
-               }));
-               setHolders(parsedHolders);
-            }
+        setCoinData(prev => ({
+          ...prev,
+          currentPrice: BigInt(data.currentPrice || 0),
+          usdcReserve: BigInt(data.usdcReserve || 0),
+          tokenAReserve: BigInt(data.tokenAReserve || 0),
+          percentagePurchased: Number(data.percentagePurchased || 0),
+          lpCreated: Boolean(data.lpCreated),
+          creator: data.creator,
+          URI: data.URI,
+          virtualTokenReserve: BigInt(data.virtualTokenReserve || 0),
+          virtualUSDCReserve: BigInt(data.virtualUSDCReserve || 0),
+          creatorFeesUSDC: BigInt(data.creatorFeesUSDC || 0),
+          creatorFeesTokenA: BigInt(data.creatorFeesTokenA || 0),
+        }));
 
-            if(data.URI && !metadata.name) fetchMetadata(data.URI);
+        if (data.holders && Array.isArray(data.holders)) {
+          const parsedHolders = data.holders.map(h => ({
+            holder: h.holder,
+            balance: BigInt(h.balance)
+          }));
+          console.log(parsedHolders);
+          setHolders(parsedHolders);
         }
+
+        if (data.URI && !metadata.name) fetchMetadata(data.URI);
+      }
     } catch (e) {
-        console.log("API refresh failed", e);
+      console.log("API refresh failed", e);
     }
   }
 
-  // Fallback / Static data RPC fetch
   const fetchTokenBasics = async () => {
     try {
-        const [decimals, totalSupply] = await Promise.all([
+      const [decimals, totalSupply] = await Promise.all([
         readContract({ contract: tokenContract, method: 'function decimals() view returns (uint8)', params: [] }),
         readContract({ contract: tokenContract, method: 'function totalSupply() view returns (uint256)', params: [] }),
-        ])
-        setTokenInfo(prev => ({ ...prev, decimals: Number(decimals), totalSupply }))
-    } catch (e) {}
+      ])
+      setTokenInfo(prev => ({ ...prev, decimals: Number(decimals), totalSupply }))
+    } catch (e) { }
   }
 
-  // Transactions must ideally come from RPC if backend doesn't index them fully yet
   const fetchTransactions = async () => {
     try {
-        const txHistory = await readContract({
+      const txHistory = await readContract({
         contract: dex,
         method: 'function getTransactionHistory(address,uint256) view returns ((address,uint256,uint256,uint256,uint256,bool)[])',
         params: [tokenAddress, 400],
-        })
+      })
 
-        const parsed = (txHistory ?? [])
+      const parsed = (txHistory ?? [])
         .map((tx) => {
-            const user = tx[0] ?? tx.user ?? '0x0000000000000000000000000000000000000000'
-            const tokenAAmount = BigInt(tx[1] ?? tx.tokenAAmount ?? 0n)
-            const usdcAmount = BigInt(tx[2] ?? tx.usdcAmount ?? 0n)
-            const price = BigInt(tx[3] ?? tx.price ?? 0n)
-            const tsRaw = tx[4] ?? tx.timestamp ?? 0n
-            const timestampNum = Number(tsRaw)
-            const timestamp = Number.isFinite(timestampNum) ? timestampNum : 0
-            const isBuy = Boolean(tx[5] ?? tx.isBuy ?? false)
-            return { user, tokenAAmount, usdcAmount, price, timestamp, isBuy }
+          const user = tx[0] ?? tx.user ?? '0x0000000000000000000000000000000000000000'
+          const tokenAAmount = BigInt(tx[1] ?? tx.tokenAAmount ?? 0n)
+          const usdcAmount = BigInt(tx[2] ?? tx.usdcAmount ?? 0n)
+          const price = BigInt(tx[3] ?? tx.price ?? 0n)
+          const tsRaw = tx[4] ?? tx.timestamp ?? 0n
+          const timestampNum = Number(tsRaw)
+          const timestamp = Number.isFinite(timestampNum) ? timestampNum : 0
+          const isBuy = Boolean(tx[5] ?? tx.isBuy ?? false)
+          return { user, tokenAAmount, usdcAmount, price, timestamp, isBuy }
         })
         .filter((t) => t.timestamp > 0)
         .sort((a, b) => a.timestamp - b.timestamp)
 
-        setTransactions(parsed)
-    } catch (e) {}
+      setTransactions(parsed)
+    } catch (e) { }
   }
 
   const fetchMetadata = async (uri) => {
     if (!uri) return
     try {
-      if (metadata.name && metadata.logo) return; // avoid refetch
+      if (metadata.name && metadata.logo) return;
       const cid = String(uri).replace('ipfs://', '')
       const response = await fetch(
         `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${cid}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`
@@ -293,21 +314,18 @@ const CoinPage = () => {
 
   // ---------- Hooks & Effects ----------
 
-  // 1. Initial Load
   useEffect(() => {
     let mounted = true
     const run = async () => {
       if (!tokenAddress) return
       setLoading(true)
       setError('')
-      
-      // Load fast data from API
+
       await fetchAllDataFromAPI();
-      
-      // Load RPC specific
+
       await Promise.all([
-          fetchTokenBasics(),
-          fetchTransactions()
+        fetchTokenBasics(),
+        fetchTransactions()
       ]);
 
       if (mounted) setLoading(false)
@@ -316,7 +334,6 @@ const CoinPage = () => {
     return () => { mounted = false }
   }, [tokenAddress])
 
-  // 2. Balances
   useEffect(() => {
     const runTotalBalance = async () => {
       try {
@@ -340,7 +357,7 @@ const CoinPage = () => {
     if (address && tokenContract && usdcContract) runTotalBalance()
   }, [address, tokenContract, usdcContract, txTick])
 
-  // 3. Live events (Websocket/RPC listener for realtime updates)
+  // Websocket listener
   useEffect(() => {
     if (!DEX_ADDRESS || !tokenAddress) return
     const provider = window.ethereum
@@ -376,30 +393,29 @@ const CoinPage = () => {
       try {
         dexEthers.off('TokensPurchased', onPurchased)
         dexEthers.off('TokensSold', onSold)
-      } catch {}
+      } catch { }
     }
   }, [DEX_ADDRESS, tokenAddress, POLYRPC])
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  },[]);
+  }, []);
 
-  // 4. Targeted re-fetches
-  useEffect(() => { 
-      if (infoTick > 0) fetchAllDataFromAPI() 
+  useEffect(() => {
+    if (infoTick > 0) fetchAllDataFromAPI()
   }, [infoTick])
 
-  useEffect(() => { 
-      if (txTick > 0) fetchTransactions() 
+  useEffect(() => {
+    if (txTick > 0) fetchTransactions()
   }, [txTick])
 
-  // 5. Polling Interval (API based)
+  // Polling
   useEffect(() => {
     const id = setInterval(() => {
       setAutoRefreshTick(t => t + 1)
       setInfoTick(x => x + 1)
       setTxTick(x => x + 1)
-    }, 5000) 
+    }, 5000)
     return () => clearInterval(id)
   }, [])
 
@@ -431,8 +447,8 @@ const CoinPage = () => {
       } catch {
         setBuyPreview({ tokens: '0', fees: '0' })
         setBuyQuote({
-            tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
-            pricePerTokenGross: 0n, enoughTokenLiquidity: false
+          tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
+          pricePerTokenGross: 0n, enoughTokenLiquidity: false
         })
       }
     }
@@ -467,14 +483,14 @@ const CoinPage = () => {
       } catch {
         setSellPreview({ usdc: '0', fees: '0' })
         setSellQuote({
-            usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
-            pricePerTokenGross: 0n, enoughUSDCReserve: true
+          usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
+          pricePerTokenGross: 0n, enoughUSDCReserve: true
         })
       }
     }
     calc()
   }, [sellAmount, tokenAddress, tokenInfo.decimals, dex, coinData.virtualTokenReserve, coinData.virtualUSDCReserve])
-  
+
   // ---------- Chart Logic ----------
   const chartTransactions = useMemo(() => {
     return (transactions ?? [])
@@ -485,20 +501,19 @@ const CoinPage = () => {
       .filter((t) => t.timestamp > 0)
   }, [transactions])
 
-  // 12d Price helpers
   const price12FromTx = (tx) => {
     const usdc = BigInt(tx.usdcAmount ?? 0);
-    const tok  = BigInt(tx.tokenAAmount ?? 0);
+    const tok = BigInt(tx.tokenAAmount ?? 0);
     if (usdc === 0n || tok === 0n) return null;
-    return (usdc * 10n**24n) / tok;
+    return (usdc * 10n ** 24n) / tok;
   };
-  
+
   const isValidTx = (tx) => {
     const usdc = BigInt(tx.usdcAmount ?? 0);
-    const tok  = BigInt(tx.tokenAAmount ?? 0);
+    const tok = BigInt(tx.tokenAAmount ?? 0);
     return usdc > 0n && tok > 0n;
   };
-  
+
   const priceAtOrBeforeCutoff12 = (txsAsc, cutoffSec) => {
     if (!txsAsc?.length) return null;
     let lo = 0, hi = txsAsc.length;
@@ -518,31 +533,31 @@ const CoinPage = () => {
     if (idx < 0) return null;
     return price12FromTx(txsAsc[idx]);
   };
-  
+
   const pctChangeBig = (past12, curr12) => {
     if (past12 == null || curr12 == null || past12 === 0n) return null;
     const bp = ((curr12 - past12) * 10000n) / past12;
     const pct = Number(bp) / 100;
     return Number.isFinite(pct) ? pct : null;
   };
-  
+
   const priceChanges = useMemo(() => {
     try {
       const nowSec = Math.floor(Date.now() / 1000);
       const txsFiltered = chartTransactions.filter(t => Number(t.timestamp) <= nowSec);
-      const txsAsc = txsFiltered.sort((a,b) => Number(a.timestamp) - Number(b.timestamp));
+      const txsAsc = txsFiltered.sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
       const lastValid = [...txsAsc].reverse().find(isValidTx);
       let curr12 = lastValid ? price12FromTx(lastValid) : null;
-      
+
       if (curr12 === null) return { h1: null, h6: null, h24: null };
-  
-      const p1h  = priceAtOrBeforeCutoff12(txsAsc, nowSec -  3600);
-      const p6h  = priceAtOrBeforeCutoff12(txsAsc, nowSec -  6*3600);
-      const p24h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 24*3600);
-  
+
+      const p1h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 3600);
+      const p6h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 6 * 3600);
+      const p24h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 24 * 3600);
+
       return {
-        h1:  pctChangeBig(p1h,  curr12),
-        h6:  pctChangeBig(p6h,  curr12),
+        h1: pctChangeBig(p1h, curr12),
+        h6: pctChangeBig(p6h, curr12),
         h24: pctChangeBig(p24h, curr12),
       };
     } catch {
@@ -551,7 +566,7 @@ const CoinPage = () => {
   }, [chartTransactions, coinData?.currentPrice]);
 
   const formatSignedPct = (v) => (v == null ? '—' : (v >= 0 ? `+${v.toFixed(2)}%` : `${v.toFixed(2)}%`));
-  const upDownSymbol    = (v) => (v == null ? '' : (v >= 0 ? '▲' : '▼'));
+  const upDownSymbol = (v) => (v == null ? '' : (v >= 0 ? '▲' : '▼'));
   const valueColorClass = (v) => (v == null ? 'text-white/70' : (v >= 0 ? 'text-emerald-400' : 'text-red-400'));
 
   const chartStartUnix = useMemo(() => {
@@ -578,29 +593,47 @@ const CoinPage = () => {
     })
   }
 
+  // === CORRECTED BUILDERS FOR NEW CONTRACT SIGNATURES ===
   const buildBuyTokens = async () => {
     const usdcIn = ethers.utils.parseUnits(buyAmount || "0", 6);
+
+    // Slippage calc:
+    // buyQuote.tokenOut is the EXPECTED output from the curve
+    // We calculate the MINIMUM we are willing to accept based on slippagePct
     const minTokenAOut = buyQuote?.tokenOut
-        ? applyNegSlippage(buyQuote.tokenOut, slippagePct)
-        : 0n; 
+      ? applyNegSlippage(buyQuote.tokenOut, slippagePct)
+      : 0n;
+
     return prepareContractCall({
       contract: dex,
+      // Updated signature to match UltraShop.sol
       method: "function buyTokens(address tokenA, uint256 usdcAmount, uint256 minTokenAReceived)",
       params: [tokenAddress, usdcIn, minTokenAOut],
     });
   };
-  
+
   const buildSellTokens = async () => {
     const tIn = ethers.utils.parseUnits(sellAmount || "0", 18);
+
+    // Slippage calc:
+    // sellQuote.usdcNet is the EXPECTED output (after fees)
+    // We calculate the MINIMUM USDC we accept
     const minUSDCOut = sellQuote?.usdcNet
-        ? applyNegSlippage(sellQuote.usdcNet, slippagePct)
-        : 0n;
+      ? applyNegSlippage(sellQuote.usdcNet, slippagePct)
+      : 0n;
+
     return prepareContractCall({
       contract: dex,
+      // Updated signature to match UltraShop.sol
       method: "function sellTokens(address tokenA, uint256 tokenAmount, uint256 minUSDCReceived)",
       params: [tokenAddress, tIn, minUSDCOut],
     });
   };
+
+  const isBuyAmountValid = () => {
+    const v = parseFloat(buyAmount);
+    return v >= MIN_PURCHASE_USDC;
+  }
 
   if (loading) {
     return (
@@ -634,6 +667,7 @@ const CoinPage = () => {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white/20 bg-black/40 shrink-0">
                   <IPFSMediaViewer
                     ipfsLink={`${metadata.logo}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
+                    objectFit='contain'
                   />
                 </div>
               )}
@@ -651,12 +685,12 @@ const CoinPage = () => {
 
                 {/* Description */}
                 <div className="relative max-w-3xl mb-4 rounded-2xl drop-shadow-md overflow-hidden">
-                    <div className="absolute inset-0 linear-gradient1 opacity-70"></div>
-                    <div className="relative p-4">
-                        <div className="text-white/90 font-bold text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-                        {metadata.description || 'No description available'}
-                        </div>
+                  <div className="absolute inset-0 linear-gradient1 opacity-70"></div>
+                  <div className="relative p-4">
+                    <div className="text-white/90 font-bold text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
+                      {metadata.description || 'No description available'}
                     </div>
+                  </div>
                 </div>
 
                 {/* Actions */}
@@ -686,15 +720,15 @@ const CoinPage = () => {
               <div className="text-right">
                 <div className="text-white/60 text-sm">Current Price</div>
                 <div className="text-2xl md:text-3xl font-bold text-white">
-                    {formatTinyPriceDisplay(formatPriceFull(coinData.currentPrice, 12, 18))}
+                  {formatTinyPriceDisplay(formatPriceFull(coinData.currentPrice, 12, 18))}
                 </div>
                 <div className="text-white/60 text-sm mt-2">
-                    Progress: {coinData.percentagePurchased}%
+                  Progress: {coinData.percentagePurchased}%
                 </div>
                 {coinData.lpCreated && (
-                    <div className="mt-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                  <div className="mt-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
                     LP Created ✓
-                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -724,11 +758,10 @@ const CoinPage = () => {
                         <button
                           key={t.label}
                           onClick={() => setBucketSeconds(t.seconds)}
-                          className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
-                            bucketSeconds === t.seconds
-                              ? "bg-blue-500 text-white"
-                              : "bg-white/10 text-white/70 hover:bg-white/20"
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${bucketSeconds === t.seconds
+                            ? "bg-blue-500 text-white"
+                            : "bg-white/10 text-white/70 hover:bg-white/20"
+                            }`}
                         >
                           {t.label}
                         </button>
@@ -761,31 +794,31 @@ const CoinPage = () => {
               <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
                 <div className="text-white/60 text-sm">Price Δ 1h</div>
                 <div className="text-white text-lg font-semibold mt-1">
-                    {priceChanges.h1 === null ? <span className="text-white/40">—</span> : (
+                  {priceChanges.h1 === null ? <span className="text-white/40">—</span> : (
                     <span className={valueColorClass(priceChanges.h1)}>
-                        {upDownSymbol(priceChanges.h1)} {formatSignedPct(priceChanges.h1)}
+                      {upDownSymbol(priceChanges.h1)} {formatSignedPct(priceChanges.h1)}
                     </span>
-                    )}
+                  )}
                 </div>
               </div>
               <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
                 <div className="text-white/60 text-sm">Price Δ 6h</div>
                 <div className="text-white text-lg font-semibold mt-1">
-                    {priceChanges.h6 === null ? <span className="text-white/40">—</span> : (
+                  {priceChanges.h6 === null ? <span className="text-white/40">—</span> : (
                     <span className={valueColorClass(priceChanges.h6)}>
-                        {upDownSymbol(priceChanges.h6)} {formatSignedPct(priceChanges.h6)}
+                      {upDownSymbol(priceChanges.h6)} {formatSignedPct(priceChanges.h6)}
                     </span>
-                    )}
+                  )}
                 </div>
               </div>
               <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
                 <div className="text-white/60 text-sm">Price Δ 24h</div>
                 <div className="text-white text-lg font-semibold mt-1">
-                    {priceChanges.h24 === null ? <span className="text-white/40">—</span> : (
+                  {priceChanges.h24 === null ? <span className="text-white/40">—</span> : (
                     <span className={valueColorClass(priceChanges.h24)}>
-                        {upDownSymbol(priceChanges.h24)} {formatSignedPct(priceChanges.h24)}
+                      {upDownSymbol(priceChanges.h24)} {formatSignedPct(priceChanges.h24)}
                     </span>
-                    )}
+                  )}
                 </div>
               </div>
               <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
@@ -835,9 +868,8 @@ const CoinPage = () => {
                       .map((tx, i) => (
                         <tr key={i} className="border-b border-white/5">
                           <td className="py-3">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              tx.isBuy ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                            }`}>
+                            <span className={`px-2 py-1 rounded text-xs ${tx.isBuy ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                              }`}>
                               {tx.isBuy ? 'BUY' : 'SELL'}
                             </span>
                           </td>
@@ -865,17 +897,15 @@ const CoinPage = () => {
               <div className="flex gap-2 mb-6">
                 <button
                   onClick={() => setActiveTab('buy')}
-                  className={`flex-1 py-3 rounded-xl font-semibold transition ${
-                    activeTab === 'buy' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'
-                  }`}
+                  className={`flex-1 py-3 rounded-xl font-semibold transition ${activeTab === 'buy' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'
+                    }`}
                 >
                   Buy
                 </button>
                 <button
                   onClick={() => setActiveTab('sell')}
-                  className={`flex-1 py-3 rounded-xl font-semibold transition ${
-                    activeTab === 'sell' ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'
-                  }`}
+                  className={`flex-1 py-3 rounded-xl font-semibold transition ${activeTab === 'sell' ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'
+                    }`}
                   disabled={coinData.lpCreated}
                 >
                   Sell
@@ -884,9 +914,9 @@ const CoinPage = () => {
 
               {coinData.lpCreated ? (
                 /* SWAPPER */
-                <Swapper 
-                  ERCUltraAddress={tokenAddress} 
-                  SYMBOL={tokenInfo.symbol} 
+                <Swapper
+                  ERCUltraAddress={tokenAddress}
+                  SYMBOL={tokenInfo.symbol}
                 />
               ) : (
                 <>
@@ -931,6 +961,12 @@ const CoinPage = () => {
                               Not enough token liquidity to fulfill this buy at once.
                             </div>
                           )}
+                          {/* MIN PURCHASE WARNING */}
+                          {!isBuyAmountValid() && buyAmount && (
+                            <div className="mt-2 text-red-400 text-xs">
+                              Minimum purchase is {MIN_PURCHASE_USDC} USDC
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="mt-2">
@@ -959,12 +995,12 @@ const CoinPage = () => {
                           Approve USDC
                         </TransactionButton>
                         <TransactionButton
-                            disabled={!buyQuote.enoughTokenLiquidity}
-                            transaction={() => buildBuyTokens()}
-                            onError={(e) => setError(e?.message || 'Purchase failed')}
-                            onTransactionConfirmed={() => { setToast('Tokens purchased!'); setBuyAmount(''); setTxTick(x => x+1); }}
-                            >
-                            Buy {tokenInfo.symbol}
+                          disabled={!buyQuote.enoughTokenLiquidity || !isBuyAmountValid()}
+                          transaction={() => buildBuyTokens()}
+                          onError={(e) => setError(e?.message || 'Purchase failed')}
+                          onTransactionConfirmed={() => { setToast('Tokens purchased!'); setBuyAmount(''); setTxTick(x => x + 1); }}
+                        >
+                          Buy {tokenInfo.symbol}
                         </TransactionButton>
                       </div>
                     </div>
@@ -1090,8 +1126,40 @@ const CoinPage = () => {
               </div>
             </div>
 
+            {/* Withdraw Fees */}
+            {address && address?.toLowerCase() === coinData?.creator.toLowerCase() && (
+              <div className="mt-4 space-y-3">
+                <TransactionButton
+                  transaction={() =>
+                    prepareContractCall({
+                      contract: dex,
+                      method: "function withdrawAllCreatorFeesUSDC(address tokenA)",
+                      params: [tokenAddress],
+                    })
+                  }
+                  onError={(e) => setError(e?.message || "Withdraw failed")}
+                  onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}
+                >
+                  Withdraw Creator Fees (USDC)
+                </TransactionButton>
+                <TransactionButton
+                  transaction={() =>
+                    prepareContractCall({
+                      contract: dex,
+                      method: "function withdrawAllCreatorFeesToken(address tokenA)",
+                      params: [tokenAddress],
+                    })
+                  }
+                  onError={(e) => setError(e?.message || "Withdraw failed")}
+                  onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}
+                >
+                  Withdraw Creator Fees (Token)
+                </TransactionButton>
+              </div>
+            )}
+
             {/* Holders */}
-            <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10">
+            <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10 mt-6">
               <h3 className="text-white font-semibold mb-4">Top Holders</h3>
               <div className="space-y-2">
                 {holders.slice(0, 20).map((holder, i) => {
@@ -1143,42 +1211,6 @@ const CoinPage = () => {
                 })}
               </div>
             </div>
-
-            {/* Withdraw Fees */}
-            {address && address?.toLowerCase() === coinData?.creator.toLowerCase() && (
-              <div className="mt-4">
-                <TransactionButton
-                  transaction={() =>
-                    prepareContractCall({
-                      contract: dex,
-                      method: "function withdrawAllCreatorFeesUSDC(address tokenA)",
-                      params: [tokenAddress],
-                    })
-                  }
-                  onError={(e) => setError(e?.message || "Withdraw failed")}
-                  onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}
-                >
-                  Withdraw Creator Fees (USDC)
-                </TransactionButton>
-              </div>
-            )}
-            {address && address?.toLowerCase() === coinData?.creator.toLowerCase() && (
-              <div className="mt-4">
-                <TransactionButton
-                  transaction={() =>
-                    prepareContractCall({
-                      contract: dex,
-                      method: "function withdrawAllCreatorFeesToken(address tokenA)",
-                      params: [tokenAddress],
-                    })
-                  }
-                  onError={(e) => setError(e?.message || "Withdraw failed")}
-                  onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}
-                >
-                  Withdraw Creator Fees (Token)
-                </TransactionButton>
-              </div>
-            )}
 
           </div>
         </div>

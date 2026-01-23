@@ -275,7 +275,7 @@ const StorePage = () => {
         try {
             let tempAddress = physicalAddressOfClient;
             if (storeContractByURL == import.meta.env.VITE_ULTIMATEDEAL_STORE || storeContractByURL == '0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75') {
-                tempAddress = 'UltimateDeAl PORT';
+                tempAddress = "Doesn't matters";
             }
 
             const response = await fetch(`${API_URL}/register`, {

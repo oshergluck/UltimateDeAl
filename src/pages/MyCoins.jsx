@@ -1,228 +1,205 @@
+// MyCoins.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ethers } from 'ethers'
-import { createThirdwebClient, getContract, readContract } from 'thirdweb'
-import { useReadContract } from 'thirdweb/react'
-import { base } from 'thirdweb/chains'
 import CoinBox from '../components/CoinBox'
 import { useStateContext } from '../context'
 
+// API Base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 const PINATA_GATEWAY_FALLBACK = 'bronze-sticky-guanaco-654.mypinata.cloud'
 
-const useThirdweb = () => {
-  const client = useMemo(
-    () =>
-      createThirdwebClient({
-        clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || import.meta.env.VITE_THIRDWEB_CLIENT,
-      }),
-    []
-  )
-  const dex = useMemo(
-    () =>
-      getContract({
-        client,
-        chain: base,
-        address: import.meta.env.VITE_DEX_ADDRESS,
-      }),
-    [client]
-  )
-  return { client, dex }
-}
-
+/* --------------------------- Fetch JSON -------------------------- */
 const fetchJSON = async (url) => {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed meta ${res.status}`)
+  const res = await fetch(url, { cache: 'no-store' })
+  if (!res.ok) throw new Error(`Failed ${res.status}`)
   return res.json()
 }
 
+/* -------- SAME helpers as RecentCoins (KEEP SAME IDEA) -------- */
+const normalizeIpfsOrHttp = (u, pinataGateway, pinataToken) => {
+  if (!u) return ''
+  if (u.startsWith('ipfs://')) {
+    const cidPath = u.slice('ipfs://'.length)
+    // NOTE: in your RecentCoins you left base as `` (empty) by mistake,
+    // but it still works because you mainly pass gateway urls.
+    // Here we do the correct gateway build while keeping behavior consistent.
+    const base = `https://${pinataGateway}/ipfs/${cidPath}`
+    return pinataToken ? `${base}?pinataGatewayToken=${pinataToken}` : base
+  }
+  if (u.startsWith('//')) return `https:${u}`
+  if (u.startsWith('http://') || u.startsWith('https://')) return u
+  return `https://${u}`
+}
+
+const gatewayURLFromURI = (uri) => {
+  if (!uri) return ''
+  if (uri.startsWith('ipfs://')) return uri.replace('ipfs://', '')
+  return uri
+}
+
+/* ----------------------------- UI ------------------------------- */
+
 export default function MyCoins() {
   const navigate = useNavigate()
-  const { client, dex } = useThirdweb()
   const { address } = useStateContext()
+
   const [coins, setCoins] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const intervalRef = useRef(null)
 
-  const pinataGateway = import.meta.env.VITE_PINATA_GATEWAY || PINATA_GATEWAY_FALLBACK
+  const pinataGateway = PINATA_GATEWAY_FALLBACK
   const pinataToken = import.meta.env.VITE_PINATA_API || ''
 
-  const POLYRPC = `https://8453.rpc.thirdweb.com/${import.meta.env.VITE_THIRDWEB_CLIENT}`
-  const provider = useMemo(() => {
-    return window.ethereum
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : new ethers.providers.JsonRpcProvider(POLYRPC)
-  }, [POLYRPC])
+  /* -------------------- Enrich coin via URI --------------------- */
+  const enrichCoinFromURI = useCallback(
+    async (apiCoin) => {
+      // Metadata (same flow as RecentCoins)
+      let meta = { name: '', description: '', logo: '', banner: '', website: '', x: '', telegram: '' }
 
-  const normalizeIpfsOrHttp = (u, pinataGateway, pinataToken) => {
-    if (!u) return ''
-    if (u.startsWith('ipfs://')) {
-      const cidPath = u.slice('ipfs://'.length)
-      console.log(u);
-      const base = `https://${pinataGateway}/ipfs/${cidPath}`
-      return pinataToken ? `${base}?pinataGatewayToken=${pinataToken}` : base
-    }
-    if (u.startsWith('//')) return `https:${u}`
-    if (u.startsWith('http://') || u.startsWith('https://')) return u
-    return `https://${u}`
-  }
+      try {
+        const metaCID = gatewayURLFromURI(apiCoin.URI)
+        if (metaCID) {
+          const m = await fetchJSON(
+            `https://${pinataGateway}/ipfs/${metaCID}${pinataToken ? `?pinataGatewayToken=${pinataToken}` : ''}`
+          )
 
-  const getTokenBasics = async (tokenAddr) => {
-    const erc20 = new ethers.Contract(
-      tokenAddr,
-      [
-        'function name() view returns (string)',
-        'function symbol() view returns (string)',
-        'function decimals() view returns (uint8)',
-      ],
-      provider
-    )
-    const [name, symbol, decimals] = await Promise.all([erc20.name(), erc20.symbol(), erc20.decimals()])
-    return { name, symbol, decimals: Number(decimals) }
-  }
+          const rawLogo = m?.media?.logo_gateway || m?.image || ''
+          const rawBanner = m?.media?.banner_gateway ?? m?.media?.banner ?? ''
 
-  const PRICE_DECIMALS_18 = 18;
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  },[]);
-const enrichCoins = async (coinTuples) => {
-  const tasks = coinTuples.map(async (c) => {
-    const parsed = {
-      tokenA: c.tokenA,
-      tokenAReserve: BigInt(c.tokenAReserve ?? 0n),
-      usdcReserve: BigInt(c.usdcReserve ?? 0n),
-      totalPurchased: BigInt(c.totalPurchased ?? 0n),
-      lpCreated: Boolean(c.lpCreated),
-      creator: c.creator,
-      createdAt: Number(c.createdAt ?? 0),
-      totalVolume: BigInt(c.totalVolume ?? 0n),
-      URI: c.URI || '',
-      creatorFeesUSDC: BigInt(c.creatorFeesUSDC ?? 0n),
-      creatorFeesTokenA: BigInt(c.creatorFeesTokenA ?? 0n),
-      virtualTokenReserve: BigInt(c.virtualTokenReserve ?? 0n),
-      virtualUSDCReserve: BigInt(c.virtualUSDCReserve ?? 0n),
-    };
-
-    // token basics
-    let basics = { name: '', symbol: '', decimals: 18 };
-    try { basics = await getTokenBasics(parsed.tokenA); } catch {}
-
-    // ---- KEEP YOUR EXISTING IPFS/METADATA CODE AS-IS ----
-    let meta = { name: '', description: '', logo: '', banner: '' };
-    try {
-      if (parsed.URI) {
-        const url = normalizeIpfsOrHttp(parsed.URI, pinataGateway, pinataToken);
-        const m = await fetchJSON(`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${parsed.URI}/?pinataGatewayToken=${pinataToken}`);
-        const rawLogo = m?.media?.logo_gateway;
-        const rawBanner = m?.media?.banner_gateway;
-        meta = {
-          name: m?.name || basics.name,
-          description: m?.description || '',
-          logo: rawLogo.substring(8)+`?pinataGatewayToken=${pinataToken}`,
-          banner: rawBanner.substring(8)+`?pinataGatewayToken=${pinataToken}`,
-        };
+          meta = {
+            name: m?.name || '',
+            description: m?.description || '',
+            logo: normalizeIpfsOrHttp(rawLogo, pinataGateway, pinataToken),
+            banner: normalizeIpfsOrHttp(rawBanner, pinataGateway, pinataToken),
+            website: m?.links?.website || '',
+            x: m?.links?.x || '',
+            telegram: m?.links?.telegram || '',
+          }
+        }
+      } catch {
+        // ignore meta errors
       }
-    } catch {}
-    // -----------------------------------------------------
 
-    // Align price with RecentCoins: read getCoinInfo()
-    // returns (uint256 tokenAReserve, uint256 usdcReserve, uint256 totalPurchased,
-    //          bool lpCreated, uint256 percentagePurchased, uint256 currentPrice(18d),
-    //          string URI, uint256 creatorFeesUSDC, uint256 creatorFeesTokenA)
-    let price18 = 0n;
-    let liveTokenRes = parsed.tokenAReserve;
-    let liveUsdcRes  = parsed.usdcReserve;
-    let percentagePurchased = 0;
+      const logoUrl = meta.logo
 
-    try {
-      const info = await readContract({
-        contract: dex,
-        method: 'function getCoinInfo(address) view returns (uint256,uint256,uint256,bool,uint256,uint256,string,uint256,uint256)',
-        params: [parsed.tokenA],
-      });
+      // IMPORTANT: match RecentCoins output format for CoinBox:
+      // CoinBox likely does: "https://" + logo
+      // so we remove https:// here to avoid https://https://
+      const logoForCoinBox = logoUrl
+        ? logoUrl.substring(8) + (pinataToken ? `&pinataGatewayToken=${pinataToken}` : '')
+        : ''
 
-      liveTokenRes = BigInt(info[0] ?? liveTokenRes);
-      liveUsdcRes  = BigInt(info[1] ?? liveUsdcRes);
-      percentagePurchased = Number(info[4] ?? 0);
-      price18 = BigInt(info[5] ?? 0n); // already 18 decimals, same as RecentCoins
-    } catch {
-      // Fallback if getCoinInfo unavailable: derive price with virtual reserves & correct decimals.
-      // price(18d) = ( (usdc(6d)+virtUSDC) * 10^(18+decimals) ) / ( (token(dec)+virtToken) * 10^6 )
-      const effToken = parsed.tokenAReserve + parsed.virtualTokenReserve;
-      const effUSDC  = parsed.usdcReserve  + parsed.virtualUSDCReserve;
-      if (effToken > 0n) {
-        price18 = (effUSDC * (10n ** (18n + BigInt(basics.decimals)))) / (effToken * 10n ** 6n);
+      return {
+        address: apiCoin.address,
+        name: meta.name || apiCoin.metaName || apiCoin.tokenName || 'Unknown',
+        symbol: apiCoin.tokenSymbol || '',
+        decimals: 18,
+
+        price: BigInt(apiCoin.currentPrice || '0'),
+        priceDecimals: 18,
+        usdcReserve: BigInt(apiCoin.usdcReserve || '0'),
+        tokenReserve: BigInt(apiCoin.tokenAReserve || '0'),
+        percentagePurchased: apiCoin.percentagePurchased || 0,
+        lpCreated: apiCoin.lpCreated || false,
+        createdAt: apiCoin.createdAt || 0,
+        totalVolume: BigInt(apiCoin.totalVolume || '0'),
+
+        // ✅ This is what CoinBox expects (same as RecentCoins)
+        logo: logoUrl ? logoUrl.substring(8) + `?pinataGatewayToken=${pinataToken}` : '',
       }
-    }
+    },
+    [pinataGateway, pinataToken]
+  )
 
-    return {
-      address: parsed.tokenA,
-      name: meta.name || basics.name,
-      symbol: basics.symbol,
-      decimals: basics.decimals,
-      price: price18,                    // <- now matches RecentCoins
-      priceDecimals: PRICE_DECIMALS_18,  // 18
-      usdcReserve: liveUsdcRes,
-      tokenReserve: liveTokenRes,
-      percentagePurchased,
-      lpCreated: parsed.lpCreated,
-      createdAt: parsed.createdAt,
-      totalVolume: parsed.totalVolume,
-      logo: meta.logo,
-    };
-  });
+  /* ----------------------- Fetch user coins ---------------------- */
+  const fetchUserCoins = useCallback(async () => {
+    if (!address) return
 
-  return Promise.all(tasks);
-};
-
-  
-  const loadCoins = useCallback(async () => {
-    if (!address || !dex) return
-    setLoading(true)
+    if (coins.length === 0) setLoading(true)
     setError('')
+
     try {
-      const result = await readContract({
-        contract: dex,
-        method:
-          'function getAllCoinsCreated(address user) view returns ((address tokenA,uint256 tokenAReserve,uint256 usdcReserve,uint256 totalPurchased,bool lpCreated,address creator,uint256 createdAt,uint256 totalVolume,string URI,uint256 creatorFeesUSDC,uint256 creatorFeesTokenA,uint256 virtualTokenReserve,uint256 virtualUSDCReserve)[] userCoins)',
-        params: [address],
-      })
-      const coinsRaw = result || []
-      const enriched = await enrichCoins(coinsRaw)
+      const url = `${API_BASE_URL}/api/coins?creator=${address}&limit=100&sortBy=recent`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`API Error: ${res.status}`)
+      const data = await res.json()
+
+      const list = data.coins || []
+
+      // Enrich in small batches like you did (avoid too many IPFS fetches at once)
+      const BATCH_SIZE = 6
+      const enriched = []
+
+      for (let i = 0; i < list.length; i += BATCH_SIZE) {
+        const batch = list.slice(i, i + BATCH_SIZE)
+        const batchResults = await Promise.all(
+          batch.map(async (c) => {
+            try {
+              return await enrichCoinFromURI(c)
+            } catch (e) {
+              // fallback: still show coin without logo
+              return {
+                address: c.address,
+                name: c.metaName || c.tokenName || 'Unknown',
+                symbol: c.tokenSymbol || '',
+                decimals: 18,
+                price: BigInt(c.currentPrice || '0'),
+                priceDecimals: 18,
+                usdcReserve: BigInt(c.usdcReserve || '0'),
+                tokenReserve: BigInt(c.tokenAReserve || '0'),
+                percentagePurchased: c.percentagePurchased || 0,
+                lpCreated: c.lpCreated || false,
+                createdAt: c.createdAt || 0,
+                totalVolume: BigInt(c.totalVolume || '0'),
+                logo: '',
+              }
+            }
+          })
+        )
+        enriched.push(...batchResults)
+      }
+
       setCoins(enriched)
     } catch (e) {
-      console.error(e)
-      setError('Failed to load your coins.')
+      console.error('Fetch error:', e)
+      setError(`Failed to load your coins. ${e?.message || ''}`)
     } finally {
       setLoading(false)
     }
-  }, [address, dex])
+  }, [address, coins.length, enrichCoinFromURI])
 
   useEffect(() => {
-    loadCoins()
+    window.scrollTo(0, 0)
+
+    fetchUserCoins()
+
     if (intervalRef.current) clearInterval(intervalRef.current)
-    intervalRef.current = setInterval(() => {
-      loadCoins()
-    }, 5000)
+    intervalRef.current = setInterval(fetchUserCoins, 5000)
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [loadCoins])
+  }, [fetchUserCoins])
 
   return (
-    <div className="min-h-screen  py-8">
+    <div className="min-h-screen py-8">
       <div className="sm:max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-white">My Created Coins</h1>
-          <div className="text-white/60 text-sm">{address ? address.slice(0, 6) + '...' + address.slice(-4) : ''}</div>
+          <div className="text-white/60 text-sm">
+            {address ? address.slice(0, 6) + '...' + address.slice(-4) : ''}
+          </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
         )}
 
         {loading && coins.length === 0 ? (
-          <div className="text-white/80">Loading your coins…</div>
+          <div className="text-white/80">Loading your coins...</div>
         ) : coins.length === 0 ? (
           <div className="text-white/60">You haven’t created any coins yet.</div>
         ) : (

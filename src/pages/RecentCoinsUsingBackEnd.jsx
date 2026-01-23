@@ -163,23 +163,29 @@ const withTimeout = (promise, ms = 3000) => {
   /* ----------------------- Enrich coin data ----------------------- */
 
   const enrichCoin = async (apiCoin) => {
-    // Token basics
+    // 1) Prefer backend fields (same as MyCoins)
+    const apiSymbol = apiCoin.tokenSymbol || apiCoin.symbol || ''
+    const apiName = apiCoin.tokenName || apiCoin.metaName || apiCoin.name || ''
+  
+    // 2) RPC fallback only if missing
     let basics = { name: '', symbol: '', decimals: 18 }
-    try {
-      basics = await getTokenBasics(apiCoin.address)
-    } catch {
-      /* ignore */
+    if (!apiSymbol || !apiName) {
+      try {
+        basics = await getTokenBasics(apiCoin.address)
+      } catch {
+        /* ignore */
+      }
     }
-
-    // Metadata (EXACT ORIGINAL flow)
+  
+    // Metadata (same flow you already have)
     let meta = { name: '', description: '', logo: '', banner: '', website: '', x: '', telegram: '' }
     try {
       const metaURL = gatewayURLFromURI(apiCoin.URI)
       if (metaURL) {
         const m = await fetchJSON(`https://${pinataGateway}/ipfs/${metaURL}?pinataGatewayToken=${pinataToken}`)
-        const rawLogo = m?.media?.logo_gateway;
+        const rawLogo = m?.media?.logo_gateway || m?.image || ''
         const rawBanner = m?.media?.banner_gateway ?? m?.media?.banner ?? ''
-
+  
         meta = {
           name: m?.name || '',
           description: m?.description || '',
@@ -193,14 +199,20 @@ const withTimeout = (promise, ms = 3000) => {
     } catch {
       /* ignore meta errors */
     }
-
+  
     const logoUrl = meta.logo
-
+  
     return {
       address: apiCoin.address,
-      name: meta.name || basics.name || '',
-      symbol: basics.symbol || '',
-      decimals: basics.decimals || 18,
+  
+      // name: prefer meta, then backend, then RPC
+      name: meta.name || apiName || basics.name || 'Unknown',
+  
+      // ✅ symbol: prefer backend, then RPC (fix)
+      symbol: apiSymbol || basics.symbol || '',
+  
+      decimals: Number(apiCoin.decimals ?? basics.decimals ?? 18),
+  
       price: BigInt(apiCoin.currentPrice || '0'),
       priceDecimals: 18,
       usdcReserve: BigInt(apiCoin.usdcReserve || '0'),
@@ -210,9 +222,11 @@ const withTimeout = (promise, ms = 3000) => {
       createdAt: apiCoin.createdAt || 0,
       totalVolume: BigInt(apiCoin.totalVolume || '0'),
       lastActivity: apiCoin.lastActivity || 0,
+  
       logo: logoUrl ? logoUrl.substring(8) + `?pinataGatewayToken=${pinataToken}` : '',
     }
   }
+  
 
   /* --------------------------- Load coins ------------------------- */
 
