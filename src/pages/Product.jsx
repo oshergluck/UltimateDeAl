@@ -284,58 +284,64 @@ const Product = () => {
     // New Function: Unregister via API (Store Specific)
     const handleUnregisterFromDB = async () => {
       if (!confirmUnregister) return;
-      
-      // 1. Check if account exists (v5 way)
-      if (!account) {
-          alert("Wallet not connected");
-          return;
+    
+      if (!account?.address) {
+        alert("Wallet not connected");
+        return;
       }
-
+    
+      if (!storeContractByURL) {
+        alert("Store not loaded yet");
+        return;
+      }
+    
       setIsLoading(true);
-
+    
       try {
-          const timestamp = Date.now();
-          const message = `I confirm that I want to delete my account: ${address.toLowerCase()} at ${timestamp}`;
-
-          // 2. Sign using the v5 account object
-          // The v5 SDK handles Mobile/Desktop/WalletConnect automatically
-          const signature = await account.signMessage({ message: message });
-
-          // 3. Send to server (Same as before)
-          const response = await fetch(`${API_URL}/unregister`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  walletAddress: address,
-                  signature: signature,
-                  timestamp: timestamp
-              })
-          });
-
-          const data = await response.json();
-
-          if (data.success) {
-              setIsRegistered(false);
-              setShowUnregisterModal(false);
-              setConfirmUnregister(false);
-              // Reset user state...
-              setNameOfClient('');
-              setEmailOfClient('');
-              setPhoneNumOfClient('');
-              setPhysicalAddressOfClient('');
-              alert("Account removed successfully");
-          } else {
-              throw new Error(data.error || "Unknown error from server");
-          }
-
+        const timestamp = Date.now();
+    
+        const wallet = account.address.toLowerCase();
+        const store = String(storeContractByURL).toLowerCase();
+    
+        const message = `I confirm that I want to delete my account: ${wallet} in store: ${store} at ${timestamp}`;
+    
+        const signature = await account.signMessage({ message });
+    
+        const response = await fetch(`${API_URL}/unregister`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletAddress: account.address,
+            storeAddress: storeContractByURL,
+            signature,
+            timestamp,
+          }),
+        });
+    
+        const data = await response.json();
+    
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || `HTTP ${response.status}`);
+        }
+    
+        setIsRegistered(false);
+        setShowUnregisterModal(false);
+        setConfirmUnregister(false);
+    
+        setNameOfClient("");
+        setEmailOfClient("");
+        setPhoneNumOfClient("");
+        setPhysicalAddressOfClient("");
+    
+        alert("Account removed successfully");
       } catch (error) {
-          console.error("Unregister failed:", error);
-          alert("Error removing client: " + error.message);
+        console.error("Unregister failed:", error);
+        alert("Error removing client: " + (error?.message || "Unknown error"));
       } finally {
-          setIsLoading(false);
+        setIsLoading(false);
       }
-  };
-
+    };
+    
       const canUserLeaveReview = async () => {
         try {
           setIsLoading(true);
@@ -1313,7 +1319,7 @@ return (
                         } catch (err) {
                             console.error("Failed to register order in DB:", err);
                         }
-                        setOwnerShip(true);
+                        refreshPage();
                     }}
                       onError={(error) => {
                         console.error("Transaction error", error);

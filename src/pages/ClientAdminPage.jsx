@@ -1784,7 +1784,7 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
                                 </div>
                             </section>
                         </div>
-                        <button onClick={adminLogout} className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold">
+                        <button onClick={adminLogout} className="px-3 mt-[20px] py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold">
                         Logout
                         </button>
                     </div>
