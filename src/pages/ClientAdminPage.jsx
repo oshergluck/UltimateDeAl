@@ -15,6 +15,15 @@ import { useNavigate } from 'react-router-dom';
 
 
 const ClientAdminPage = () => {
+    const [webhookUrl, setWebhookUrl] = useState('');
+    const loadWebhookSettings = async () => {
+        try {
+            const data = await authFetch("/store/get-webhook");
+            if (data.webhookUrl) setWebhookUrl(data.webhookUrl);
+        } catch (e) {
+            console.log("No webhook set or error fetching");
+        }
+    };
     function normAddr(a) {
         return String(a || '').trim().toLowerCase();
       }
@@ -197,8 +206,21 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
     useEffect(() => {
         if (adminToken && userContract && ethers.utils.isAddress(userContract)) {
           setConnectedto(true);
+          loadWebhookSettings();
         }
       }, [adminToken, userContract]);
+
+      const handleSaveWebhook = async () => {
+        try {
+            setIsLoading(true);
+            await authFetch("/store/set-webhook", { webhookUrl });
+            alert("Webhook updated successfully!");
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (userContract && ethers.utils.isAddress(userContract)) {
@@ -1783,6 +1805,32 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
                                     </button>
                                 </div>
                             </section>
+
+                            {/* Webhook Configuration */}
+<div className="mt-4 pt-4 border-t border-slate-700">
+    <h3 className="text-white font-medium mb-2">Webhook Integration (Automation)</h3>
+    <div className="flex flex-col sm:flex-row gap-3">
+        <input 
+            type="text" 
+            placeholder="https://your-webhook-url.com..." 
+            value={webhookUrl} 
+            onChange={e => setWebhookUrl(e.target.value)} 
+            className="flex-1 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm" 
+        />
+        <button 
+            onClick={handleSaveWebhook} 
+            className="px-3 sm:px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center gap-2"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Set Webhook
+        </button>
+    </div>
+    <p className="text-xs text-gray-400 mt-2">
+        This URL will receive a POST request JSON on every <b>New Order</b> and <b>New Client Registration</b>.
+    </p>
+</div>
                         </div>
                         <button onClick={adminLogout} className="px-3 mt-[20px] py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold">
                         Logout
