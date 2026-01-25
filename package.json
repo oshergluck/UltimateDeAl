@@ -60,7 +60,8 @@
     "stream-browserify": "^3.0.0",
     "thirdweb": "^5.105.26",
     "util": "^0.12.5",
-    "viem": "^2.21.2"
+    "viem": "^2.21.2",
+    "world-countries": "^5.1.0"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",

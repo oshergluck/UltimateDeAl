@@ -59,6 +59,7 @@ import {
   DeployVotes,
   RecentCoins,
   ActivatePromotion,
+  StoreDesigner,
 } from "./pages";
 import { useMediaQuery } from "react-responsive";
 

@@ -405,7 +405,8 @@ useEffect(() => {
 
               {/* Wallet button & Menu */}
               <div className="shrink-0 flex items-center gap-2">
-                <div className="relative cursor-pointer group" onClick={() => navigate('/cart')}>
+              <div className="relative cursor-pointer group translate-x-[20px]" onClick={() => navigate('/cart')}>
+
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-slate-300 group-hover:text-[#FFDD00] group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
@@ -415,7 +416,7 @@ useEffect(() => {
                         </span>
                     )}
                 </div>
-
+                    <div className="origin-right scale-[0.85] sm:scale-100">
                 <ConnectButton
                   autoConnect={true}
                   client={client}
@@ -482,6 +483,7 @@ useEffect(() => {
                   chain={base}
                   chains={[base]}
                 />
+                </div>
               </div>
 
               {/* Menu button */}

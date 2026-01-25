@@ -139,7 +139,7 @@ function processDescription(description, maxLength = 180)
         <div className="max-w-[1200px] mx-auto px-3 sm:px-6 lg:px-8 py-8">
           <button
             type="button"
-            onClick={() => navigate("/shop/ultrashop/products/LISTESH")}
+            onClick={() => navigate("/shop/main/products/LISTESH")}
             className="w-full rounded-3xl border-2 border-[#FFDD00]/30 bg-gradient-to-br from-[#FFDD00]/10 via-transparent to-[#FFDD00]/5 backdrop-blur-xl shadow-2xl hover:border-[#FFDD00]/50 hover:shadow-[0_0_30px_rgba(255,221,0,0.3)] transition-all duration-300 p-8 sm:p-12 group"
           >
             <div className="text-center">

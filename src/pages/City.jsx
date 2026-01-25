@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useContract } from "@thirdweb-dev/react";
 import { createThirdwebClient, prepareContractCall, getContract } from "thirdweb";
@@ -35,11 +35,15 @@ const City = () => {
     return decodeURIComponent(lastSegment || "").trim();
   }, [location.pathname]);
 
+  // --- State Management ---
   const [citiesAndMayors, setCitiesAndMayors] = useState([]);
   const [cityStartDate, setCityStartDate] = useState(null);
   const [cityStores, setCityStores] = useState([]);
   const [encryptionStatus, setEncryptionStatus] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // Loading States
+  const [isLoading, setIsLoading] = useState(false); // Main UI blocker
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false); // Non-blocking background fetch
 
   const [ticketsOwned, setTicketsOwned] = useState(0);
   const [participantsCount, setParticipantsCount] = useState(0);
@@ -65,6 +69,7 @@ const City = () => {
     navigate("/shop/main/products/LOTERRY");
   };
 
+  // --- Contracts ---
   const { contract: highContract } = useContract("0x18b67dd7409d3a3f4f3dde7a6a01c4db4b9ba5cd");
   const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
   const { contract: invoicesContract } = useContract("0xcbb313c9C80CBe57a7Ba70f95700272d83C65020");
@@ -213,7 +218,9 @@ const City = () => {
     return <div className="font-epilogue text-[#FFFFFF]">{lines}</div>;
   }
 
-  async function checkOwnership() {
+  // --- Optimized Fetch Functions (No internal blocking loaders) ---
+
+  const checkOwnership = useCallback(async () => {
     try {
       if (!invoicesContract || !address) {
         setOwnerShip(false);
@@ -225,12 +232,11 @@ const City = () => {
       console.error("Error checking ownership:", error);
       setOwnerShip(false);
     }
-  }
+  }, [invoicesContract, address]);
 
-  async function fetchCityData() {
+  const fetchCityData = useCallback(async () => {
     if (!luckMachineContract || !cityName) return;
 
-    setIsLoading(true);
     try {
       const state = await luckMachineContract.call("getRoundState", [cityName]);
 
@@ -251,12 +257,10 @@ const City = () => {
       setParticipantsCount(Number.isFinite(pcNum) ? pcNum : 0);
     } catch (error) {
       console.error("Error fetching city data:", error);
-    } finally {
-      setIsLoading(false);
     }
-  }
+  }, [luckMachineContract, cityName, HexToInteger]);
 
-  async function fetchCityStoresAndMayor() {
+  const fetchCityStoresAndMayor = useCallback(async () => {
     try {
       if (!storeRegistery || !highContract || !cityName) return;
 
@@ -326,14 +330,16 @@ const City = () => {
     } catch (error) {
       console.error("Error fetching city stores and mayor:", error);
     }
-  }
+  }, [storeRegistery, highContract, cityName, checkIfEncrypted]);
 
-  async function fetchAllCitiesAndMayors() {
+  // NOTE: This function is slow. Separated to run in background.
+  const fetchAllCitiesAndMayors = useCallback(async () => {
     try {
       if (!storeRegistery || !highContract) {
         setCitiesAndMayors([]);
         return;
       }
+      setIsBackgroundLoading(true);
 
       const allStores = await storeRegistery.call("getAllStores");
       const storesArr = allStores?.[0] || [];
@@ -388,10 +394,12 @@ const City = () => {
     } catch (error) {
       console.error("Error fetching cities and mayors:", error);
       setCitiesAndMayors([]);
+    } finally {
+      setIsBackgroundLoading(false);
     }
-  }
+  }, [storeRegistery, highContract]);
 
-  async function updateDateOfGame() {
+  const updateDateOfGame = useCallback(async () => {
     try {
       if (!luckMachineContract || !cityName) return;
 
@@ -409,7 +417,7 @@ const City = () => {
     } catch (error) {
       console.error("Error updating date of game:", error);
     }
-  }
+  }, [luckMachineContract, cityName]);
 
   async function updateDateOfGameAfterPurchase(extraTickets) {
     try {
@@ -530,126 +538,208 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
     }
   };
 
+  // --- Main Effects ---
+
+  // 1. Critical Data Load (Blocks UI until ready)
   useEffect(() => {
     if (!cityName) return;
+    
+    // Wait for Thirdweb hooks to initialize contracts
+    if (!luckMachineContract || !storeRegistery || !highContract) {
+      setIsLoading(true);
+      return;
+    }
+
     if (lastLoadedCityRef.current === cityName) return;
     lastLoadedCityRef.current = cityName;
 
     window.scrollTo(0, 0);
 
-    (async () => {
+    const loadCriticalData = async () => {
+      setIsLoading(true);
       setStory("");
       setMayor("");
       setHighesBalance(0);
       setOwnerShip(false);
 
-      await Promise.allSettled([
-        fetchCityData(),
-        fetchCityStoresAndMayor(),
-        fetchAllCitiesAndMayors(),
-        updateDateOfGame(),
-        checkOwnership(),
-      ]);
-    })();
-  }, [cityName]);
+      try {
+        // Parallel fetch for critical UI data only
+        await Promise.allSettled([
+          fetchCityData(),
+          fetchCityStoresAndMayor(),
+          updateDateOfGame(),
+          checkOwnership(),
+        ]);
+      } catch (e) {
+        console.error("Critical load error", e);
+      } finally {
+        setIsLoading(false);
+        // Trigger the heavy "all cities" fetch in the background
+        fetchAllCitiesAndMayors();
+      }
+    };
 
+    loadCriticalData();
+  }, [
+    cityName, 
+    luckMachineContract, 
+    storeRegistery, 
+    highContract, 
+    fetchCityData, 
+    fetchCityStoresAndMayor, 
+    updateDateOfGame, 
+    checkOwnership, 
+    fetchAllCitiesAndMayors
+  ]);
+
+  // 2. Refresh on Address/Wallet change (Non-blocking usually)
   useEffect(() => {
-    if (!cityName) return;
+    if (!cityName || !address || !luckMachineContract) return;
     (async () => {
-      await Promise.allSettled([fetchCityData(), checkOwnership()]);
+       await Promise.allSettled([fetchCityData(), checkOwnership()]);
     })();
-  }, [address, cityName]);
+  }, [address, cityName, luckMachineContract, fetchCityData, checkOwnership]);
 
   return (
-    <div className=" rounded-[15px] mx-auto p-8 mt-[35px]">
-      {isLoading && <Loader />}
+    <div className="relative mx-auto p-4 sm:p-8 mt-[35px] bg-black/40 backdrop-blur-xl border border-white/10 rounded-[30px] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden font-epilogue">
+  
+  {/* Background Decorative Elements - Neon Glows */}
+  <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-500/10 blur-[100px] pointer-events-none" />
+  <div className="absolute bottom-0 right-0 w-32 h-32 bg-fuchsia-500/10 blur-[100px] pointer-events-none" />
 
-      <h1 className="text-center font-bold text-[#ff9900] drop-shadow-md pb-[25px] sm:text-[50px] text-[30px]">
-        Today is:
-      </h1>
-      <h1 className="text-center font-bold text-[#ff9900] drop-shadow-md pb-[25px] sm:text-[50px] text-[30px]">
-        {dateOfGame || "Loading..."}
-      </h1>
+  {isLoading && <Loader />}
 
-      <h1 className="text-center font-bold text-[#ff9900] drop-shadow-md pb-[25px] sm:text-[50px] text-[25px]">
-        In The MetaVerse Of {cityName}
-      </h1>
+  {/* --- Header Section --- */}
+  <div className="relative z-10 space-y-2 mb-10">
+    <h1 className="text-center font-black tracking-tighter text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] uppercase sm:text-[60px] text-[35px]">
+      System Date:
+    </h1>
+    <h1 className="text-center font-mono font-bold text-white drop-shadow-md py-[10px] sm:text-[50px] text-[30px]">
+      [{dateOfGame || "SYNCHRONIZING..."}]
+    </h1>
 
-      <h2 className="sm:text-8xl text-5xl font-bold text-white mb-2 text-center">
-        Welcome to {cityName}
-      </h2>
+    <h1 className="text-center font-bold bg-gradient-to-r from-fuchsia-500 to-cyan-400 bg-clip-text text-transparent py-[25px] sm:text-[40px] text-[22px] uppercase tracking-widest">
+      Node: Metaverse of {cityName}
+    </h1>
 
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-[#FFDD00] mb-4 text-center">Stores in {cityName}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cityStores.map((store, index) => (
-            <StoreBox key={`${store?.urlPath || index}-${index}`} store={store} enc={encryptionStatus[store.urlPath]} />
-          ))}
+    <h2 className="sm:text-7xl text-4xl font-black text-white mb-6 text-center tracking-tight">
+      Welcome to <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">{cityName}</span>
+    </h2>
+  </div>
+
+  {/* --- Stores Grid --- */}
+  <div className="mb-12 relative z-10">
+    <h2 className="text-2xl font-bold text-cyan-400/80 mb-6 text-center uppercase tracking-[0.2em] border-b border-cyan-500/20 pb-4 mx-auto w-fit">
+      Sector Stores
+    </h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {cityStores.map((store, index) => (
+        <div key={`${store?.urlPath || index}-${index}`} className="hover:scale-[1.03] transition-transform duration-300 border border-white/5 bg-white/5 rounded-2xl p-1 backdrop-blur-sm shadow-lg hover:shadow-cyan-500/20">
+           <StoreBox store={store} enc={encryptionStatus[store.urlPath]} />
+        </div>
+      ))}
+    </div>
+  </div>
+
+  {/* --- Lore / Info Section --- */}
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12 border-y border-white/10 py-8 bg-white/5">
+    <p className="text-cyan-100/70 text-sm font-light leading-relaxed px-4 border-l-2 border-cyan-500/50">
+      <strong className="text-cyan-400 block mb-1">CORE PROTOCOL:</strong> 
+      No living costs required. Knowledge and information are the primary currency in this sector.
+    </p>
+    <p className="text-cyan-100/70 text-sm font-light leading-relaxed px-4 border-l-2 border-fuchsia-500/50">
+      <strong className="text-fuchsia-400 block mb-1">CITIZEN RIGHTS:</strong> 
+      Every architect has the authority to manifest new sectors, build cities, or merge existing nodes.
+    </p>
+    <p className="text-cyan-100/70 text-sm font-light leading-relaxed px-4 border-l-2 border-cyan-500/50">
+      <strong className="text-cyan-400 block mb-1">THE DEVICE:</strong> 
+      The $USDC Spinner — a fusion of ancient runic scripts and hyper-advanced neural circuitry offering escape.
+    </p>
+  </div>
+
+  {address ? (
+    <>
+      {/* --- HUD Stats Cards --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        {/* Cost Card */}
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-yellow-500/30 p-6 rounded-2xl group hover:bg-yellow-500/10 transition-all shadow-[inset_0_0_20px_rgba(234,179,8,0.05)]">
+          <h2 className="text-xs font-bold text-yellow-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span> Uptime Cost
+          </h2>
+          <p className="text-3xl font-mono font-bold text-white tracking-tight">
+            {Math.round(Number(registrationCost) || 0)} <span className="text-sm opacity-60">USDC</span>
+          </p>
+        </div>
+
+        {/* Treasury Card */}
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-cyan-500/30 p-6 rounded-2xl group hover:bg-cyan-500/10 transition-all shadow-[inset_0_0_20px_rgba(6,182,212,0.05)]">
+          <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Treasury
+          </h2>
+          <p className="text-3xl font-mono font-bold text-white tracking-tight">
+            {Math.round(Number(totalDeposited) || 0)} <span className="text-sm opacity-60">USDC</span>
+          </p>
+        </div>
+
+        {/* Population Card */}
+        <div className="bg-gradient-to-br from-white/5 to-transparent border border-green-500/30 p-6 rounded-2xl group hover:bg-green-500/10 transition-all shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]">
+          <h2 className="text-xs font-bold text-green-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Lifeforms
+          </h2>
+          <p className="text-xl font-mono font-bold text-white">
+            {participantsCount} <span className="text-[10px] block opacity-50 uppercase tracking-tighter mt-1">Bio-units & Droids</span>
+          </p>
+        </div>
+
+        {/* User Cycles Card */}
+        <div className={`p-6 rounded-2xl border transition-all relative overflow-hidden ${
+            ticketsOwned >= 1 
+              ? "bg-cyan-900/20 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.15)]" 
+              : "bg-white/5 border-white/10"
+          }`}>
+          <h2 className={`text-xs font-bold uppercase tracking-widest mb-2 ${ticketsOwned >= 1 ? "text-cyan-300" : "text-white/40"}`}>
+            Cycles Spent
+          </h2>
+          <p className="text-3xl font-mono font-bold text-white relative z-10">{ticketsOwned}</p>
+          {ticketsOwned >= 1 && <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-cyan-400/20 blur-xl rounded-full"></div>}
         </div>
       </div>
 
-      <p className="text-white text-lg leading-relaxed mb-8">
-        In {cityName}, You dont have to pay for living. You have to pay to get the news of today about the city you built,
-      </p>
-      <p className="text-white text-lg leading-relaxed mb-8">Each store owner can build a city or join an existing city.</p>
-      <p className="text-white text-lg leading-relaxed mb-8">
-        In the bustling city of {cityName}, where magic and technology intertwine, the $USDC Spinner stands as a beacon of
-        hope and excitement. This mystical device, powered by ancient runes and cutting-edge circuitry, offers citizens a
-        chance to escape the daily grind and dream of a brighter future.
-      </p>
+      {/* --- Main Interaction Control Panel --- */}
+      <div className="text-center mb-12 bg-gradient-to-b from-white/5 to-black/40 p-6 sm:p-10 rounded-[40px] border border-white/10 shadow-2xl relative overflow-hidden">
+        {/* Animated Scanline */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/5 to-transparent h-[10px] w-full animate-[scan_4s_linear_infinite] pointer-events-none opacity-20"></div>
 
-      {address ? (
-        <>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
-              <h2 className="text-2xl font-bold mb-2">Day Cost</h2>
-              <p className="text-3xl font-semibold">{Math.round(Number(registrationCost) || 0)} USDC</p>
-            </div>
+        <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter drop-shadow-lg">Initialize Luck Protocol</h2>
+        <p className="text-cyan-400/60 mb-8 font-mono text-sm">Quantum raffle participation active. Secure connection established.</p>
 
-            <div className="bg-gradient-to-r from-blue-400 to-indigo-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
-              <h2 className="text-2xl font-bold mb-2">{cityName} has</h2>
-              <p className="text-3xl font-semibold">{Math.round(Number(totalDeposited) || 0)} USDC</p>
-            </div>
-
-            <div className="bg-gradient-to-r from-green-400 to-teal-500 p-6 rounded-lg shadow-lg text-white w-full md:w-1/4">
-              <h2 className="text-2xl font-bold mb-2">{cityName} Residents</h2>
-              <p className="text-3xl font-semibold">{participantsCount} + some Ailens and Robots</p>
-            </div>
-
-            <div
-              className={`p-6 rounded-lg shadow-lg text-white w-full md:w-1/4 ${
-                ticketsOwned >= 1 ? "bg-gradient-to-r from-yellow-400 to-yellow-600" : "bg-gradient-to-r from-gray-400 to-gray-600"
-              }`}
-            >
-              <h2 className="text-2xl font-bold mb-2 drop-shadow-md">Days you spent in {cityName}</h2>
-              <p className="text-3xl font-semibold drop-shadow-md">{ticketsOwned}</p>
-            </div>
+        <div className="flex flex-col items-center justify-center space-y-6">
+          
+          {/* Input Field */}
+          <div className="flex items-center space-x-4 bg-black/60 p-3 rounded-2xl border border-white/20 shadow-inner">
+            <label htmlFor="ticketsToBuy" className="text-xs font-bold text-white/70 uppercase px-2">Cycles to Advance:</label>
+            <input
+              type="number"
+              id="ticketsToBuy"
+              value={ticketsToBuy}
+              onChange={handleTicketChange}
+              className="bg-transparent text-cyan-400 font-mono font-bold text-2xl w-24 outline-none text-right focus:text-cyan-300 transition-colors"
+            />
           </div>
 
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#FFDD00] mb-4">Try Your Luck!</h2>
-            <p className="text-xl text-white mb-8">Buy days in {cityName} for a chance to win big!</p>
-
-            <div className="mb-4">
-              <label htmlFor="ticketsToBuy" className="text-white mr-2">
-                Amount Of Days To Run Forward
-              </label>
-              <input
-                type="number"
-                id="ticketsToBuy"
-                value={ticketsToBuy}
-                onChange={handleTicketChange}
-                className="bg-gray-700 text-white px-2 py-1 rounded"
-              />
-            </div>
-
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-4 w-full max-w-sm relative z-20">
             {ownerShip ? (
               <>
+                {/* 1. APPROVE BUTTON */}
                 <TransactionButton
                   disabled={ticketsToBuy < 1}
-                  className="!mb-[15px] !bg-cyan-400 !hover:bg-orange-400 text-black font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out"
+                  className="!w-full !rounded-xl !bg-white/90 hover:!bg-white !text-black !font-black !uppercase !tracking-widest !py-4 !shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                   transaction={() => {
-                    const cost6 = registrationCost6 && !registrationCost6.isZero() ? registrationCost6 : ethers.BigNumber.from(90).mul(ethers.BigNumber.from(10).pow(6));
+                    const cost6 = registrationCost6 && !registrationCost6.isZero() 
+                      ? registrationCost6 
+                      : ethers.BigNumber.from(90).mul(ethers.BigNumber.from(10).pow(6));
+                    
                     const approveAmount = cost6.mul(ethers.BigNumber.from(String(ticketsToBuy))).add(ethers.BigNumber.from(1));
 
                     const tx = prepareContractCall({
@@ -662,22 +752,21 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
                     return tx;
                   }}
                   onTransactionSent={(result) => {
-                    console.log("Transaction submitted", result.transactionHash);
+                    console.log("Approval submitted", result.transactionHash);
                   }}
                   onTransactionConfirmed={(receipt) => {
-                    console.log("Transaction confirmed", receipt.transactionHash);
+                    console.log("Approval confirmed", receipt.transactionHash);
                   }}
                   onError={(error) => {
-                    console.error("Transaction error", error);
+                    console.error("Approval error", error);
                   }}
                 >
-                  Approve
+                  Authorize USDC Transfer
                 </TransactionButton>
 
-                <br />
-
+                {/* 2. REGISTER BUTTON */}
                 <TransactionButton
-                  className="!bg-green-500 !hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out"
+                  className="!w-full !rounded-xl !bg-gradient-to-r !from-cyan-500 !to-blue-600 hover:!from-cyan-400 hover:!to-blue-500 !text-white !font-black !uppercase !tracking-widest !py-4 !shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                   transaction={async () => {
                     const tx = prepareContractCall({
                       contract: luckMachineContract2,
@@ -688,11 +777,11 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
                     return tx;
                   }}
                   onTransactionSent={(result) => {
-                    console.log("Transaction submitted", result.transactionHash);
+                    console.log("Registration submitted", result.transactionHash);
                     setIsLoading(true);
                   }}
                   onTransactionConfirmed={async (receipt) => {
-                    console.log("Transaction confirmed", receipt.transactionHash);
+                    console.log("Registration confirmed", receipt.transactionHash);
 
                     const prev = Number(localStorage.getItem(ticketsStorageKey) || "0");
                     const next = (Number.isFinite(prev) ? prev : 0) + (Number(ticketsToBuy) || 0);
@@ -705,61 +794,107 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
                   }}
                   onError={(error) => {
                     setIsLoading(false);
-                    console.error("Transaction error", error);
+                    console.error("Registration error", error);
                   }}
                 >
-                  Get The Daily News
+                  INITIALIZE & DOWNLOAD NEWS
                 </TransactionButton>
               </>
             ) : (
-              <>
-                <p className="my-[5px] font-bold text-red-500">You Don't Have Ultimate CitizenShip</p>
-                <br />
-                <button
-                  onClick={() => navigateToDeAlStore()}
-                  className="!bg-green-500 !hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 ease-in-out"
-                >
-                  Buy CitizenShip
-                </button>
-              </>
+              <button
+                onClick={() => navigateToDeAlStore()}
+                className="bg-red-500/10 border border-red-500/50 text-red-500 font-black py-4 rounded-xl uppercase tracking-widest hover:bg-red-500/20 hover:border-red-500 transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+              >
+                Access Denied: Buy Citizenship
+              </button>
             )}
           </div>
+        </div>
+      </div>
 
-          <h2 className="text-xl font-bold text-white mb-4">Current Mayor:</h2>
-          <h2 className="text-xl text-white mb-4">{renderDescriptionWithBreaks(mayor)}</h2>
+      {/* --- Data Panels: Mayor & Stocks --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="p-6 bg-white/5 rounded-2xl border-l-4 border-fuchsia-500 shadow-lg">
+          <h2 className="text-xs font-bold text-fuchsia-400 uppercase mb-3 tracking-widest">Current Sector Admin (Mayor)</h2>
+          <div className="text-white/90 font-mono text-sm leading-relaxed">
+            {renderDescriptionWithBreaks(mayor)}
+          </div>
+        </div>
+        <div className="p-6 bg-white/5 rounded-2xl border-l-4 border-yellow-500 shadow-lg">
+          <h2 className="text-xs font-bold text-yellow-400 uppercase mb-3 tracking-widest">Mayor $UST Balance</h2>
+          <div className="text-2xl text-white font-mono font-bold">
+            {formatNumberWithCommas(Math.round(Number(high) || 0))} 
+            <span className="text-sm font-normal text-white/50 ml-2">$UST Stocks</span>
+          </div>
+        </div>
+      </div>
 
-          <h2 className="text-[36px] text-yellow-400 mb-4">Holding:</h2>
-          <h2 className="text-[36px] text-yellow-400 mb-4">{formatNumberWithCommas(Math.round(Number(high) || 0))} UST$ Stocks</h2>
-
-          {story && (
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-              <h2 className="text-2xl font-bold text-white mb-4">City Fake News</h2>
-              <p className="text-white whitespace-pre-line rtl">{story}</p>
+      {/* --- Dynamic Story Feed --- */}
+      {story && (
+        <div className="relative group p-[2px] rounded-3xl bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-cyan-500 bg-[length:200%_auto] animate-[gradient_3s_ease_infinite] mb-12 shadow-[0_0_40px_rgba(34,211,238,0.3)]">
+          <div className="bg-[#0f0f13] p-8 rounded-[22px] h-full">
+            <h2 className="text-xl font-black text-cyan-400 mb-4 uppercase flex items-center gap-2">
+              <span className="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
+              Incoming Data Transmission
+            </h2>
+            <div className="text-white/90 leading-relaxed font-light italic font-mono whitespace-pre-line rtl">
+              {story}
             </div>
-          )}
-
-          <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold text-white mb-4">How It Works</h2>
-            <ol className="list-decimal list-inside text-white space-y-2">
-              <li>Buy days by paying the day cost</li>
-              <li>Get the daily news of {cityName}</li>
-              <li>Each city has its own raffle</li>
-              <li>Wait for more residents to join</li>
-              <li>The owner of UltraShop MultiVerse will spin the luck when ready</li>
-              <li>The Timeline Of {cityName} will reset</li>
-              <li>A winner gets 2/3 of the total pot!</li>
-              <li>The remaining 1/3 goes to the contract owner</li>
-            </ol>
           </div>
-
-          <div className="mt-12 text-center">
-            <p className="text-white text-lg">May the odds be ever in your favor!</p>
-          </div>
-        </>
-      ) : (
-        <h2 className="text-[18px] text-[#FFDD00] font-bold">Login get the daily news of {cityName}</h2>
+        </div>
       )}
+
+      {/* --- Footer Instructions --- */}
+      <div className="bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-md">
+        <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest border-b border-white/10 pb-4">
+          Protocol Operating Procedure
+        </h2>
+        <ol className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-xs font-mono text-cyan-100/60">
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">01.</span> Execute payment for cycle entry.
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">02.</span> Decrypt local node transmissions (News).
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">03.</span> City-specific raffles initialized automatically.
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">04.</span> Await population density threshold.
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">05.</span> Multiverse spin sequence begins.
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">06.</span> Timeline reset upon conclusion.
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">07.</span> Victor receives 66.6% of treasury pot.
+          </li>
+          <li className="flex gap-4 items-start"> 
+            <span className="text-cyan-400 font-bold">08.</span> System tax: 33.3% to system architects.
+          </li>
+        </ol>
+      </div>
+      
+      <div className="mt-8 text-center">
+         <p className="text-fuchsia-400/80 text-sm uppercase tracking-[0.3em] font-bold animate-pulse">
+           May the algorithm favor your signature
+         </p>
+      </div>
+
+    </>
+  ) : (
+    // Disconnected State
+    <div className="text-center p-16 border border-dashed border-cyan-500/30 rounded-3xl bg-black/20">
+       <div className="inline-block p-4 rounded-full bg-cyan-500/10 mb-4 animate-pulse">
+         <svg className="w-12 h-12 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
+       </div>
+       <h2 className="text-2xl text-cyan-400 font-black uppercase tracking-widest mb-2">Neural Link Required</h2>
+       <p className="text-white/40 font-mono">Authenticate wallet to view node data and establish connection.</p>
     </div>
+  )}
+</div>
   );
 };
 

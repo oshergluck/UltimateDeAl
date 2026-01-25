@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import { useStateContext } from '../context';
 import { useNavigate } from 'react-router-dom';
 import { logoOfWebsite, leader, atom, LingureLogo, VerifiedIcon, done_desktop } from '../assets';
@@ -13,8 +13,72 @@ import { useSendTransaction, TransactionButton,useActiveAccount } from 'thirdweb
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import countriesData from 'world-countries';
+
+
 
 const StorePage = () => {
+  const countries = countriesData
+  .map((country) => {
+    const root = country.idd?.root || '';
+    const suffix = country.idd?.suffixes ? country.idd.suffixes[0] : '';
+    const fullCode = (root + suffix).replace('+', '');
+
+    return {
+      name: country.name.common,
+      code: fullCode,
+      emoji: country.flag,
+      searchStr: country.name.common.toLowerCase()
+    };
+  })
+  .filter((c) => c.code)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const [countryCode, setCountryCode] = useState('972');
+const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+const [countrySearch, setCountrySearch] = useState('');
+const countryDropdownRef = useRef(null);
+
+// 2. Filter countries based on search input
+const filteredCountries = countries.filter(c => 
+  c.name.toLowerCase().includes(countrySearch.toLowerCase()) || 
+  c.code.includes(countrySearch)
+);
+
+// 3. Close dropdown when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
+      setIsCountryDropdownOpen(false);
+      setCountrySearch('');
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
+
+// 4. Handle "Type a letter to jump" logic
+const handleKeyDown = (e) => {
+  if (!isCountryDropdownOpen) return;
+  
+  // If it's a single character/letter
+  if (e.key.length === 1 && e.key.match(/[a-z]/i)) {
+    const firstMatch = countries.find(c => c.name.toLowerCase().startsWith(e.key.toLowerCase()));
+    if (firstMatch) {
+      const element = document.getElementById(`country-${firstMatch.code}-${firstMatch.name}`);
+      if (element) element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+};
+
+
+  const formatFullPhoneNumber = () => {
+    let subscriber = phoneNumOfClient.trim();
+    if (subscriber.startsWith('0')) {
+      subscriber = subscriber.substring(1);
+    }
+    return `${countryCode}${subscriber}`;
+  };
     const navigate = useNavigate();
     const account = useActiveAccount();
     const client = createThirdwebClient({ clientId: import.meta.env.VITE_THIRDWEB_CLIENT });
@@ -25,7 +89,8 @@ const StorePage = () => {
     
     // API URL Definition
     const API_URL = import.meta.env.VITE_MONGO_SERVER_API+"/api";
-
+    // Modal States for Registration Confirmation
+    const [showRegisterConfirmModal, setShowRegisterConfirmModal] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [selectedCategoryName, setSelectedCategoryName] = useState('All');
     const [reward, setReward] = useState(0);
@@ -104,7 +169,6 @@ const StorePage = () => {
             
             if (storeRegistery && theStoreContract) {
                 canUserLeaveReview();
-                fetchShareDetails();
             }
         }
     }, [address]); 
@@ -278,17 +342,18 @@ const StorePage = () => {
                 tempAddress = "Doesn't matters";
             }
 
+            // ... inside handleRegisterToDB
             const response = await fetch(`${API_URL}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    walletAddress: address,
-                    name: nameOfClient,
-                    email: emailOfClient,
-                    phone: phoneNumOfClient,
-                    physicalAddress: tempAddress,
-                    storeAddress: storeContractByURL
-                })
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  walletAddress: address,
+                  name: nameOfClient,
+                  email: emailOfClient,
+                  phone: formatFullPhoneNumber(), // <--- Add this
+                  physicalAddress: tempAddress,
+                  storeAddress: storeContractByURL
+              })
             });
             const data = await response.json();
             if (data.success) {
@@ -498,6 +563,7 @@ const StorePage = () => {
                 fetchRewardAddress();
                 fetchCategories();
                 if (ShareContract) {
+                  fetchShareDetails();
                     fetchRewardSymbol();
                 }
             }
@@ -913,46 +979,109 @@ const StorePage = () => {
                       🔐 All details are encrypted by the website
                     </p>
       
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {storeContractByURL === import.meta.env.VITE_ULTIMATEDEAL_STORE ||
-                      storeContractByURL === '0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75' ? null : (
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Physical Address - Only shows if not specific stores */}
+                        {storeContractByURL === import.meta.env.VITE_ULTIMATEDEAL_STORE ||
+                        storeContractByURL === "0x8Ccf7b92D22B3dc098eeeCFe0E1582Dd152f0c75" ? null : (
+                          <div className="relative group">
+                            <input
+                              className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 pl-11 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-black/40 transition-all duration-300"
+                              type="text"
+                              placeholder="Physical Address"
+                              value={physicalAddressOfClient}
+                              onChange={(e) => setPhysicalAddressOfClient(e.target.value)}
+                            />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 group-focus-within:opacity-100 transition-opacity">📍</span>
+                          </div>
+                        )}
+
+                        {/* Email Input */}
+                        <div className="relative group">
+                          <input
+                            className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 pl-11 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-black/40 transition-all duration-300"
+                            type="email"
+                            placeholder="Email Address"
+                            value={emailOfClient}
+                            onChange={(e) => setEmailOfClient(e.target.value)}
+                          />
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 group-focus-within:opacity-100 transition-opacity">✉️</span>
+                        </div>
+
+                        <div className="flex gap-2 relative" ref={countryDropdownRef}>
+                        {/* Custom Country Selector */}
+                        <div className="relative sm:w-[160px]">
+                          <button
+                            type="button"
+                            onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                            className="w-full h-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white text-sm flex items-center justify-between overflow-hidden"
+                          >
+                            <span className="truncate">
+                              {countries.find(c => c.code === countryCode)?.name || 'Select'} (+{countryCode})
+                            </span>
+                            <svg className={`w-4 h-4 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                          </button>
+
+                          {isCountryDropdownOpen && (
+                            <div 
+                              className="absolute bottom-full mb-2 left-0 w-[250px] max-h-[300px] overflow-y-auto rounded-2xl border border-white/10 bg-[#1c1c24] shadow-2xl z-[500] p-2"
+                              onKeyDown={handleKeyDown}
+                            >
+                              {/* Search Input inside dropdown */}
+                              <input 
+                                autoFocus
+                                type="text"
+                                placeholder="Search country..."
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-2 mb-2 text-white text-sm outline-none focus:border-blue-500"
+                                value={countrySearch}
+                                onChange={(e) => setCountrySearch(e.target.value)}
+                              />
+                              
+                              <div className="space-y-1">
+                                {filteredCountries.map((c, i) => (
+                                  <div
+                                    key={i}
+                                    id={`country-${c.code}-${c.name}`}
+                                    onClick={() => {
+                                      setCountryCode(c.code);
+                                      setIsCountryDropdownOpen(false);
+                                      setCountrySearch('');
+                                    }}
+                                    className={`flex items-center justify-between p-3 rounded-xl cursor-pointer hover:bg-white/10 transition ${countryCode === c.code ? 'bg-blue-500/20 border border-blue-500/30' : ''}`}
+                                  >
+                                    <span className="text-white text-xs truncate mr-2">{c.name}</span>
+                                    <span className="text-cyan-400 font-bold text-xs">+{c.code}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                         <input
-                          className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500 sm:w-full w-6/12"
                           type="text"
-                          placeholder="Your Physical Address"
-                          value={physicalAddressOfClient}
-                          onChange={(e) => setPhysicalAddressOfClient(e.target.value)}
+                          placeholder="Mobile Phone"
+                          value={phoneNumOfClient}
+                          onChange={(e) => setPhoneNumOfClient(e.target.value)}
                         />
-                      )}
-      
-                      <input
-                        className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                        type="text"
-                        placeholder="Your Email"
-                        value={emailOfClient}
-                        onChange={(e) => setEmailOfClient(e.target.value)}
-                      />
-      
-                      <input
-                        className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                        type="text"
-                        placeholder="Your Phone Number"
-                        value={phoneNumOfClient}
-                        onChange={(e) => setPhoneNumOfClient(e.target.value)}
-                      />
-      
-                      <input
-                        className="w-full rounded-2xl border border-white/10 bg-black/30 p-4 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-                        type="text"
-                        placeholder="Your Name"
-                        value={nameOfClient}
-                        onChange={(e) => setNameOfClient(e.target.value)}
-                      />
-                    </div>
+                      </div>
+
+                        {/* Name Input */}
+                        <div className="relative group">
+                          <input
+                            className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 pl-11 text-white placeholder:text-white/40 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-black/40 transition-all duration-300"
+                            type="text"
+                            placeholder="Full Name"
+                            value={nameOfClient}
+                            onChange={(e) => setNameOfClient(e.target.value)}
+                          />
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 group-focus-within:opacity-100 transition-opacity">👤</span>
+                        </div>
+                      </div>
       
                     <button
                       disabled={isLoading || !nameOfClient || !phoneNumOfClient}
-                      onClick={handleRegisterToDB}
+                      onClick={() => setShowRegisterConfirmModal(true)}
                       className={`mt-5 w-full sm:w-auto rounded-2xl px-6 py-3 font-extrabold shadow-lg transition
                         ${isLoading || !nameOfClient || !phoneNumOfClient
                           ? "bg-white/10 text-white/40 cursor-not-allowed"
@@ -1107,6 +1236,41 @@ const StorePage = () => {
             </div>
           </div>
         )}
+        {/* Registration Confirmation Modal */}
+{showRegisterConfirmModal && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 px-4">
+    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1c1c24] backdrop-blur-xl shadow-2xl p-6 relative">
+      <h3 className="text-white font-extrabold text-xl mb-4">Confirm Registration</h3>
+      
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6">
+        <p className="text-white/90 text-sm leading-relaxed">
+          By registering, you agree to receive order updates and notifications via:
+          <span className="block mt-2 font-bold text-cyan-400">• WhatsApp ({formatFullPhoneNumber()})</span>
+          <span className="block font-bold text-cyan-400">• Email ({emailOfClient})</span>
+        </p>
+      </div>
+
+      <div className="flex gap-3 justify-end">
+        <button
+          onClick={() => setShowRegisterConfirmModal(false)}
+          className="rounded-2xl px-4 py-2 text-white/80 hover:bg-white/10 transition"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            setShowRegisterConfirmModal(false);
+            handleRegisterToDB();
+          }}
+          className="rounded-2xl px-6 py-2 font-extrabold bg-gradient-to-r from-blue-500 to-cyan-300 text-black hover:opacity-90 transition"
+        >
+          I Approve & Register
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </>
       
     );

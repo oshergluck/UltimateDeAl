@@ -217,16 +217,16 @@ function processtitle(description, maxLength = 50) {
                 className='!h-[100px] !w-[100px] !flex'/>
                 </div>
                 <div>
-                <div className="font-medium">{product.name}</div>
+                <div className="font-medium text-[#000000]">{product.name}</div>
                 <div className="text-sm text-[#b8b8b8] truncate w-6/10">
                   {renderDescriptionWithBreaks(product.description)}
                 </div>
                 <div className="text-sm mt-1">
                   <span className="text-red-600">
-                    Full Price: {product.price*1e-6.toString()} USDT
+                    Full Price: {(product.price*1e-6).toFixed(2)} USDC
                   </span>
                   <span className="text-green-600 ml-[15px]">
-                     Now: {product.price/100*(100-product.discount)*1e-6.toString()} USDT
+                     Now: {(product.price/100*(100-product.discount)*1e-6).toFixed(2)} USDC
                   </span>
                   <span className="ml-3 text-[#b8b8b8]">
                     Stock: {product.quantity.toString()}
