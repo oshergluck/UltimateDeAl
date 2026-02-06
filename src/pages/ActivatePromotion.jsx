@@ -61,7 +61,7 @@ const ActivatePromotion = () => {
                 // Determine the ID. In your register code you did +1, 
                 // typically for existing NFTs you use the exact ID. 
                 // Assuming user enters the exact ID seen in their wallet:
-                const tokenId = Number(form._promotionReceiptId)+5;
+                const tokenId = Number(form._promotionReceiptId)+1;
                 console.log(tokenId);
                 const tx = prepareContractCall({
                   contract: Stores,

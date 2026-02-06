@@ -62,6 +62,7 @@ export default function DeployInvoices() {
         publisher: "0xBDEda0d0a434C2C21ED532Bc64aDE1a136b65847",
         contractId: "ESHInvoicesMinter",
         contractParams: params
+
       });
       setDeployedAddress(address);
     } catch (err) {

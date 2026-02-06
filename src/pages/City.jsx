@@ -72,7 +72,7 @@ const City = () => {
   // --- Contracts ---
   const { contract: highContract } = useContract("0x18b67dd7409d3a3f4f3dde7a6a01c4db4b9ba5cd");
   const { contract: luckMachineContract } = useContract(import.meta.env.VITE_LUCKDEAL);
-  const { contract: invoicesContract } = useContract("0xcbb313c9C80CBe57a7Ba70f95700272d83C65020");
+  const { contract: invoicesContract } = useContract("0x2aE03A0A5c5Dd65fE6e8ff7bA4cBBFCa22DFb9FE");
 
   const luckMachineContract2 = useMemo(() => {
     return getContract({

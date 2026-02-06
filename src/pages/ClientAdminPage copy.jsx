@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 
 
 const ClientAdminPage = () => {
+    const [readyToReleaseIds, setReadyToReleaseIds] = useState([]);
+    const [pendingReleaseAmount, setPendingReleaseAmount] = useState(0);
     const [webhookUrl, setWebhookUrl] = useState('');
     const loadWebhookSettings = async () => {
         try {
@@ -598,39 +600,97 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
         }
     };
 
-
-    const getAllReceipts = async () => {
-        try {
-            setIsLoading(true);
-            clearResponseData();
-
-            const receipts = await contract.call('getAllReceipts');
-            setReceipts(receipts);
-            const totalReceipts = receipts.length;
-
-            const formattedReceipts = receipts.map((receipt, index) => {
-                const decryptedReceipt = [
-                    `Invoice Id ` + receipt[0],
-                    formatDate(receipt[1] * 1000),
-                    receipt[2],
-                    receipt[5],
-                    receipt[6] / 1e6,
-                ];
-
-                const reversedIndex = totalReceipts - index - 1;
-                return `${decryptedReceipt.join(', ')}`;
-            });
-
-            const formattedString = formattedReceipts.join('~\n\n~');
-
-            setResponseData(`All Invoices:\n~${formattedString}~`);
-            setIsLoading(false);
-            return formattedReceipts;
-        } catch (error) {
-            alert(`Error retrieving receipts: ${error.message}`);
-            setIsLoading(false);
-        }
+    const calculateReadyToRelease = (allReceipts) => {
+        const now = Math.floor(Date.now() / 1000);
+        const refundPeriod = 14 * 24 * 60 * 60; // 14 יום בשניות
+    
+        const readyIds = [];
+        let totalAmount = 0;
+    
+        allReceipts.forEach((receipt) => {
+            const timestamp = Number(receipt.timestamp);
+            const isRefunded = receipt.isRefunded;
+            const isWithdrawn = receipt.isWithdrawn; // וודא שהוספת את השדה הזה ל-Struct בחוזה
+    
+            if (!isRefunded && !isWithdrawn && (now >= timestamp + refundPeriod)) {
+                readyIds.push(receipt.index);
+                totalAmount += Number(receipt.amountPaid) / 1e6;
+            }
+        });
+    
+        setReadyToReleaseIds(readyIds);
+        setPendingReleaseAmount(totalAmount);
     };
+
+    
+
+
+            const getAllReceipts = async () => {
+                try {
+                    setIsLoading(true);
+                    clearResponseData();
+            
+                    const receipts = await contract.call('getAllReceipts');
+                    setReceipts(receipts);
+                    
+                    const totalReceipts = receipts.length;
+                    const now = Math.floor(Date.now() / 1000);
+                    const refundPeriod = 14 * 24 * 60 * 60; // 14 יום בשניות
+            
+                    const formattedReceipts = receipts.map((receipt) => {
+                        const rId = receipt[0].toString();
+                        const timestamp = Number(receipt[1]);
+                        const clientAddr = receipt[2];
+                        const barcode = receipt[3];
+                        const amount = Number(receipt[4]) / 1e6;
+                        const isRefunded = receipt[5];
+                        const isWithdrawn = receipt[6]; // השדה החדש ב-Struct
+            
+                        // חישוב סטטוס Escrow
+                        const timePassed = now - timestamp;
+                        const isReadyForRelease = timePassed >= refundPeriod;
+                        const daysRemaining = !isReadyForRelease ? Math.ceil((refundPeriod - timePassed) / (24 * 60 * 60)) : 0;
+            
+                        // יצירת תצוגת סטטוס ידידותית
+                        let financialStatus = "";
+                        if (isRefunded) {
+                            financialStatus = "🔴 ~REFUNDED~";
+                        } else if (isWithdrawn) {
+                            financialStatus = "✅ ~RELEASED TO BALANCE~";
+                        } else if (isReadyForRelease) {
+                            financialStatus = "🔓 ~READY FOR BATCH RELEASE~";
+                        } else {
+                            financialStatus = "⏳ ~LOCKED IN ESCROW~ (" + daysRemaining + " days left)";
+                        }
+            
+                        return `-------------------------------------------
+            📄 *INVOICE ID:* ^${rId}^
+            📅 *DATE:* ${formatDate(timestamp * 1000)}
+            👤 *CLIENT:* ${clientAddr}
+            📦 *BARCODE:* ${barcode}
+            💰 *TOTAL PAID:* ~${amount} USDC~
+            🏦 *FUNDS STATUS:* ${financialStatus}
+            -------------------------------------------`;
+                    });
+            
+                    // הפיכת המערך למחרוזת אחת ארוכה, הפוכה (מהחדש לישן)
+                    const formattedString = formattedReceipts.reverse().join('\n\n');
+            
+                    setResponseData(`Found ${totalReceipts} Invoices:\n\n${formattedString}`);
+                    setIsLoading(false);
+                    
+                    // קריאה לפונקציה שמעדכנת את כפתור ה-Batch (אם כתבת אותה)
+                    if (typeof calculateReadyToRelease === "function") {
+                        calculateReadyToRelease(receipts);
+                    }
+                    
+                    return formattedReceipts;
+                } catch (error) {
+                    console.error("Error retrieving receipts:", error);
+                    alert(`Error: ${error.message}`);
+                    setIsLoading(false);
+                }
+            };
 
     const LoadProduct = async (barcode) => {
         setIsLoading(true);
@@ -816,7 +876,7 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
     
             const token = localStorage.getItem("ADMIN_TOKEN");
             if (!token) throw new Error("Admin not logged in (missing token)");
-    
+            
             // 1) שליפת הזמנות מהשרת (כולל Snapshot אם קיים)
             const ordersResponse = await fetch(`${API_URL}/store/get-client-orders`, {
                 method: "POST",
@@ -859,7 +919,14 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
     
             for (let i = 0; i < dbOrders.length; i++) {
                 const order = dbOrders[i];
-    
+                let isWithdrawn = false;
+                try {
+                    const receiptFromContract = await contract.call("receipts", [order.receiptId]);
+                    // בהנחה שזה האינדקס האחרון ב-Struct המעודכן שלך (אינדקס 6 ב-ESHStoreRentals/Sales)
+                    isWithdrawn = receiptFromContract[6]; 
+                } catch (err) {
+                    console.log(`Failed to fetch withdrawn status for ${order.receiptId}`, err);
+                }
                 // --- בחירת מקור המידע (Snapshot או Live) ---
                 let displayClient = { 
                     name: "Unknown", 
@@ -889,16 +956,17 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
     
                 // --- בניית התצוגה ---
                 formattedReceipts += `\n\n\nReceipt ID: ${order.receiptId}
-          Time: ~${formatDate(order.timestamp * 1000)}~
-          Wallet: ~${order.clientAddress}~
-          Name: ~${isOwner ? displayClient.name : "Hidden (Not Owner)"}~
-          Email: ~${isOwner ? displayClient.email : "Hidden (Not Owner)"}~
-          Product Barcode: ~${order.productBarcode}~
+          Time: ${formatDate(order.timestamp * 1000)}
+          Wallet: ${order.clientAddress}
+          Name: ${isOwner ? displayClient.name : "Hidden (Not Owner)"}
+          Email: ${isOwner ? displayClient.email : "Hidden (Not Owner)"}
+          Product Barcode: ${order.productBarcode}
           Amount Payed: ~${order.price} USDC~
-          Address:~ ${isOwner ? displayClient.physicalAddress : "Hidden (Not Owner)"}~
-          More info: ~${specificMoreData}~
-          Phone: ~${isOwner ? displayClient.phone : "Hidden (Not Owner)"}~
-          Status: ~${order.isRefunded ? "~REFUNDED~" : "Completed"}~\n\n\n\n\n`;
+          Address: ${isOwner ? displayClient.physicalAddress : "Hidden (Not Owner)"}
+          More info: ${specificMoreData}
+          Phone: ${isOwner ? displayClient.phone : "Hidden (Not Owner)"}
+          Funds Status: ${isWithdrawn}
+          Status: ${order.isRefunded ? "~REFUNDED~" : "Completed"}\n\n\n\n\n`;
             }
     
             if (formattedReceipts === "") {
@@ -1216,23 +1284,6 @@ const [adminToken, setAdminToken] = useState(() => localStorage.getItem("ADMIN_T
         await handleUploadHiddenContent();
     };
 
-    const getEligibleReleaseIds = () => {
-        if (!receipts || receipts.length === 0) return [];
-        
-        const FOURTEEN_DAYS_IN_SECONDS = 14 * 24 * 60 * 60;
-        const now = Math.floor(Date.now() / 1000);
-    
-        return receipts
-    .filter((r, i) => {
-        if (i === 0) return false; // מדלג על האיבר הראשון במערך
-        
-        const isOldEnough = (Number(r.timestamp) + FOURTEEN_DAYS_IN_SECONDS) <= now;
-        return isOldEnough && !r.isRefunded && !r.isWithdrawn && !r.refundRequested;
-    })
-    .map(r => r.index);
-    };
-
-const eligibleIds = getEligibleReleaseIds();
 
     const convertBigNumber = (bigNumberObj) => {
         return bigNumberObj.toNumber();
@@ -1351,69 +1402,6 @@ const eligibleIds = getEligibleReleaseIds();
                                     Get Client Details
                                 </button>
                             </section>
-
-                            {/* Funds Release (Escrow) Section - AUTOMATED */}
-                            <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700 mt-6 relative overflow-hidden">
-                                {/* Decorative background glow */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
-                                
-                                <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-green-400 border-b border-slate-700 pb-2 flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                    Automated Escrow Release
-                                </h2>
-                                
-                                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                                    <div className="flex-1">
-                                        <p className="text-sm sm:text-base text-gray-300">
-                                            Found <span className="font-bold text-green-400">{eligibleIds.length}</span> invoices ready for release.
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            These invoices are older than 14 days and have no active disputes.
-                                        </p>
-                                    </div>
-
-                                    <div className="w-full md:w-auto">
-                                        <TransactionButton
-                                            className={`!w-full !md:w-auto !px-8 !py-3 !font-bold !rounded-xl !transition-all !duration-200 !text-sm !shadow-lg 
-                                                ${eligibleIds.length > 0 
-                                                    ? "!bg-green-500 !hover:bg-green-600 !text-black !cursor-pointer" 
-                                                    : "!bg-slate-700 !text-gray-500 !cursor-not-allowed opacity-50"}`}
-                                            disabled={eligibleIds.length === 0}
-                                            transaction={async () => {
-                                                if (eligibleIds.length === 0) throw new Error("No invoices eligible");
-
-                                                return prepareContractCall({
-                                                    contract: adminContract,
-                                                    method: "function batchReleaseFunds(uint256[] _receiptIds)",
-                                                    params: [eligibleIds],
-                                                });
-                                            }}
-                                            onTransactionSent={(result) => {
-                                                setResponseData(`🚀 Release of ${eligibleIds.length} invoices initiated: ${result.transactionHash}`);
-                                            }}
-                                            onTransactionConfirmed={(receipt) => {
-                                                setResponseData(`✅ Successfully released ${eligibleIds.length} invoices to store balance!`);
-                                                // מומלץ לקרוא שוב ל-getAllReceipts כדי לעדכן את ה-UI
-                                                getAllReceipts();
-                                            }}
-                                            onError={(error) => {
-                                                setResponseData(`❌ Release failed: ${error.message}`);
-                                            }}
-                                        >
-                                            {eligibleIds.length > 0 ? `Release ${eligibleIds.length} Invoices` : "Nothing to Release"}
-                                        </TransactionButton>
-                                    </div>
-                                </div>
-
-                                {eligibleIds.length > 0 && (
-                                    <div className="mt-4 p-2 bg-slate-900/50 rounded border border-slate-700/50">
-                                        <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Pending IDs: </span>
-                                        <span className="text-[10px] text-green-400/80 break-all">{eligibleIds.join(', ')}</span>
-                                    </div>
-                                )}
-                            </section>
                             {/* Financial Operations Section */}
                             <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700">
                                 <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-yellow-400 border-b border-slate-700 pb-2">Financial Operations</h2>
@@ -1497,6 +1485,53 @@ const eligibleIds = getEligibleReleaseIds();
                                             <button onClick={handleTotal} className="px-2 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm">
                                                 Total Profit
                                             </button>
+                                            <div className="bg-slate-700/50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-yellow-500/30">
+                                            <h3 className="text-base sm:text-lg font-medium mb-2 text-yellow-400 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Escrow Release (Batch)
+                                            </h3>
+                                            
+                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                                <div>
+                                                    <p className="text-sm text-gray-300">
+                                                        Found <span className="text-yellow-400 font-bold">{readyToReleaseIds.length}</span> invoices ready for release.
+                                                    </p>
+                                                    <p className="text-xs text-gray-400">
+                                                        Total amount to be moved to balance: <span className="text-green-400 font-bold">{pendingReleaseAmount} USDC</span>
+                                                    </p>
+                                                </div>
+
+                                                <TransactionButton
+                                                    className="!px-6 !py-3 !bg-gradient-to-r !from-green-500 !to-emerald-600 !text-black !font-bold !rounded-xl !transition-all !duration-200 !shadow-lg !disabled:opacity-50"
+                                                    disabled={readyToReleaseIds.length === 0}
+                                                    transaction={async () => {
+                                                        return prepareContractCall({
+                                                            contract: adminContract,
+                                                            method: "function batchReleaseFunds(uint256[] calldata _receiptIds)",
+                                                            params: [readyToReleaseIds],
+                                                        });
+                                                    }}
+                                                    onTransactionConfirmed={(receipt) => {
+                                                        alert(`Success! Released ${pendingReleaseAmount} USDC to your manageable balance.`);
+                                                        getAllReceipts();
+                                                        handleProfit();   
+                                                    }}
+                                                    onError={(error) => {
+                                                        console.error("Release error:", error);
+                                                        alert("Failed to release funds. Check console for details.");
+                                                    }}
+                                                >
+                                                    {readyToReleaseIds.length > 0 
+                                                        ? `Release ${pendingReleaseAmount} USDC` 
+                                                        : "No Funds Ready Yet"}
+                                                </TransactionButton>
+                                            </div>
+                                            <p className="text-[10px] text-gray-500 mt-2 italic">
+                                                * Only invoices older than 14 days that weren't refunded appear here.
+                                            </p>
+                                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1566,8 +1601,6 @@ const eligibleIds = getEligibleReleaseIds();
                                     </TransactionButton>
                                 </div>
                             </section>
-
-
 
                             {/* Product Management Section */}
                             <section className="bg-slate-800 rounded-lg shadow-md p-4 sm:p-5 border border-slate-700">
@@ -1855,14 +1888,14 @@ const eligibleIds = getEligibleReleaseIds();
                                         <button
                                             onClick={handleUploadHiddenContent}
                                             disabled={!hiddenIPFS || isUploadingHidden}
-                                            className="px-2 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Upload Hidden Video (DB)
                                         </button>
                                         <button
                                             onClick={handleEditHiddenContent}
                                             disabled={!hiddenIPFS || isUploadingHidden}
-                                            className="px-2 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-2 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition-colors duration-200 text-xs sm:text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Edit Hidden Video (DB)
                                         </button>
@@ -1996,7 +2029,7 @@ const eligibleIds = getEligibleReleaseIds();
           </button>
 
           <button
-            onClick={() => navigate("/shop/main/products/LISTESH")}
+            onClick={() => navigate("/shop/ultrashop/products/LISTESH/extra/")}
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white
                        transition hover:bg-white/10 hover:border-yellow-400/30"
           >

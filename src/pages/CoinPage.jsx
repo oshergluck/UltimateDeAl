@@ -57,7 +57,7 @@ const CoinPage = () => {
     tokenAReserve: 0n,
     usdcReserve: 0n,
     totalPurchased: 0n,
-    lpCreated: false,
+    lpCreated: true,
     percentagePurchased: 0,
     currentPrice: 0n,
     URI: '',
@@ -744,7 +744,7 @@ const CoinPage = () => {
                   /* DEX SCREENER */
                   <div className="w-full h-[600px] lg:h-[700px] rounded-xl overflow-hidden relative">
                     <iframe
-                      src={`https://dexscreener.com/base/${tokenAddress}?embed=1&theme=dark&trades=0&info=0`}
+                      src={`https://dexscreener.com/base/${tokenAddress}?embed=1&theme=dark&trades=1&info=1`}
                       title="DexScreener"
                       className="absolute inset-0 w-full h-full"
                       frameBorder="0"
@@ -775,12 +775,7 @@ const CoinPage = () => {
                       bucketSeconds={bucketSeconds}
                       startUnix={chartStartUnix}
                     />
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Stats */}
+                       {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
                 <div className="text-white/60 text-sm">Market Cap</div>
@@ -849,7 +844,7 @@ const CoinPage = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10">
+            <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10 mt-[15px]">
               <h2 className="text-xl font-semibold text-white mb-4">Recent Transactions</h2>
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -889,6 +884,14 @@ const CoinPage = () => {
                 </table>
               </div>
             </div>
+                  </>
+
+
+                )}
+              </div>
+            )}
+
+         
           </div>
 
           {/* Right Panel (Trade + Stats) */}

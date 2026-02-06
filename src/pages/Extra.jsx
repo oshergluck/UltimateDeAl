@@ -148,7 +148,7 @@ const Extra = () => {
     }
 
     const lines = description.split('\n').map((line, index) => (
-      <div key={index} className="whitespace-pre-wrap">
+      <div key={index} className="whitespace-pre-wrap touch-auto">
         {processText(line)}
       </div>
     ))
@@ -307,7 +307,7 @@ const Extra = () => {
         </h2>
 
         {ownerShip && rendered ? (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in touch-auto">
             <p className="text-center text-green-400 mb-4">Access Granted ✅</p>
 
             {media ? (
@@ -316,22 +316,23 @@ const Extra = () => {
                   ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${media}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
                   className="my-[50px] !w-11/12 mx-auto"
                 />
-              </ProtectedBox>
+                </ProtectedBox>
             ) : (
               <div className="w-11/12 max-w-xl mx-auto mt-4 text-center text-yellow-300/90 bg-yellow-500/10 border border-yellow-400/30 rounded-xl p-4">
                 Hidden file was not uploaded for this product yet.
               </div>
             )}
 
-            <div className="w-11/12 md:w-6/12 mx-auto">
-              {StoreURL === 'main' &&
-                ProductURL === 'LISTESH' &&
-                renderDescriptionWithBreaks(
-                  "$^*🚀 Welcome to Your New Business!*^$\n$Follow these steps to deploy your smart contracts and activate your store.$\n\n*~Step 1: Deploy Essential Tools~*\nBefore creating the shop, you need these helper contracts:\n• *Deploy Your Coin (Stock):* https://ultrashop.tech/deploy-esh\n• *Deploy Invoice Minter:* https://ultrashop.tech/deploy-invoices\n• *Deploy Voting Contract:* https://ultrashop.tech/deploy-votes\n*~Step 2: Choose Your Shop Type~*\nRegister to thirdweb.com (with email) and deploy *ONE* of the following contracts based on your business model:\n\n*Option A: Retail Store (Standard)*\nBest for selling items like T-shirts, Digital Files, or Keys.\n👉 *Deploy Sales Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreSales\n\n*Option B: Rental Store (Time-Based)*\nBest for Subscriptions, Memberships, or Renting assets.\n👉 *Deploy Rentals Shop:* https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals\n\n$*Got your contracts?*\nGreat! Copy the contract addresses and fill out the registration form below.$"
+                <div className="w-11/12 md:w-6/12 mx-auto">
+                {StoreURL === 'main' && ProductURL === 'LISTESH' && (
+                    <div className="overflow-x-auto whitespace-pre-wrap break-words custom-scrollbar pb-2">
+                    {renderDescriptionWithBreaks(
+                        "$^*🚀 Welcome to Your New Business!*^$\n$Follow these steps to deploy your smart contracts and activate your store.$\n\n*~Step 1: Deploy Essential Tools~*\nBefore creating the shop, you need these helper contracts:\n• *Deploy Your Coin (Vote Power):* ~https://ultrashop.tech/deploy-esh~\n• *Deploy Invoice Minter:* ~https://ultrashop.tech/deploy-invoices~\n• *Deploy Voting Contract:* ~https://ultrashop.tech/deploy-votes~\n*~Step 2: Choose Your Shop Type~*\nRegister to thirdweb.com (with email) and deploy *ONE* of the following contracts based on your business model:\n\n*Option A: Retail Store (Standard)*\nBest for selling items like T-shirts, Digital Files, or Keys.\n👉 *Deploy Sales Shop:* ~https://thirdweb.com/ultimatedeal.eth/ESHStoreSales/1.1.4~ \n\n*Option B: Rental Store (Time-Based)*\nBest for Subscriptions, Memberships, or Renting assets.\n👉 *Deploy Rentals Shop:* ~https://thirdweb.com/ultimatedeal.eth/ESHStoreRentals/1.1.7~ \n\n$*Got your contracts?*\nGreat! Copy the contract addresses and fill out the registration form below.$"
+                    )}
+                    </div>
                 )}
-
-              {renderContent()}
-            </div>
+                </div>
+            {renderContent()}
           </div>
         ) : (
           !rendered && (

@@ -64,7 +64,7 @@ export default function DeploySales() {
       const params = {
         ESHToken: formData.ESHToken,
         ESHInvoicesMinter: formData.ESHInvoicesMinter,
-        'Contract Owner': formData.contractOwner
+        ContractOwner: formData.contractOwner
       };
 
       console.log("PARAM TYPES", {

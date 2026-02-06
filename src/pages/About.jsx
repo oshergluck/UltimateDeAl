@@ -20,7 +20,7 @@ const About = () => {
   <section className="w-full rounded-t-[12px] px-4 sm:px-6 md:px-10 py-10 mt-5">
     <div className="max-w-6xl mx-auto text-center">
       <h1 className="text-white text-3xl sm:text-5xl font-extrabold tracking-tight">
-        UltraShop — Bonding Curve Launch + On-Chain Shop Registry
+        UltraShop - Bonding Curve Launch + On-Chain Shop Registry
       </h1>
 
       <p className="text-white/85 text-base sm:text-lg mt-4 max-w-3xl mx-auto">
@@ -32,7 +32,7 @@ const About = () => {
         <span className="text-amber-300 font-semibold"> +35% price premium</span>.
         <span className="block mt-3 text-white/85">
           Plus: every registered store can mint <span className="text-emerald-300 font-semibold">NFT invoice receipts</span>{" "}
-          that are <span className="text-amber-300 font-semibold">verifiable by product barcode</span> — proof of purchase you can scan, share, and trust.
+          that are <span className="text-amber-300 font-semibold">verifiable by product barcode</span> - proof of purchase you can scan, share, and trust.
         </span>
       </p>
 
