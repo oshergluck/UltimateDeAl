@@ -311,12 +311,10 @@ const Extra = () => {
             <p className="text-center text-green-400 mb-4">Access Granted ✅</p>
 
             {media ? (
-              <ProtectedBox>
                 <IPFSMediaViewer
                   ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${media}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
                   className="my-[50px] !w-11/12 mx-auto"
                 />
-                </ProtectedBox>
             ) : (
               <div className="w-11/12 max-w-xl mx-auto mt-4 text-center text-yellow-300/90 bg-yellow-500/10 border border-yellow-400/30 rounded-xl p-4">
                 Hidden file was not uploaded for this product yet.

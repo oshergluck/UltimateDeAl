@@ -21,6 +21,7 @@ import {
   Swapper,
   QuantumBusinessInterface,
   EditStore,
+  ActivateExtendPeriod,
   City,
   Extra,
   CreateCampaign,
@@ -220,6 +221,7 @@ export default function App() {
                 <Route path="/edit-official-store" element={<EditOfficialStore />} />
                 <Route path="/edit-store" element={<EditStore />} />
                 <Route path="/activate-pro" element={<ActivatePromotion/>}/>
+                <Route path="/activate-list" element={<ActivateExtendPeriod/>}/>
                 <Route
                   path="/shop/:storepath/products/:productBarCode"
                   element={<Product />}

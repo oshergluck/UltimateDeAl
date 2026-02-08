@@ -5,7 +5,7 @@ import { TransactionButton } from 'thirdweb/react';
 import { useStateContext } from '../context'; // Adjust path if necessary
 import { FormField, Loader } from '../components'; // Adjust path if necessary
 
-const ActivatePromotion = () => {
+const ActivateExtendPeriod = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { Stores, address } = useStateContext();
@@ -31,8 +31,8 @@ const ActivatePromotion = () => {
           
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-4">
             <p className="text-gray-300 text-sm">
-              <span className="font-bold text-yellow-400">Note:</span> You must own a valid "PROS" NFT to activate a promotion. 
-              This will boost your store's visibility based on the NFT's expiration date.
+              <span className="font-bold text-yellow-400">Note:</span> You must own a valid "LISTESH" NFT to activate a promotion. 
+              This will reactive/extend your store's visibility based on the NFT's expiration date.
             </p>
           </div>
 
@@ -46,7 +46,7 @@ const ActivatePromotion = () => {
             />
 
             <FormField
-              labelName="Promotion NFT Invoice Number *"
+              labelName="Listing NFT Invoice Number *"
               placeholder="Invoice Id"
               inputType="number"
               value={form._promotionReceiptId}
@@ -65,7 +65,7 @@ const ActivatePromotion = () => {
                 console.log(tokenId);
                 const tx = prepareContractCall({
                   contract: Stores,
-                  method: "function activatePromotion(string _urlPath, uint256 _promotionReceiptId)",
+                  method: "function extendPeriodOfStore(string memory _urlPath, uint256 _receiptId)",
                   params: [
                     form._urlPath, 
                     tokenId// Ensure it's sent as a BigInt
@@ -80,16 +80,15 @@ const ActivatePromotion = () => {
               onTransactionConfirmed={async (receipt) => {
                 console.log("Transaction confirmed", receipt.transactionHash);
                 setIsLoading(false);
-                alert("Promotion Activated Successfully!");
                 navigate(`/shop/${form._urlPath}`); // Optional: Redirect to the store
               }}
               onError={(error) => {
                 console.error("Transaction error", error);
                 setIsLoading(false);
-                alert("Transaction failed. Ensure you own the PROS NFT and the Store.");
+                alert("Transaction failed. Ensure you own the LISTESH NFT and the Store.");
               }}
             >
-              Activate Promotion
+              Activate Extend Period
             </TransactionButton>
           </div>
         </div>
@@ -100,4 +99,4 @@ const ActivatePromotion = () => {
   );
 };
 
-export default ActivatePromotion;
+export default ActivateExtendPeriod;

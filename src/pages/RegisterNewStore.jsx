@@ -367,8 +367,9 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
                 const tx = prepareContractCall({
                   contract: Stores,
                   method: "function registerStore(string _urlPath, address _smartContractAddress, string _picture, string _name, string _description, string _category, string _contactInfo, uint256 _receiptId, string _city, address _votingSystemAddress, address _ERCUltra)",
-                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId)+1, form._city, form.voting, form.ercultra],
+                  params: [form._urlPath, form._smartContractAddress, form._picture, form._name, form._description, form._category, form._contactInfo, Number(form._receiptId)+4, form._city, form.voting, form.ercultra],
                 });
+                console.log(Number(form._receiptId)+1);
                 return tx;
               }}
               

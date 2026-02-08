@@ -48,4 +48,5 @@ export {default as RecentCoins} from './RecentCoinsUsingBackEnd.jsx';
 export {default as MyCoins} from './MyCoins';
 export {default as Cart} from './Cart';
 export {default as ActivatePromotion} from './ActivatePromotion';
+export {default as ActivateExtendPeriod} from './ActivateExtendPeriod';
 export {default as StoreDesigner} from './StoreDesigner';
