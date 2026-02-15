@@ -837,7 +837,7 @@ const handleKeyDown = (e) => {
                 🔎 Search Products
               </h3>
               <div className="relative z-[50] rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
-                <ProductSearch contractAddress={storeContractByURL} />
+                <ProductSearch contractAddress={storeContractByURL} type={type} />
                 </div>
 
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useStateContext } from '../context';
-import { Loader } from '../components';
+import { Loader,IPFSMediaViewer } from '../components';
 import { useNavigate } from 'react-router-dom';
 import { prepareContractCall, createThirdwebClient, getContract, readContract } from "thirdweb";
 import { useSendTransaction, TransactionButton } from 'thirdweb/react';
@@ -16,11 +16,16 @@ const StoreCartSection = ({ storeAddress, items, onRemove, client, address, paym
     const isValidAddress = typeof storeAddress === 'string' && storeAddress.startsWith('0x');
     const displayAddress = isValidAddress ? `${storeAddress.slice(0, 6)}...${storeAddress.slice(-4)}` : "Unknown Store (Invalid Data)";
 
+    // --- חישוב הטוטאל של החנות עם הלוגיקה החדשה ---
     const storeTotal = items.reduce((total, item) => {
         const price = item.price / 1e6; 
         const discount = item.discount;
         const finalPrice = price * (100 - discount) / 100;
-        return total + (finalPrice * item.amount);
+        
+        // אם זה Rentals - מכפילים ב-30. אם לא - משתמשים בכמות הרגילה
+        const amountForCalc = item.type === "Rentals" ? 30 : item.amount;
+        
+        return total + (finalPrice * amountForCalc);
     }, 0);
 
     const paymentContract = getContract({
@@ -66,23 +71,34 @@ const StoreCartSection = ({ storeAddress, items, onRemove, client, address, paym
 
             {/* Items */}
             <div className="space-y-4 mb-4">
-                {items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-4 bg-slate-900/50 p-3 rounded-lg">
-                        <img src={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${item.image}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className="w-16 h-16 object-cover rounded-md" />
-                        <div className="flex-1">
-                            <h4 className="font-bold">{item.name}</h4>
-                            <p className="text-xs text-gray-400">{item.barcode}</p>
-                            <p className="text-sm text-[#FFDD00]">Qty: {item.amount}</p>
+                {items.map((item, index) => {
+                    // חישוב כמות לתצוגה וחישוב מחיר לפריט
+                    const displayQty = item.type === "Rentals" ? 1 : item.amount;
+                    const calcAmount = item.type === "Rentals" ? 30 : item.amount;
+                    const itemPrice = (item.price/1e6) * (100-item.discount)/100;
+                    const itemTotal = itemPrice * calcAmount;
+
+                    return (
+                        <div key={index} className="flex items-center gap-4 bg-slate-900/50 p-3 rounded-lg">
+                            <IPFSMediaViewer ipfsLink={`https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${item.image}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} className="!w-24 !h-24 object-cover rounded-md" />
+                            <div className="flex-1">
+                                <h4 className="font-bold">{item.name}</h4>
+                                <p className="text-xs text-gray-400">{item.barcode}</p>
+                                <div className="flex gap-2">
+                                    <p className="text-sm text-[#FFDD00]">Qty: {displayQty}</p>
+                                    {item.type === "Rentals" && <span className="text-xs text-purple-400 bg-purple-900/30 px-1 rounded border border-purple-500/30">Rental (30 Days)</span>}
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-bold">{itemTotal.toFixed(2)} $</p>
+                                {/* FIX: Pass item.storeContract specifically */}
+                                <button onClick={() => onRemove(item.barcode, item.storeContract)} className="text-red-500 text-xs hover:text-red-400 mt-1 block ml-auto">
+                                    Remove
+                                </button>
+                            </div>
                         </div>
-                        <div className="text-right">
-                            <p className="font-bold">{((item.price/1e6) * (100-item.discount)/100).toFixed(2)} $</p>
-                            {/* FIX: Pass item.storeContract specifically, even if it's the bad object, so reference matches context */}
-                            <button onClick={() => onRemove(item.barcode, item.storeContract)} className="text-red-500 text-xs hover:text-red-400 mt-1 block ml-auto">
-                                Remove
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Approve Button */}
@@ -95,7 +111,8 @@ const StoreCartSection = ({ storeAddress, items, onRemove, client, address, paym
                                 const tx = prepareContractCall({
                                     contract: paymentContract,
                                     method: "function approve(address spender, uint256 value) returns (bool)",
-                                    params: [storeAddress, BigInt(Math.ceil(storeTotal * 1e6))] // Approve plenty
+                                    // כאן משתמשים ב-storeTotal שכבר חושב לפי 30 אם זה רנטלס
+                                    params: [storeAddress, BigInt(Math.ceil(storeTotal * 1e6))] 
                                 });
                                 return tx;
                             }}
@@ -138,7 +155,6 @@ const Cart = () => {
 
     // --- Group Items by Store Address ---
     const groupedCart = cart.reduce((acc, item) => {
-        // Convert objects/nulls to a safe string key for grouping
         let key = item.storeContract;
         if (typeof key !== 'string') key = "INVALID_STORE";
         
@@ -147,12 +163,17 @@ const Cart = () => {
         return acc;
     }, {});
 
+    // --- חישוב מחיר סופי (Grand Total) ---
     const calculateTotal = () => {
         return cart.reduce((total, item) => {
             const price = item.price / 1e6; 
             const discount = item.discount;
             const finalPrice = price * (100 - discount) / 100;
-            return total + (finalPrice * item.amount);
+            
+            // לוגיקה זהה לחישוב - אם רנטלס, כופלים ב30
+            const amountForCalc = item.type === "Rentals" ? 30 : item.amount;
+            
+            return total + (finalPrice * amountForCalc);
         }, 0).toFixed(2);
     };
 
@@ -163,10 +184,8 @@ const Cart = () => {
             return;
         }
         
-        // Find Store Address logic
         let storeToRegister = pendingItemForRetry?.storeContract;
         if ((!storeToRegister || typeof storeToRegister !== 'string') && cart.length > 0) {
-            // Find first valid store string
             const validItem = cart.find(c => typeof c.storeContract === 'string');
             if (validItem) storeToRegister = validItem.storeContract;
         }
@@ -214,7 +233,6 @@ const Cart = () => {
         setIsLoading(true);
         try {
             for (const item of cart) {
-                // Skip invalid items
                 if (!item.storeContract || typeof item.storeContract !== 'string') {
                     console.warn("Skipping invalid item:", item.name);
                     continue;
@@ -222,15 +240,21 @@ const Cart = () => {
 
                 console.log(`Processing: ${item.name}`);
                 
+                // --- קביעת הכמות שתשלח לחוזה ול-API ---
+                // אם זה Rentals שולחים 30, אחרת שולחים את הכמות המקורית
+                const amountForTransaction = item.type === "Rentals" ? 30 : item.amount;
+
                 try {
-                    // 1. Get Signature
+                    // 1. Get Signature (Sends adjusted amount)
                     const signResponse = await fetch(`${API_URL}/sign-purchase`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             walletAddress: address,
                             productBarcode: item.barcode,
-                            amount: item.amount
+                            // אם הסוג הוא Rentals, מכפילים ב-30, אחרת משאירים רגיל
+                            amount: amountForTransaction,
+                            storeAddress: item.storeContract 
                         })
                     });
                     
@@ -247,16 +271,65 @@ const Cart = () => {
                     }
 
                     // 2. IPFS Metadata
-                    const metadata = await pinata.upload.json({
-                        name: `Invoice - ${item.name}`,
-                        description: `Purchased via UltraShop Cart`,
-                        attributes: [
-                            { trait_type: "Product", value: item.name },
-                            { trait_type: "Amount", value: item.amount },
-                            { trait_type: "Date", value: new Date().toISOString() }
-                        ]
-                    });
+                    // --- חלק ה-IPFS בתוך הלולאה ב-handleCheckout ---
 
+                    const isRental = item.type === "Rentals" || item.type === "Renting";
+                    // נניח שהמחיר ב-item.price הוא מחיר לחודש
+                    const priceForNFT = (item.price / 1e6) * (100 - item.discount) / 100;
+                    const sellDate = new Date().toLocaleString(); 
+
+                    let ipfsHash;
+
+                    if (isRental) {
+                        // --- לוגיקה להשכרות (Rentals) - כמות = חודשים ---
+                        const rentalMonths = item.amount;       // הכמות היא מספר החודשים
+                        const totalDays = rentalMonths * 30;    // המרה לימים לצורך חישוב תאריך (כל חודש = 30 יום)
+
+                        // חישוב תאריך תפוגה: היום הנוכחי + (מספר החודשים * 30)
+                        const expDate = new Date();
+                        expDate.setDate(expDate.getDate() + totalDays);
+                        const expirationDate = expDate.toLocaleString(); 
+
+                        const metadata = await pinata.upload.json({
+                            name: `Invoice - ${item.name}`,
+                            description: `Rental Service for ${rentalMonths} Months from ${item.storeName || 'Store'}\nExpires on: ${expirationDate}`,
+                            external_url: `https://UltraShop.tech/shop/${item.storeContract}`,
+                            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${item.image}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
+                            attributes: [
+                                { trait_type: "Product Name", value: item.name },
+                                // מציג את מספר החודשים שנרכשו
+                                { trait_type: "Rental Period", value: `${rentalMonths} Months` }, 
+                                { trait_type: "Sell Date", value: sellDate },
+                                // הסכום ששולם: מחיר לחודש * מספר החודשים
+                                { trait_type: "Amount Payed", value: `${(priceForNFT * rentalMonths*30).toFixed(2)} $USDC` },
+                                { trait_type: "Price Per Month", value: `${(priceForNFT*30).toFixed(2)} $USDC` },
+                                // תאריך התפוגה המחושב (עוד X חודשים)
+                                { trait_type: `${item.name} Expiration Date`, value: expirationDate },
+                                { trait_type: "Type", value: "Rental" }
+                            ]
+                        });
+                        ipfsHash = metadata.IpfsHash;
+
+                    } else {
+                        // --- לוגיקה למכירות רגילות (Sales) ---
+                        const metadata = await pinata.upload.json({
+                            name: `Invoice - ${item.name}`,
+                            description: `Purchased from ${item.storeName || 'Store'}`,
+                            external_url: `https://UltraShop.tech/shop/${item.storeContract}`,
+                            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${item.image}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
+                            attributes: [
+                                { trait_type: "Product Name", value: item.name },
+                                { trait_type: "Amount", value: item.amount },
+                                { trait_type: "Sell Date", value: sellDate },
+                                { trait_type: "Amount Payed", value: `${(priceForNFT * item.amount).toFixed(2)} $USDC` },
+                                { trait_type: "Price", value: `${priceForNFT.toFixed(2)} $USDC` },
+                                { trait_type: "Type", value: "Sale" }
+                            ]
+                        });
+                        ipfsHash = metadata.IpfsHash;
+                    }
+
+                    // ... לאחר מכן ב-prepareContractCall משתמשים ב-ipfsHash ...
                     // 3. Prepare Tx
                     const storeContract = getContract({
                         client,
@@ -269,9 +342,9 @@ const Cart = () => {
                         method: "function purchaseProduct(string _productBarcode, uint256 _amount, string _info, string metadata, bytes _signature, uint256 _deadline)",
                         params: [
                             item.barcode,
-                            item.amount,
+                            amountForTransaction, // שליחת הכמות המחושבת לחוזה
                             "Cart Purchase",
-                            metadata.IpfsHash,
+                            ipfsHash,
                             signData.signature,
                             signData.deadline
                         ]
@@ -292,7 +365,6 @@ const Cart = () => {
             if (!showRegisterModal) {
                 alert("Checkout sequence finished. Please check your wallet transactions.");
                 clearCart();
-                navigate('/my-coins');
             }
 
         } catch (error) {
@@ -342,7 +414,7 @@ const Cart = () => {
                 {cart.length === 0 ? (
                     <div className="text-center mt-20">
                         <h2 className="text-2xl">Your cart is empty 🛒</h2>
-                        <button onClick={() => navigate('/home')} className="mt-4 bg-cyan-500 text-black px-6 py-2 rounded-full font-bold">Go Shopping</button>
+                        <button onClick={() => navigate('/')} className="mt-4 bg-cyan-500 text-black px-6 py-2 rounded-full font-bold">Go Shopping</button>
                     </div>
                 ) : (
                     <div className="flex flex-col lg:flex-row gap-8">

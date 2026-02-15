@@ -1,4 +1,3 @@
-// CoinPage.jsx
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ethers } from 'ethers'
@@ -17,13 +16,14 @@ const CoinPage = () => {
 
   // ENV / consts
   const DEX_ADDRESS = import.meta.env.VITE_DEX_ADDRESS
-  const ThirdWEBAPI = import.meta.env.VITE_THIRDWEB_CLIENT_ID || import.meta.env.VITE_THIRDWEB_CLIENT
-  const POLYRPC = `https://8453.rpc.thirdweb.com/${ThirdWEBAPI}`
+  // BaseSwap V2 Factory
+  const FACTORY_ADDRESS = "0xFDa619b6d20975be80A10332cD39b9a4b0FAa8BB"
   const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
-  const MIN_PURCHASE_USDC = 1.0; // From contract constant
+  const MIN_PURCHASE_USDC = 1.0; 
   const API_BASE = (import.meta.env.VITE_API_BASE || "http://localhost:3001").replace(/\/+$/, "");
   const API_URL = `${API_BASE}/api`;
-  
+  const ThirdWEBAPI = import.meta.env.VITE_THIRDWEB_CLIENT_ID || import.meta.env.VITE_THIRDWEB_CLIENT
+  const POLYRPC = `https://8453.rpc.thirdweb.com/${ThirdWEBAPI}`
 
   // thirdweb + pinata
   const client = useMemo(
@@ -42,6 +42,7 @@ const CoinPage = () => {
   const dex = useMemo(() => getContract({ client, chain: base, address: DEX_ADDRESS }), [client, DEX_ADDRESS])
   const usdcContract = useMemo(() => getContract({ client: client, chain: base, address: USDC }), [client])
   const tokenContract = useMemo(() => getContract({ client: client, chain: base, address: tokenAddress }), [client, tokenAddress])
+  const factoryContract = useMemo(() => getContract({ client, chain: base, address: FACTORY_ADDRESS }), [client, FACTORY_ADDRESS])
 
   // UI state
   const [loading, setLoading] = useState(true)
@@ -57,7 +58,7 @@ const CoinPage = () => {
     tokenAReserve: 0n,
     usdcReserve: 0n,
     totalPurchased: 0n,
-    lpCreated: true,
+    lpCreated: false,
     percentagePurchased: 0,
     currentPrice: 0n,
     URI: '',
@@ -89,7 +90,7 @@ const CoinPage = () => {
   const [transactions, setTransactions] = useState([])
   const [holders, setHolders] = useState([])
 
-  // Refresh “signals” (only re-fetch slices that change)
+  // Refresh “signals”
   const [txTick, setTxTick] = useState(0)
   const [infoTick, setInfoTick] = useState(0)
   const [autoRefreshTick, setAutoRefreshTick] = useState(0)
@@ -175,40 +176,86 @@ const CoinPage = () => {
   }
 
   const applyNegSlippage = (amountBig, percent) => {
-    // returns floor(amount * (100 - percent)/100)
-    // Used to calculate MINIMUM output
-    const bps = BigInt(Math.round((100 - Number(percent)) * 100)); // (100 - p) in bps
+    const bps = BigInt(Math.round((100 - Number(percent)) * 100)); 
     return (amountBig * bps) / 10000n;
   };
 
   // ---------- Fetchers ----------
+
+  const fetchLpPrice = async (coin) => {
+      try {
+          // 1. Get Pair Address
+          const pairAddress = await readContract({
+              contract: factoryContract,
+              method: "function getPair(address, address) view returns (address)",
+              params: [coin.address || tokenAddress, USDC]
+          });
+          
+          if (!pairAddress || pairAddress === ethers.constants.AddressZero) return;
+
+          // 2. Get Reserves
+          const pairContract = getContract({ client, chain: base, address: pairAddress });
+          const reserves = await readContract({
+              contract: pairContract,
+              method: "function getReserves() view returns (uint112, uint112, uint32)",
+              params: []
+          });
+
+          const token0 = await readContract({
+              contract: pairContract,
+              method: "function token0() view returns (address)",
+              params: []
+          });
+
+          // Identify which reserve is which
+          const isToken0 = token0.toLowerCase() === (coin.address || tokenAddress).toLowerCase();
+          const rToken = isToken0 ? reserves[0] : reserves[1];
+          const rUSDC = isToken0 ? reserves[1] : reserves[0];
+
+          if (rToken > 0n) {
+              // Calculate Price: (USDC * 1e12 * 1e18) / Token
+              const price = (BigInt(rUSDC) * BigInt(1e12) * BigInt(1e18)) / BigInt(rToken);
+              
+              setCoinData(prev => ({
+                  ...prev,
+                  currentPrice: price,
+                  tokenAReserve: BigInt(rToken), // Update reserves for display
+                  usdcReserve: BigInt(rUSDC)
+              }));
+          }
+      } catch (e) {
+          console.warn("Error fetching LP price:", e);
+      }
+  };
 
   const fetchAllDataFromAPI = async () => {
     try {
       const res = await fetch(`${API_URL}/coins/${tokenAddress}?t=${Date.now()}`);
       if (!res.ok) return;
       const data = await res.json();
+      
+      // Update Holders
       if (data.holders && Array.isArray(data.holders)) {
-        const dec = Number(tokenInfo.decimals || 18);
-      
+        // FIX: The backend now sends Raw Integer strings directly from Etherscan.
+        // We do NOT use parseUnits here, to avoid double-multiplication.
         const parsedHolders = data.holders.map((h) => {
-          const qtyStr = String(h.balance || "0"); // decimal string from Etherscan
+          const qtyStr = String(h.balance || "0");
           let raw = 0n;
-      
           try {
-            // ethers v5: parseUnits returns BigNumber; convert -> BigInt safely
-            raw = BigInt(ethers.utils.parseUnits(qtyStr, dec).toString());
+            // אם יש נקודה עשרונית, נשתמש ב-parseUnits, אם לא - BigInt ישיר
+            if (qtyStr.includes('.')) {
+              raw = ethers.utils.parseUnits(qtyStr, tokenInfo.decimals).toBigInt();
+            } else {
+              raw = BigInt(qtyStr);
+            }
           } catch {
             raw = 0n;
           }
-      
           return {
             holder: h.holder,
-            balanceRaw: raw,      // BigInt (smallest units)
-            balanceDisplay: qtyStr // original decimal string (optional)
+            balance: raw, 
           };
         });
-      
         setHolders(parsedHolders);
       }
 
@@ -221,13 +268,15 @@ const CoinPage = () => {
           totalSupply: prev.totalSupply !== '0' ? prev.totalSupply : (data.totalSupply || '0')
         }));
 
+        const lpCreated = Boolean(data.lpCreated);
+        
         setCoinData(prev => ({
           ...prev,
           currentPrice: BigInt(data.currentPrice || 0),
           usdcReserve: BigInt(data.usdcReserve || 0),
           tokenAReserve: BigInt(data.tokenAReserve || 0),
           percentagePurchased: Number(data.percentagePurchased || 0),
-          lpCreated: Boolean(data.lpCreated),
+          lpCreated: lpCreated,
           creator: data.creator,
           URI: data.URI,
           virtualTokenReserve: BigInt(data.virtualTokenReserve || 0),
@@ -236,16 +285,12 @@ const CoinPage = () => {
           creatorFeesTokenA: BigInt(data.creatorFeesTokenA || 0),
         }));
 
-        if (data.holders && Array.isArray(data.holders)) {
-          const parsedHolders = data.holders.map(h => ({
-            holder: h.holder,
-            balance: BigInt(h.balance)
-          }));
-          console.log(parsedHolders);
-          setHolders(parsedHolders);
-        }
-
         if (data.URI && !metadata.name) fetchMetadata(data.URI);
+
+        // ✅ If LP is created, double check/fetch fresh price directly from blockchain 
+        if (lpCreated) {
+            fetchLpPrice(data);
+        }
       }
     } catch (e) {
       console.log("API refresh failed", e);
@@ -419,16 +464,13 @@ const CoinPage = () => {
     return () => clearInterval(id)
   }, [])
 
-  // ---------- BUY preview ----------
+  // ---------- BUY/SELL Previews ----------
   useEffect(() => {
     const calc = async () => {
       const v = parseFloat(buyAmount)
       if (!v || v <= 0) {
         setBuyPreview({ tokens: '0', fees: '0' })
-        setBuyQuote({
-          tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
-          pricePerTokenGross: 0n, enoughTokenLiquidity: false
-        })
+        setBuyQuote({ tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n, pricePerTokenGross: 0n, enoughTokenLiquidity: false })
         return
       }
       try {
@@ -446,25 +488,18 @@ const CoinPage = () => {
         })
       } catch {
         setBuyPreview({ tokens: '0', fees: '0' })
-        setBuyQuote({
-          tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
-          pricePerTokenGross: 0n, enoughTokenLiquidity: false
-        })
+        setBuyQuote({ tokenOut: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n, pricePerTokenGross: 0n, enoughTokenLiquidity: false })
       }
     }
     calc()
   }, [buyAmount, tokenAddress, tokenInfo.decimals, dex, coinData.virtualTokenReserve, coinData.virtualUSDCReserve])
 
-  // ---------- SELL preview ----------
   useEffect(() => {
     const calc = async () => {
       const v = parseFloat(sellAmount)
       if (!v || v <= 0) {
         setSellPreview({ usdc: '0', fees: '0' })
-        setSellQuote({
-          usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
-          pricePerTokenGross: 0n, enoughUSDCReserve: true
-        })
+        setSellQuote({ usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n, pricePerTokenGross: 0n, enoughUSDCReserve: true })
         return
       }
       try {
@@ -482,10 +517,7 @@ const CoinPage = () => {
         })
       } catch {
         setSellPreview({ usdc: '0', fees: '0' })
-        setSellQuote({
-          usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n,
-          pricePerTokenGross: 0n, enoughUSDCReserve: true
-        })
+        setSellQuote({ usdcGross: 0n, platformFee: 0n, creatorFee: 0n, usdcNet: 0n, pricePerTokenGross: 0n, enoughUSDCReserve: true })
       }
     }
     calc()
@@ -494,10 +526,7 @@ const CoinPage = () => {
   // ---------- Chart Logic ----------
   const chartTransactions = useMemo(() => {
     return (transactions ?? [])
-      .map((t) => ({
-        ...t,
-        timestamp: Number.isFinite(Number(t.timestamp)) ? Number(t.timestamp) : 0,
-      }))
+      .map((t) => ({ ...t, timestamp: Number.isFinite(Number(t.timestamp)) ? Number(t.timestamp) : 0 }))
       .filter((t) => t.timestamp > 0)
   }, [transactions])
 
@@ -550,7 +579,6 @@ const CoinPage = () => {
       let curr12 = lastValid ? price12FromTx(lastValid) : null;
 
       if (curr12 === null) return { h1: null, h6: null, h24: null };
-
       const p1h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 3600);
       const p6h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 6 * 3600);
       const p24h = priceAtOrBeforeCutoff12(txsAsc, nowSec - 24 * 3600);
@@ -577,57 +605,24 @@ const CoinPage = () => {
   // ---------- TX Builders ----------
   const buildApproveUSDC = () => {
     const amount = ethers.utils.parseUnits(buyAmount || '0', 6)
-    return prepareContractCall({
-      contract: usdcContract,
-      method: 'function approve(address spender, uint256 value) returns (bool)',
-      params: [DEX_ADDRESS, amount],
-    })
+    return prepareContractCall({ contract: usdcContract, method: 'function approve(address spender, uint256 value) returns (bool)', params: [DEX_ADDRESS, amount] })
   }
 
   const buildApproveToken = () => {
     const amount = ethers.utils.parseUnits(sellAmount || '0', tokenInfo.decimals)
-    return prepareContractCall({
-      contract: tokenContract,
-      method: 'function approve(address spender, uint256 value) returns (bool)',
-      params: [DEX_ADDRESS, amount],
-    })
+    return prepareContractCall({ contract: tokenContract, method: 'function approve(address spender, uint256 value) returns (bool)', params: [DEX_ADDRESS, amount] })
   }
 
-  // === CORRECTED BUILDERS FOR NEW CONTRACT SIGNATURES ===
   const buildBuyTokens = async () => {
     const usdcIn = ethers.utils.parseUnits(buyAmount || "0", 6);
-
-    // Slippage calc:
-    // buyQuote.tokenOut is the EXPECTED output from the curve
-    // We calculate the MINIMUM we are willing to accept based on slippagePct
-    const minTokenAOut = buyQuote?.tokenOut
-      ? applyNegSlippage(buyQuote.tokenOut, slippagePct)
-      : 0n;
-
-    return prepareContractCall({
-      contract: dex,
-      // Updated signature to match UltraShop.sol
-      method: "function buyTokens(address tokenA, uint256 usdcAmount, uint256 minTokenAReceived)",
-      params: [tokenAddress, usdcIn, minTokenAOut],
-    });
+    const minTokenAOut = buyQuote?.tokenOut ? applyNegSlippage(buyQuote.tokenOut, slippagePct) : 0n;
+    return prepareContractCall({ contract: dex, method: "function buyTokens(address tokenA, uint256 usdcAmount, uint256 minTokenAReceived)", params: [tokenAddress, usdcIn, minTokenAOut] });
   };
 
   const buildSellTokens = async () => {
     const tIn = ethers.utils.parseUnits(sellAmount || "0", 18);
-
-    // Slippage calc:
-    // sellQuote.usdcNet is the EXPECTED output (after fees)
-    // We calculate the MINIMUM USDC we accept
-    const minUSDCOut = sellQuote?.usdcNet
-      ? applyNegSlippage(sellQuote.usdcNet, slippagePct)
-      : 0n;
-
-    return prepareContractCall({
-      contract: dex,
-      // Updated signature to match UltraShop.sol
-      method: "function sellTokens(address tokenA, uint256 tokenAmount, uint256 minUSDCReceived)",
-      params: [tokenAddress, tIn, minUSDCOut],
-    });
+    const minUSDCOut = sellQuote?.usdcNet ? applyNegSlippage(sellQuote.usdcNet, slippagePct) : 0n;
+    return prepareContractCall({ contract: dex, method: "function sellTokens(address tokenA, uint256 tokenAmount, uint256 minUSDCReceived)", params: [tokenAddress, tIn, minUSDCOut] });
   };
 
   const isBuyAmountValid = () => {
@@ -647,93 +642,149 @@ const CoinPage = () => {
     <div className="min-h-screen py-6 md:py-10">
       <div className="sm:max-w-7xl mx-auto px-4 md:px-6">
         {/* Header */}
-        <div className="relative rounded-3xl overflow-hidden bg-white/5 backdrop-blur mb-8">
-          {/* Banner */}
-          {metadata.banner && (
-            <div className="absolute inset-0 h-32 sm:h-44 md:h-56">
-              <IPFSMediaViewer
-                ipfsLink={`${metadata.banner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                height={224}
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
-            </div>
-          )}
+        <div className="relative rounded-3xl overflow-hidden bg-zinc-900 mb-8 border border-white/10 shadow-2xl">
+  {/* Full Background Banner Layer */}
+  {metadata.banner && (
+    <div className="absolute inset-0 z-0">
+      <IPFSMediaViewer 
+        ipfsLink={`${metadata.banner}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} 
+        className="w-full h-full object-cover"
+      />
+      {/* Dynamic Overlay: Darker at bottom for text contrast */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
+      <div className="absolute inset-0 backdrop-blur-[1px]" />
+    </div>
+  )}
 
-          {/* Content */}
-          <div className={`relative z-10 ${metadata.banner ? 'pt-28 sm:pt-36 md:pt-44' : 'pt-4'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
-            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
-              {/* Logo */}
-              {metadata.logo && (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white/20 bg-black/40 shrink-0">
-                  <IPFSMediaViewer
-                    ipfsLink={`${metadata.logo}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`}
-                    objectFit='contain'
-                  />
-                </div>
-              )}
+  {/* Content Layer */}
+  <div className="relative z-10 p-5 sm:p-8">
+    <div className="flex flex-col lg:flex-row gap-6">
+      
+      {/* Top Section: Logo & Mobile Identity */}
+      <div className="flex flex-row items-center lg:items-start gap-4 sm:gap-6">
+        {metadata.logo && (
+          <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden border-2 border-white/20 bg-black/40 shrink-0 shadow-lg">
+            <IPFSMediaViewer 
+              ipfsLink={`${metadata.logo}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`} 
+              objectFit='contain' 
+            />
+          </div>
+        )}
+        
+        {/* Mobile-only Title/Price Row */}
+        <div className="flex-1 min-w-0 lg:hidden">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
+              {metadata.name || tokenInfo.name}
+            </h1>
+            <span className="px-2 py-0.5 rounded-lg bg-white/10 text-white text-xs font-mono border border-white/10">
+              ${tokenInfo.symbol}
+            </span>
+          </div>
+          <div className="text-lg font-bold text-indigo-400">
+            {formatTinyPriceDisplay(formatPriceFull(coinData.currentPrice, 12, 18))}
+          </div>
+        </div>
+      </div>
 
-              {/* Title + Meta */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white truncate">
-                    {metadata.name || tokenInfo.name}
-                  </h1>
-                  <span className="px-2.5 py-1 rounded-full bg-white/10 text-white text-xs sm:text-sm shrink-0">
-                    ${tokenInfo.symbol}
-                  </span>
-                </div>
+      {/* Main Content Column */}
+      <div className="flex-1 min-w-0">
+        {/* Desktop-only Title Row */}
+        <div className="hidden lg:flex items-center gap-3 mb-4">
+          <h1 className="text-4xl font-bold text-white tracking-tight">
+            {metadata.name || tokenInfo.name}
+          </h1>
+          <span className="px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium border border-white/10">
+            ${tokenInfo.symbol}
+          </span>
+        </div>
 
-                {/* Description */}
-                <div className="relative max-w-3xl mb-4 rounded-2xl drop-shadow-md overflow-hidden">
-                  <div className="absolute inset-0 linear-gradient1 opacity-70"></div>
-                  <div className="relative p-4">
-                    <div className="text-white/90 font-bold text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
-                      {metadata.description || 'No description available'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:flex md:flex-wrap">
-                  {metadata.website && (
-                    <a href={metadata.website} target="_blank" rel="noreferrer" className="px-3 py-2 sm:px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm text-center">
-                      🌐 Website
-                    </a>
-                  )}
-                  {metadata.x && (
-                    <a href={metadata.x.startsWith('http') ? metadata.x : `https://x.com/${metadata.x.replace('@', '')}`} target="_blank" rel="noreferrer" className="px-3 py-2 sm:px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm text-center">
-                      𝕏 Twitter
-                    </a>
-                  )}
-                  {metadata.telegram && (
-                    <a href={metadata.telegram.startsWith('http') ? metadata.telegram : `https://t.me/${metadata.telegram.replace('t.me/', '')}`} target="_blank" rel="noreferrer" className="px-3 py-2 sm:px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm text-center">
-                      💬 Telegram
-                    </a>
-                  )}
-                  <button onClick={() => navigator.clipboard.writeText(tokenAddress)} className="col-span-2 md:col-span-1 px-3 py-2 sm:px-4 rounded-xl bg-black/25 text-white text-xs sm:text-sm text-center" aria-label="Copy contract address">
-                    📋 {tokenAddress.slice(0, 6)}...{tokenAddress.slice(-4)}
-                  </button>
-                </div>
-              </div>
-
-              {/* Price Block */}
-              <div className="text-right">
-                <div className="text-white/60 text-sm">Current Price</div>
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  {formatTinyPriceDisplay(formatPriceFull(coinData.currentPrice, 12, 18))}
-                </div>
-                <div className="text-white/60 text-sm mt-2">
-                  Progress: {coinData.percentagePurchased}%
-                </div>
-                {coinData.lpCreated && (
-                  <div className="mt-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
-                    LP Created ✓
-                  </div>
-                )}
-              </div>
+        {/* Description Glass Card */}
+        <div className="mb-6 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-md">
+          <div className="p-4">
+            <div className="text-white/90 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
+              {metadata.description || 'No description available'}
             </div>
           </div>
         </div>
+
+        {/* Social & Action Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-wrap gap-2.5">
+          {metadata.website && (
+            <a 
+              href={metadata.website === 'https://ultrashop.tech/main' ? 'https://ultrashop.tech/shop/main' : metadata.website} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex items-center justify-center px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm transition-all border border-white/5 active:scale-95"
+            >
+              🌐 Website
+            </a>
+          )}
+          
+          {metadata.x && (
+            <a 
+              href={metadata.x.startsWith('http') ? metadata.x : `https://x.com/${metadata.x.replace('@', '')}`} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex items-center justify-center px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm transition-all border border-white/5 active:scale-95"
+            >
+              𝕏 Twitter
+            </a>
+          )}
+          
+          {metadata.telegram && (
+            <a 
+              href={metadata.telegram.startsWith('http') ? metadata.telegram : `https://t.me/${metadata.telegram.replace('t.me/', '')}`} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="flex items-center justify-center px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm transition-all border border-white/5 active:scale-95"
+            >
+              💬 Telegram
+            </a>
+          )}
+
+          <button 
+            onClick={() => navigator.clipboard.writeText(tokenAddress)} 
+            className="col-span-2 sm:col-span-1 flex items-center justify-center px-4 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 text-xs sm:text-sm border border-indigo-500/30 transition-all active:scale-95"
+          >
+            📋 {tokenAddress.slice(0, 6)}...{tokenAddress.slice(-4)}
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Column: Price & Normalized Progress */}
+      <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-4 lg:py-2 shrink-0 border-t lg:border-t-0 border-white/10 pt-4 lg:pt-0">
+        <div className="text-left lg:text-right">
+          <div className="text-white/50 text-[10px] uppercase tracking-widest mb-0.5">Price</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tabular-nums">
+            {formatTinyPriceDisplay(formatPriceFull(coinData.currentPrice, 12, 18))}
+          </div>
+        </div>
+
+        <div className="text-right flex flex-col items-end">
+          <div className="text-white/50 text-[10px] uppercase tracking-widest mb-1">
+            Bonding Curve: {coinData.percentagePurchased}% / 30%
+          </div>
+          <div className="w-24 sm:w-32 h-2 bg-white/10 rounded-full overflow-hidden mb-2 border border-white/5">
+            <div 
+              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-1000 ease-out" 
+              style={{ width: `${Math.min((coinData.percentagePurchased / 30) * 100, 100)}%` }} 
+            />
+          </div>
+          {coinData.lpCreated || coinData.percentagePurchased >= 30 ? (
+            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 uppercase">
+              Ready for DEX ✓
+            </span>
+          ) : (
+            <span className="text-[10px] text-white/40 font-medium italic">
+              {(30 - coinData.percentagePurchased).toFixed(2)}% remaining
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -741,107 +792,40 @@ const CoinPage = () => {
             {(coinData.lpCreated || (chartTransactions.length > 0 && chartStartUnix)) && (
               <div className="bg-white/5 backdrop-blur rounded-2xl p-4 border border-white/10">
                 {coinData.lpCreated ? (
-                  /* DEX SCREENER */
                   <div className="w-full h-[600px] lg:h-[700px] rounded-xl overflow-hidden relative">
-                    <iframe
-                      src={`https://dexscreener.com/base/${tokenAddress}?embed=1&theme=dark&trades=1&info=1`}
-                      title="DexScreener"
-                      className="absolute inset-0 w-full h-full"
-                      frameBorder="0"
-                    ></iframe>
+                    <iframe src={`https://dexscreener.com/base/${tokenAddress}?embed=1&theme=dark&trades=1&info=1`} title="DexScreener" className="absolute inset-0 w-full h-full" frameBorder="0"></iframe>
                   </div>
                 ) : (
-                  /* INTERNAL CHART */
                   <>
                     <div className="flex justify-end mb-3 gap-2">
                       {timeframes.map((t) => (
-                        <button
-                          key={t.label}
-                          onClick={() => setBucketSeconds(t.seconds)}
-                          className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${bucketSeconds === t.seconds
-                            ? "bg-blue-500 text-white"
-                            : "bg-white/10 text-white/70 hover:bg-white/20"
-                            }`}
-                        >
-                          {t.label}
-                        </button>
+                        <button key={t.label} onClick={() => setBucketSeconds(t.seconds)} className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${bucketSeconds === t.seconds ? "bg-blue-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20"}`}>{t.label}</button>
                       ))}
                     </div>
-                    <CandleChart15mAdvanced
-                      key={`${tokenAddress}-${bucketSeconds}`}
-                      transactions={chartTransactions}
-                      currentPrice={formatPriceFull(coinData.currentPrice, 12, 18)}
-                      height={420}
-                      bucketSeconds={bucketSeconds}
-                      startUnix={chartStartUnix}
-                    />
-                       {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Market Cap</div>
-                <div className="text-white text-lg font-semibold">
-                  {`$${formatPriceFull(
-                    (coinData.currentPrice * BigInt(tokenInfo.totalSupply || 0)) / 10n ** 18n,
-                    12, 18
-                  )}`}
-                </div>
+                    <CandleChart15mAdvanced key={`${tokenAddress}-${bucketSeconds}`} transactions={chartTransactions} currentPrice={formatPriceFull(coinData.currentPrice, 12, 18)} height={420} bucketSeconds={bucketSeconds} startUnix={chartStartUnix} />
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                      <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                        <div className="text-white/60 text-sm">Market Cap</div>
+                        <div className="text-white text-lg font-semibold">{`$${formatPriceFull((coinData.currentPrice * BigInt(tokenInfo.totalSupply || 0)) / 10n ** 18n, 12, 18)}`}</div>
+                      </div>
+                      <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                        <div className="text-white/60 text-sm">Price Δ 1h</div>
+                        <div className="text-white text-lg font-semibold mt-1">{priceChanges.h1 === null ? <span className="text-white/40">—</span> : (<span className={valueColorClass(priceChanges.h1)}>{upDownSymbol(priceChanges.h1)} {formatSignedPct(priceChanges.h1)}</span>)}</div>
+                      </div>
+                      <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                        <div className="text-white/60 text-sm">Price Δ 6h</div>
+                        <div className="text-white text-lg font-semibold mt-1">{priceChanges.h6 === null ? <span className="text-white/40">—</span> : (<span className={valueColorClass(priceChanges.h6)}>{upDownSymbol(priceChanges.h6)} {formatSignedPct(priceChanges.h6)}</span>)}</div>
+                      </div>
+                      <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                        <div className="text-white/60 text-sm">Price Δ 24h</div>
+                        <div className="text-white text-lg font-semibold mt-1">{priceChanges.h24 === null ? <span className="text-white/40">—</span> : (<span className={valueColorClass(priceChanges.h24)}>{upDownSymbol(priceChanges.h24)} {formatSignedPct(priceChanges.h24)}</span>)}</div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Price Δ 1h</div>
-                <div className="text-white text-lg font-semibold mt-1">
-                  {priceChanges.h1 === null ? <span className="text-white/40">—</span> : (
-                    <span className={valueColorClass(priceChanges.h1)}>
-                      {upDownSymbol(priceChanges.h1)} {formatSignedPct(priceChanges.h1)}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Price Δ 6h</div>
-                <div className="text-white text-lg font-semibold mt-1">
-                  {priceChanges.h6 === null ? <span className="text-white/40">—</span> : (
-                    <span className={valueColorClass(priceChanges.h6)}>
-                      {upDownSymbol(priceChanges.h6)} {formatSignedPct(priceChanges.h6)}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Price Δ 24h</div>
-                <div className="text-white text-lg font-semibold mt-1">
-                  {priceChanges.h24 === null ? <span className="text-white/40">—</span> : (
-                    <span className={valueColorClass(priceChanges.h24)}>
-                      {upDownSymbol(priceChanges.h24)} {formatSignedPct(priceChanges.h24)}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Liquidity</div>
-                <div className="text-white text-lg font-semibold">
-                  ${formatCurrency(coinData.usdcReserve + BigInt(6000 * 1e6), 6)}
-                </div>
-              </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Holders</div>
-                <div className="text-white text-lg font-semibold">{holders.length}</div>
-              </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">Virtual Liquidity</div>
-                <div className="text-white text-lg font-semibold">{formatCurrency(BigInt(6000 * 1e6), 6)}</div>
-              </div>
-              <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                <div className="text-white/60 text-sm">24h Volume</div>
-                <div className="text-white text-lg font-semibold">
-                  ${formatCurrency(
-                    (transactions || [])
-                      .filter((tx) => tx.timestamp && Number(tx.timestamp) > Date.now() / 1000 - 86400)
-                      .reduce((sum, tx) => sum + BigInt(tx.usdcAmount || 0n), 0n),
-                    6
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Recent Transactions */}
             <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10 mt-[15px]">
@@ -863,8 +847,7 @@ const CoinPage = () => {
                       .map((tx, i) => (
                         <tr key={i} className="border-b border-white/5">
                           <td className="py-3">
-                            <span className={`px-2 py-1 rounded text-xs ${tx.isBuy ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                              }`}>
+                            <span className={`px-2 py-1 rounded text-xs ${tx.isBuy ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
                               {tx.isBuy ? 'BUY' : 'SELL'}
                             </span>
                           </td>
@@ -884,210 +867,76 @@ const CoinPage = () => {
                 </table>
               </div>
             </div>
-                  </>
-
-
-                )}
-              </div>
-            )}
-
-         
           </div>
 
           {/* Right Panel (Trade + Stats) */}
           <div className="space-y-6">
             <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10">
               <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => setActiveTab('buy')}
-                  className={`flex-1 py-3 rounded-xl font-semibold transition ${activeTab === 'buy' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'
-                    }`}
-                >
-                  Buy
-                </button>
-                <button
-                  onClick={() => setActiveTab('sell')}
-                  className={`flex-1 py-3 rounded-xl font-semibold transition ${activeTab === 'sell' ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'
-                    }`}
-                  disabled={coinData.lpCreated}
-                >
-                  Sell
-                </button>
+                <button onClick={() => setActiveTab('buy')} className={`flex-1 py-3 rounded-xl font-semibold transition ${activeTab === 'buy' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'}`}>Buy</button>
+                <button onClick={() => setActiveTab('sell')} className={`flex-1 py-3 rounded-xl font-semibold transition ${activeTab === 'sell' ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'}`} disabled={coinData.lpCreated}>Sell</button>
               </div>
 
               {coinData.lpCreated ? (
-                /* SWAPPER */
-                <Swapper
-                  ERCUltraAddress={tokenAddress}
-                  SYMBOL={tokenInfo.symbol}
-                />
+                <Swapper ERCUltraAddress={tokenAddress} SYMBOL={tokenInfo.symbol} />
               ) : (
                 <>
                   {activeTab === 'buy' ? (
                     <div className="space-y-4">
-                      <div onClick={() => setBuyAmount(balanceUSDC)} className="cursor-pointer text-white">
-                        Total Balance {balanceUSDC}
-                      </div>
+                      <div onClick={() => setBuyAmount(balanceUSDC)} className="cursor-pointer text-white">Total Balance {balanceUSDC}</div>
                       <div>
                         <label className="text-white/60 text-sm">You Pay</label>
                         <div className="mt-1 relative">
-                          <input
-                            type="number"
-                            value={buyAmount}
-                            onChange={(e) => setBuyAmount(e.target.value)}
-                            placeholder="0.0"
-                            className="w-full bg-black/40 text-white p-4 pr-20 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-emerald-500/50"
-                          />
+                          <input type="number" value={buyAmount} onChange={(e) => setBuyAmount(e.target.value)} placeholder="0.0" className="w-full bg-black/40 text-white p-4 pr-20 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-emerald-500/50" />
                           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                             <img src={usdcoinusdclogo} className="w-6 h-6" />
                             <span className="text-white">USDC</span>
                           </div>
                         </div>
                       </div>
-
                       <div>
                         <label className="text-white/60 text-sm">You Receive</label>
                         <div className="mt-1 bg-black/20 p-4 rounded-xl border border-white/10">
-                          <div className="text-2xl text-white font-semibold">
-                            {buyPreview.tokens} {tokenInfo.symbol}
-                          </div>
-                          <div className="text-white/40 text-sm mt-1">
-                            Fees: ${buyPreview.fees} USDC
-                            {buyQuote.usdcNet > 0n && (
-                              <span className="ml-2">
-                                • Net added to pool: ${formatUnits(buyQuote.usdcNet, 6)}
-                              </span>
-                            )}
-                          </div>
-                          {!buyQuote.enoughTokenLiquidity && buyAmount && parseFloat(buyAmount) > 0 && (
-                            <div className="mt-2 text-yellow-400 text-xs">
-                              Not enough token liquidity to fulfill this buy at once.
-                            </div>
-                          )}
-                          {/* MIN PURCHASE WARNING */}
-                          {!isBuyAmountValid() && buyAmount && (
-                            <div className="mt-2 text-red-400 text-xs">
-                              Minimum purchase is {MIN_PURCHASE_USDC} USDC
-                            </div>
-                          )}
+                          <div className="text-2xl text-white font-semibold">{buyPreview.tokens} {tokenInfo.symbol}</div>
+                          <div className="text-white/40 text-sm mt-1">Fees: ${buyPreview.fees} USDC</div>
+                          {!buyQuote.enoughTokenLiquidity && buyAmount && parseFloat(buyAmount) > 0 && <div className="mt-2 text-yellow-400 text-xs">Not enough token liquidity to fulfill this buy at once.</div>}
+                          {!isBuyAmountValid() && buyAmount && <div className="mt-2 text-red-400 text-xs">Minimum purchase is {MIN_PURCHASE_USDC} USDC</div>}
                         </div>
                       </div>
                       <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-white/60 text-sm">Slippage tolerance</label>
-                          <span className="text-white text-sm">{slippagePct}%</span>
-                        </div>
-                        <input
-                          type="range"
-                          min={0}
-                          max={50}
-                          step={0.1}
-                          value={slippagePct}
-                          onChange={(e) => setSlippagePct(e.target.value)}
-                          className="w-full accent-emerald-500"
-                        />
-                        <div className="text-white/40 text-xs mt-1">Max 50%</div>
+                        <div className="flex items-center justify-between mb-1"><label className="text-white/60 text-sm">Slippage tolerance</label><span className="text-white text-sm">{slippagePct}%</span></div>
+                        <input type="range" min={0} max={50} step={0.1} value={slippagePct} onChange={(e) => setSlippagePct(e.target.value)} className="w-full accent-emerald-500" />
                       </div>
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <TransactionButton
-                          transaction={() => buildApproveUSDC()}
-                          onError={(e) => setError(e?.message || 'Approval failed')}
-                          onTransactionConfirmed={() => setToast('USDC Approved!')}
-                        >
-                          Approve USDC
-                        </TransactionButton>
-                        <TransactionButton
-                          disabled={!buyQuote.enoughTokenLiquidity || !isBuyAmountValid()}
-                          transaction={() => buildBuyTokens()}
-                          onError={(e) => setError(e?.message || 'Purchase failed')}
-                          onTransactionConfirmed={() => { setToast('Tokens purchased!'); setBuyAmount(''); setTxTick(x => x + 1); }}
-                        >
-                          Buy {tokenInfo.symbol}
-                        </TransactionButton>
+                        <TransactionButton transaction={() => buildApproveUSDC()} onError={(e) => setError(e?.message || 'Approval failed')} onTransactionConfirmed={() => setToast('USDC Approved!')}>Approve USDC</TransactionButton>
+                        <TransactionButton disabled={!buyQuote.enoughTokenLiquidity || !isBuyAmountValid()} transaction={() => buildBuyTokens()} onError={(e) => setError(e?.message || 'Purchase failed')} onTransactionConfirmed={() => { setToast('Tokens purchased!'); setBuyAmount(''); setTxTick(x => x + 1); }}>Buy {tokenInfo.symbol}</TransactionButton>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div onClick={() => setSellAmount(balanceT)} className="cursor-pointer text-white">
-                        Total Balance {balanceT}
-                      </div>
+                      <div onClick={() => setSellAmount(balanceT)} className="cursor-pointer text-white">Total Balance {balanceT}</div>
                       <div>
                         <label className="text-white/60 text-sm">You Sell</label>
                         <div className="mt-1 relative">
-                          <input
-                            type="number"
-                            value={sellAmount}
-                            onChange={(e) => setSellAmount(e.target.value)}
-                            placeholder="0.0"
-                            className="w-full bg-black/40 text-white p-4 pr-20 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-red-500/50"
-                          />
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <span className="text-white">{tokenInfo.symbol}</span>
-                          </div>
+                          <input type="number" value={sellAmount} onChange={(e) => setSellAmount(e.target.value)} placeholder="0.0" className="w-full bg-black/40 text-white p-4 pr-20 rounded-xl border border-white/10 outline-none focus:ring-2 focus:ring-red-500/50" />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2"><span className="text-white">{tokenInfo.symbol}</span></div>
                         </div>
                       </div>
-
                       <div>
                         <label className="text-white/60 text-sm">You Receive</label>
                         <div className="mt-1 bg-black/20 p-4 rounded-xl border border-white/10">
-                          <div className="text-2xl text-white font-semibold flex items-center gap-2">
-                            <img src={usdcoinusdclogo} className="w-6 h-6" />
-                            ${sellPreview.usdc} USDC
-                          </div>
-                          <div className="text-white/40 text-sm mt-1">
-                            Fees: ${sellPreview.fees} USDC
-                            {sellQuote.usdcNet > 0n && (
-                              <span className="ml-2">
-                                • Net from pool: ${formatUnits(sellQuote.usdcNet, 6)}
-                              </span>
-                            )}
-                          </div>
-                          {!sellQuote.enoughUSDCReserve && sellAmount && parseFloat(sellAmount) > 0 && (
-                            <div className="mt-2 text-yellow-400 text-xs">
-                              Not enough USDC reserve to pay this amount. Try a smaller sell.
-                            </div>
-                          )}
+                          <div className="text-2xl text-white font-semibold flex items-center gap-2"><img src={usdcoinusdclogo} className="w-6 h-6" />${sellPreview.usdc} USDC</div>
+                          <div className="text-white/40 text-sm mt-1">Fees: ${sellPreview.fees} USDC</div>
+                          {!sellQuote.enoughUSDCReserve && sellAmount && parseFloat(sellAmount) > 0 && <div className="mt-2 text-yellow-400 text-xs">Not enough USDC reserve to pay this amount. Try a smaller sell.</div>}
                         </div>
                       </div>
                       <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-white/60 text-sm">Slippage tolerance</label>
-                          <span className="text-white text-sm">{slippagePct}%</span>
-                        </div>
-                        <input
-                          type="range"
-                          min={0}
-                          max={50}
-                          step={0.1}
-                          value={slippagePct}
-                          onChange={(e) => setSlippagePct(e.target.value)}
-                          className="w-full accent-emerald-500"
-                        />
-                        <div className="text-white/40 text-xs mt-1">Max 50%</div>
+                        <div className="flex items-center justify-between mb-1"><label className="text-white/60 text-sm">Slippage tolerance</label><span className="text-white text-sm">{slippagePct}%</span></div>
+                        <input type="range" min={0} max={50} step={0.1} value={slippagePct} onChange={(e) => setSlippagePct(e.target.value)} className="w-full accent-emerald-500" />
                       </div>
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <TransactionButton
-                          transaction={() => buildApproveToken()}
-                          onError={(e) => setError(e?.message || 'Approval failed')}
-                          onTransactionConfirmed={() => setToast('Tokens Approved!')}
-                        >
-                          Approve {tokenInfo.symbol}
-                        </TransactionButton>
-                        <TransactionButton
-                          disabled={!sellQuote.enoughUSDCReserve}
-                          transaction={() => buildSellTokens()}
-                          onError={(e) => setError(e?.message || 'Sale failed')}
-                          onTransactionConfirmed={() => {
-                            setToast('Tokens sold!')
-                            setSellAmount('')
-                            setTxTick((x) => x + 1)
-                            setInfoTick((x) => x + 1)
-                          }}
-                        >
-                          Sell {tokenInfo.symbol}
-                        </TransactionButton>
+                        <TransactionButton transaction={() => buildApproveToken()} onError={(e) => setError(e?.message || 'Approval failed')} onTransactionConfirmed={() => setToast('Tokens Approved!')}>Approve {tokenInfo.symbol}</TransactionButton>
+                        <TransactionButton disabled={!sellQuote.enoughUSDCReserve} transaction={() => buildSellTokens()} onError={(e) => setError(e?.message || 'Sale failed')} onTransactionConfirmed={() => { setToast('Tokens sold!'); setSellAmount(''); setTxTick((x) => x + 1); setInfoTick((x) => x + 1); }}>Sell {tokenInfo.symbol}</TransactionButton>
                       </div>
                     </div>
                   )}
@@ -1095,16 +944,8 @@ const CoinPage = () => {
               )}
               {(error || toast) && (
                 <>
-                  {error && (
-                    <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-                      <p className="text-red-400 text-sm">{error}</p>
-                    </div>
-                  )}
-                  {toast && (
-                    <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                      <p className="text-emerald-400 text-sm">{toast}</p>
-                    </div>
-                  )}
+                  {error && <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20"><p className="text-red-400 text-sm">{error}</p></div>}
+                  {toast && <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><p className="text-emerald-400 text-sm">{toast}</p></div>}
                 </>
               )}
             </div>
@@ -1113,51 +954,16 @@ const CoinPage = () => {
             <div className="bg-white/5 backdrop-blur rounded-2xl p-6 border border-white/10">
               <h3 className="text-white font-semibold mb-4">LP Creation Progress</h3>
               <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/60">Progress</span>
-                  <span className="text-white">{coinData.percentagePurchased}% / 30%</span>
-                </div>
-                <div className="w-full bg-black/40 rounded-full h-3">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all"
-                    style={{ width: `${Math.min(coinData.percentagePurchased * 2, 100)}%` }}
-                  />
-                </div>
-                <p className="text-white/50 text-xs">
-                  Liquidity pool will be created automatically when 30% of tokens are purchased
-                </p>
+                <div className="flex justify-between text-sm"><span className="text-white/60">Progress</span><span className="text-white">{coinData.percentagePurchased}% / 30%</span></div>
+                <div className="w-full bg-black/40 rounded-full h-3"><div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all" style={{ width: `${Math.min(coinData.percentagePurchased * 2, 100)}%` }} /></div>
+                <p className="text-white/50 text-xs">Liquidity pool will be created automatically when 30% of tokens are purchased</p>
               </div>
             </div>
 
             {/* Withdraw Fees */}
             {address && address?.toLowerCase() === coinData?.creator.toLowerCase() && (
               <div className="mt-4 space-y-3">
-                <TransactionButton
-                  transaction={() =>
-                    prepareContractCall({
-                      contract: dex,
-                      method: "function withdrawAllCreatorFeesUSDC(address tokenA)",
-                      params: [tokenAddress],
-                    })
-                  }
-                  onError={(e) => setError(e?.message || "Withdraw failed")}
-                  onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}
-                >
-                  Withdraw Creator Fees (USDC)
-                </TransactionButton>
-                <TransactionButton
-                  transaction={() =>
-                    prepareContractCall({
-                      contract: dex,
-                      method: "function withdrawAllCreatorFeesToken(address tokenA)",
-                      params: [tokenAddress],
-                    })
-                  }
-                  onError={(e) => setError(e?.message || "Withdraw failed")}
-                  onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}
-                >
-                  Withdraw Creator Fees (Token)
-                </TransactionButton>
+                <TransactionButton transaction={() => prepareContractCall({ contract: dex, method: "function withdrawAllCreatorFeesUSDC(address tokenA)", params: [tokenAddress] })} onError={(e) => setError(e?.message || "Withdraw failed")} onTransactionConfirmed={() => setToast("All creator fees withdrawn!")}>Withdraw Creator Fees (USDC)</TransactionButton>
               </div>
             )}
 
@@ -1167,47 +973,18 @@ const CoinPage = () => {
               <div className="space-y-2">
                 {holders.slice(0, 20).map((holder, i) => {
                   const addr = holder.holder || '';
-                  const isLP =
-                    addr.toLowerCase() === (import.meta.env.VITE_DEX_ADDRESS || '').toLowerCase();
-                  const isCreator =
-                    (coinData?.creator || '').toLowerCase() === addr.toLowerCase();
-
+                  const isLP = addr.toLowerCase() === (import.meta.env.VITE_DEX_ADDRESS || '').toLowerCase();
+                  const isCreator = (coinData?.creator || '').toLowerCase() === addr.toLowerCase();
                   return (
-                    <div
-                      key={i}
-                      className="flex justify-between items-center py-2 border-b border-white/5"
-                    >
+                    <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
                       <div className="flex items-center gap-2">
-                        {/* Clickable address */}
-                        <a
-                          href={`https://base.blockscout.com/address/${addr}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-white/80 text-sm hover:text-white underline-offset-2 hover:underline transition"
-                        >
-                          {addr.slice(0, 6)}...{addr.slice(-4)}
-                        </a>
-
-                        {/* LP and Creator badges */}
-                        {isLP && (
-                          <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-[10px] uppercase tracking-wider">
-                            LP
-                          </span>
-                        )}
-                        {isCreator && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] uppercase tracking-wider">
-                            Creator
-                          </span>
-                        )}
+                        <a href={`https://base.blockscout.com/address/${addr}`} target="_blank" rel="noopener noreferrer" className="text-white/80 text-sm hover:text-white underline-offset-2 hover:underline transition">{addr.slice(0, 6)}...{addr.slice(-4)}</a>
+                        {isLP && <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-[10px] uppercase tracking-wider">LP</span>}
+                        {isCreator && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] uppercase tracking-wider">Creator</span>}
                       </div>
-
                       <div className="text-right">
-                        <div className="text-white text-sm">
-                          {formatUnits(holder.balance || 0n, tokenInfo.decimals)} {tokenInfo.symbol}
-                        </div>
-                        <div className="text-white/40 text-xs">
-                          {calculateHolderPercentage(holder.balance)}%
-                        </div>
+                        <div className="text-white text-sm">{formatUnits(holder.balance || 0n, tokenInfo.decimals)} {tokenInfo.symbol}</div>
+                        <div className="text-white/40 text-xs">{calculateHolderPercentage(holder.balance)}%</div>
                       </div>
                     </div>
                   );

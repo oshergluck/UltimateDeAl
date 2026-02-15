@@ -3,6 +3,7 @@ import {createThirdwebClient,prepareContractCall, getContract } from "thirdweb";
 import { useSendTransaction,TransactionButton } from 'thirdweb/react';
 import { useStateContext } from "../context";
 import {logoOfWebsite} from "../assets";
+import {IPFSMediaViewer} from "../components";
 
 const ALCHEMY_API_KEY = import.meta.env.VITE_ALCHEMY_API_KEY1;
 const NETWORK = "base-mainnet";
@@ -160,7 +161,16 @@ function NFTDetail({ nft, onBack }) {
               {/* Image Section */}
               <div className="md:w-1/2">
                 <div className="relative">
-                  <img
+          {nft.image.cachedUrl || nft.image?.thumbnailUrl ? (<>
+            <IPFSMediaViewer
+  ipfsLink={nft.image?.cachedUrl || nft.image?.thumbnailUrl}
+  fileName={nft.name || "Untitled NFT"}
+  className="w-full h-full rounded-[15px]"
+  objectFit="cover" 
+  useCanvasForImages={true} 
+/>
+          </>):(<>
+            <img
                     src={nft.image?.cachedUrl || nft.image?.thumbnailUrl || logoOfWebsite}
                     alt={nft.name || "Untitled NFT"}
                     className="w-full h-full object-cover rounded-[15px]"
@@ -172,6 +182,8 @@ function NFTDetail({ nft, onBack }) {
                       }
                     }}
                   />
+          </>)}
+                  
                 </div>
                 <div className="mt-[30px]">
                 <input type="text" placeholder="Address" value={toTransfer} onChange={e => setToTransfer(e.target.value)} className="sm:col-span-2 p-2 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm mx-[20px] my-[10px]" />
@@ -465,8 +477,17 @@ function NFTCollection({ onNFTClick }) {
                   onClick={() => onNFTClick(nft)}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100 overflow-hidden group"
                 >
-                  <div className="aspect-square relative overflow-hidden">
-                    <img
+                  <div className="aspect-square relative overflow-hidden"> 
+                    {nft.image?.cachedUrl || nft.image?.thumbnailUrl ? (<>
+                      <IPFSMediaViewer
+  ipfsLink={nft.image?.cachedUrl || nft.image?.thumbnailUrl}
+  fileName={nft.name || "Untitled NFT"}
+  className="w-full h-full group-hover:scale-110 transition-transform duration-300"
+  objectFit="cover"
+  useCanvasForImages={true}
+/>
+                    </>):(<>
+                      <img
                       src={nft.image?.cachedUrl || nft.image?.thumbnailUrl || logoOfWebsite}
                       alt={nft.name || "Untitled NFT"}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
@@ -478,6 +499,8 @@ function NFTCollection({ onNFTClick }) {
                         }
                       }}
                     />
+                    </>)}
+                    
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-4">

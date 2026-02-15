@@ -105,7 +105,7 @@ export default function App() {
   }, [CrowdFunding]);
 
   return (
-    <><MatrixCursor />
+    <>
       <CookieAlert />
       {isLoading && <Loader />}
 

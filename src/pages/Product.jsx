@@ -545,12 +545,12 @@ const [showRegisterConfirmModal, setShowRegisterConfirmModal] = useState(false);
             if(type=="Rentals") {
                 const data = await theStoreContract.call('rewardsPool');
                 setReward(data*2/100000);
-                setAmountOfProduct(30);
+                setAmountOfProduct(1);
             }
             if(type=="Renting") {
                 const data = await theStoreContract.call('rewardsPool');
                 setReward(data*2/10000);
-                setAmountOfProduct(30);
+                setAmountOfProduct(1);
             }
             if(type=="Sales") {
                 const data = await theStoreContract.call('rewardsPool');
@@ -774,7 +774,7 @@ const rewardCalc = async (theType) => {
   else if (theType === 'Liquidity' || theType=='Rentals') {
     rewardPool = rewardInWei * 100000;
 
-    for (let i = 0; i < amountOfProduct; i++) {
+    for (let i = 0; i < amountOfProduct*30; i++) {
       rewardCalc = rewardPool / 100000;
       totalReward += rewardCalc;
       rewardPool -= rewardCalc;
@@ -843,7 +843,7 @@ return (
 
         <div className="relative z-[200] p-4 sm:p-6">
           <div className="relative z-[200] rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
-            <ProductSearch contractAddress={storeContractByURL} />
+            <ProductSearch contractAddress={storeContractByURL} type={type} />
           </div>
         </div>
       </div>
@@ -1146,7 +1146,7 @@ return (
                       {type !== "Sales" &&
                       paymentAddress !== "0x4200000000000000000000000000000000000006" &&
                       storeContractByURL !== "0xF034bF0135A6b20ec5b16483a1b83f21da63b3DD" ? (
-                        <span className="text-white/80 font-bold text-sm">Days</span>
+                        <span className="text-white/80 font-bold text-sm">Months</span>
                       ) : null}
 
                       <span className="ml-auto text-white/60 text-sm">
@@ -1159,250 +1159,211 @@ return (
                   </div>
                 )}
 
-                {/* Approve / Purchase */}
-                {address ? (
-                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                    <TransactionButton
-                      className={`!rounded-2xl !px-6 !py-3 !font-extrabold !shadow-lg !transition
-                        !bg-white !text-blue-700 hover:!shadow-xl
-                        ${
-                          amountOfProduct *
-                            (HexToInteger(product?.price._hex) -
-                              (HexToInteger(product?.discountPercentage._hex) *
-                                HexToInteger(product?.price._hex)) /
-                                100) <
-                          allowance
-                            ? "!hidden"
-                            : ""
-                        }`}
-                      transaction={async () => {
-                        const finalPrice =
-                          Math.round(
-                            Math.round(HexToInteger(product?.price._hex)) *
-                              (100 - HexToInteger(product?.discountPercentage._hex)) /
-                              100
-                          ) *
-                            amountOfProduct +
-                          1e3;
+                {/* --- חישוב מקדים של המחיר והכמות (לשים לפני ה-return של הקומפוננטה אם אפשר, או בתוך הבלוק הזה) --- */}
+{(() => {
+  // 1. חישוב מחיר ליחידה אחרי הנחה
+  const rawPrice = HexToInteger(product?.price._hex || 0);
+  const discount = HexToInteger(product?.discountPercentage._hex || 0);
+  const priceAfterDiscount = rawPrice - (rawPrice * discount) / 100;
 
-                        const spender = storeContractByURL;
-                        const value = finalPrice;
+  // 2. חישוב הכמות האמיתית (הכפלה ב-30 אם זה השכרה)
+  const actualAmount = type === "Rentals" ? amountOfProduct * 30 : amountOfProduct;
 
-                        const tx = prepareContractCall({
-                          contract: PaymentContract,
-                          method: "function approve(address spender, uint256 value) returns (bool)",
-                          params: [spender, value],
-                          value: 0,
-                        });
+  // 3. סה"כ לתשלום
+  const totalRequiredAmount = priceAfterDiscount * actualAmount;
 
-                        return tx;
-                      }}
-                      onTransactionSent={(result) => {
-                        console.log("Transaction submitted", result.transactionHash);
-                      }}
-                      onTransactionConfirmed={async () => {
-                        const data = await PaymentContract1.call("allowance", [
-                          address,
-                          storeContractByURL,
-                        ]);
-                        setAllowance(HexToInteger(data._hex));
-                      }}
-                      onError={(error) => {
-                        console.error("Transaction error", error);
-                      }}
-                    >
-                      {symbolPayment ? `Approve ${symbolPayment}` : "Approve $USDC"}
-                    </TransactionButton>
+  // 4. בדיקה האם צריך אישור (Single Source of Truth)
+  const needsApproval = allowance < totalRequiredAmount;
 
-                    <TransactionButton
-                      className={`!rounded-2xl !px-6 !py-3 !font-extrabold !shadow-lg !transition
-                        !bg-gradient-to-r !from-blue-500 !to-cyan-300 !text-black hover:!opacity-95 hover:!shadow-xl
-                        ${
-                          allowance >=
-                          (HexToInteger(product?.price._hex) -
-                            (HexToInteger(product?.discountPercentage._hex) *
-                              HexToInteger(product?.price._hex)) /
-                              100) *
-                            amountOfProduct
-                            ? ""
-                            : "!hidden"
-                        }`}
-                      transaction={async () => {
-                        const productUrlDecoded = decodeUrlString(productUrl);
+  return (
+    address ? (
+      <div className="mt-6 flex flex-col sm:flex-row gap-3">
+        
+        {/* === APPROVE BUTTON === */}
+        <TransactionButton
+          className={`!rounded-2xl !px-6 !py-3 !font-extrabold !shadow-lg !transition
+            !bg-white !text-blue-700 hover:!shadow-xl
+            ${!needsApproval ? "!hidden" : ""} 
+          `}
+          transaction={async () => {
+            // מוסיפים קצת ספר למנוע בעיות עיגול (1000 wei/units)
+            const valueToApprove = Math.ceil(totalRequiredAmount) + 1000;
+            
+            const tx = prepareContractCall({
+              contract: PaymentContract,
+              method: "function approve(address spender, uint256 value) returns (bool)",
+              params: [storeContractByURL, BigInt(valueToApprove)],
+              value: 0,
+            });
+            return tx;
+          }}
+          onTransactionSent={(result) => {
+            console.log("Transaction submitted", result.transactionHash);
+          }}
+          onTransactionConfirmed={async () => {
+            const data = await PaymentContract1.call("allowance", [
+              address,
+              storeContractByURL,
+            ]);
+            setAllowance(HexToInteger(data._hex));
+          }}
+          onError={(error) => {
+            console.error("Transaction error", error);
+          }}
+        >
+          {symbolPayment ? `Approve ${symbolPayment}` : "Approve $USDC"}
+        </TransactionButton>
 
-                        const response = await fetch(`${API_URL}/sign-purchase`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            walletAddress: address,
-                            productBarcode: productUrlDecoded,
-                            amount: amountOfProduct,
-                          }),
-                        });
+        {/* === PURCHASE BUTTON === */}
+        <TransactionButton
+          className={`!rounded-2xl !px-6 !py-3 !font-extrabold !shadow-lg !transition
+            !bg-gradient-to-r !from-blue-500 !to-cyan-300 !text-black hover:!opacity-95 hover:!shadow-xl
+            ${needsApproval ? "!hidden" : ""}
+          `}
+          transaction={async () => {
+            const productUrlDecoded = decodeUrlString(productUrl);
+            
+            const response = await fetch(`${API_URL}/sign-purchase`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  walletAddress: address,
+                  productBarcode: productUrlDecoded,
+                  // שליחת הכמות המחושבת (כפול 30 אם זה השכרה)
+                  amount: actualAmount, 
+                  storeAddress: storeContractByURL 
+              })
+            });
+            
+            const data = await response.json();
+            if (!data.success) {
+              alert("Error: " + data.error);
+              throw new Error(data.error);
+            }
 
-                        const data = await response.json();
+            const { signature, deadline } = data;
+            let IPFSOFNFT = "";
+            
+            // חישוב מחיר להצגה ב-NFT (מחיר ליחידה בדולרים)
+            const priceForNFT = priceAfterDiscount / 1e6; 
 
-                        if (!data.success) {
-                          alert("Error: " + data.error);
-                          throw new Error(data.error);
-                        }
+            const rewardForUser = await rewardCalc(type);
+            const today = new Date();
+            const sellDate = `${today.getDate().toString().padStart(2, "0")}/${(today.getMonth() + 1).toString().padStart(2, "0")}/${today.getFullYear()}`;
 
-                        const { signature, deadline } = data;
+            // חישוב תפוגה
+            const expirationPeriod = (type == "Rentals" ? amountOfProduct*30:amountOfProduct) * 24 * 60 * 60 * 1000;
+            const expirationDateObj = new Date(Date.now() + expirationPeriod);
+            const expirationDate = `${expirationDateObj.getDate().toString().padStart(2, "0")}/${(expirationDateObj.getMonth() + 1).toString().padStart(2, "0")}/${expirationDateObj.getFullYear()}`;
 
-                        let IPFSOFNFT = "";
+            // הכנת המטא-דאטה (לוגיקה זהה למקור שלך)
+            if (type === "Rentals" || type === "Renting") {
+               const upload = await pinata.upload.json({
+                  name: `Invoice`,
+                  description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
+                  external_url: `https://UltraShop.tech/shop/${StoreURL}`,
+                  image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
+                  attributes: [
+                    { trait_type: "Invoice Id", value: invoiceCounter },
+                    { trait_type: "Product Name", value: product.name },
+                    { trait_type: "Rental Period", value: `${amountOfProduct} Month` },
+                    { trait_type: "Sell Date", value: sellDate },
+                    { trait_type: "Amount Payed", value: `${(priceForNFT * actualAmount).toFixed(2)} $USDC` },
+                    { trait_type: "Price Per Day", value: `${priceForNFT.toFixed(2)} $USDC` }, // שים לב: זה מחיר לחודש בקוד המקורי, כדאי לוודא כיתוב
+                    { trait_type: "Reward Address", value: rewardAddress },
+                    { trait_type: "Reward Amount", value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}` },
+                    { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
+                    { trait_type: `${product.name} Expiration Date`, value: expirationDate },
+                  ],
+                });
+                IPFSOFNFT = upload.IpfsHash;
+            } else {
+                // Sales logic...
+                 const upload = await pinata.upload.json({
+                  name: `Invoice`,
+                  description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
+                  external_url: `https://UltraShop.tech/shop/${StoreURL}`,
+                  image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
+                  attributes: [
+                    { trait_type: "Invoice Id", value: invoiceCounter },
+                    { trait_type: "Product Name", value: product.name },
+                    { trait_type: "Amount", value: amountOfProduct },
+                    { trait_type: "Sell Date", value: sellDate },
+                    { trait_type: "Amount Payed", value: `${(priceForNFT * amountOfProduct).toFixed(2)} $USDC` },
+                    { trait_type: "Price", value: `${priceForNFT.toFixed(2)} $USDC` },
+                    { trait_type: "Reward Address", value: rewardAddress },
+                    { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
+                    { trait_type: "Reward Amount", value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}` },
+                  ],
+                });
+                IPFSOFNFT = upload.IpfsHash;
+            }
 
-                        let priceForNFT =
-                          (HexToInteger(product?.price._hex) *
-                            (100 - HexToInteger(product?.discountPercentage._hex))) /
-                          (100 * 1e6);
+            const theInfo = form.moreInfo;
+            
+            // הכנת הטרנזקציה לחוזה
+            // כאן השינוי החשוב - שימוש ב-actualAmount
+            const tx = prepareContractCall({
+                contract: storeContract1,
+                method: "function purchaseProduct(string _productBarcode, uint256 _amount, string _info, string metadata, bytes _signature, uint256 _deadline)",
+                params: [
+                  productUrlDecoded,
+                  actualAmount, // שימוש במשתנה המחושב (כבר כולל כפול 30 לרנטלס)
+                  theInfo,
+                  IPFSOFNFT,
+                  signature,
+                  deadline,
+                ],
+            });
 
-                        const rewardForUser = await rewardCalc(type);
-                        const today = new Date();
-                        const sellDate = `${today
-                          .getDate()
-                          .toString()
-                          .padStart(2, "0")}/${(today.getMonth() + 1)
-                          .toString()
-                          .padStart(2, "0")}/${today.getFullYear()}`;
-
-                        const expirationPeriod = amountOfProduct * 24 * 60 * 60 * 1000;
-                        const expirationDateObj = new Date(Date.now() + expirationPeriod);
-                        const expirationDate = `${expirationDateObj
-                          .getDate()
-                          .toString()
-                          .padStart(2, "0")}/${(expirationDateObj.getMonth() + 1)
-                          .toString()
-                          .padStart(2, "0")}/${expirationDateObj.getFullYear()}`;
-
-                        if (type === "Rentals" || type === "Renting") {
-                          const upload = await pinata.upload.json({
-                            name: `Invoice`,
-                            description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
-                            external_url: `https://UltraShop.tech/shop/${StoreURL}`,
-                            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
-                            attributes: [
-                              { trait_type: "Invoice Id", value: invoiceCounter },
-                              { trait_type: "Product Name", value: product.name },
-                              { trait_type: "Rental Period", value: `${amountOfProduct} Days` },
-                              { trait_type: "Sell Date", value: sellDate },
-                              {
-                                trait_type: "Amount Payed",
-                                value: `${(priceForNFT * amountOfProduct).toFixed(2)} $USDC`,
-                              },
-                              { trait_type: "Price Per Day", value: `${priceForNFT.toFixed(2)} $USDC` },
-                              { trait_type: "Reward Address", value: rewardAddress },
-                              {
-                                trait_type: "Reward Amount",
-                                value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}`,
-                              },
-                              { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
-                              { trait_type: `${product.name} Expiration Date`, value: expirationDate },
-                            ],
-                          });
-                          IPFSOFNFT = upload.IpfsHash;
-                        } else if (type === "Sales") {
-                          const upload = await pinata.upload.json({
-                            name: `Invoice`,
-                            description: `Services entrence from ${storeName}\nLink to the store: https://UltraShop.tech/shop/${StoreURL}`,
-                            external_url: `https://UltraShop.tech/shop/${StoreURL}`,
-                            image: `https://bronze-sticky-guanaco-654.mypinata.cloud/ipfs/${imagesOfProduct[0]}?pinataGatewayToken=${import.meta.env.VITE_PINATA_API}`,
-                            attributes: [
-                              { trait_type: "Invoice Id", value: invoiceCounter },
-                              { trait_type: "Product Name", value: product.name },
-                              { trait_type: "Amount", value: amountOfProduct },
-                              { trait_type: "Sell Date", value: sellDate },
-                              {
-                                trait_type: "Amount Payed",
-                                value: `${(priceForNFT * amountOfProduct).toFixed(2)} $USDC`,
-                              },
-                              { trait_type: "Price", value: `${priceForNFT.toFixed(2)} $USDC` },
-                              { trait_type: "Reward Address", value: rewardAddress },
-                              { trait_type: "Reward Symbol", value: `${theSymbolOfReward}` },
-                              {
-                                trait_type: "Reward Amount",
-                                value: `${rewardForUser.toFixed(2)} ${theSymbolOfReward}`,
-                              },
-                            ],
-                          });
-                          IPFSOFNFT = upload.IpfsHash;
-                        }
-
-                        const theInfo = form.moreInfo;
-
-                        const tx = prepareContractCall({
-                          contract: storeContract1,
-                          method:
-                            "function purchaseProduct(string _productBarcode, uint256 _amount, string _info, string metadata, bytes _signature, uint256 _deadline)",
-                          params: [
-                            productUrlDecoded,
-                            amountOfProduct,
-                            theInfo,
-                            IPFSOFNFT,
-                            signature,
-                            deadline,
-                          ],
-                        });
-
-                        return tx;
-                      }}
-                      onTransactionSent={(result) => {
-                        console.log("Transaction submitted", result.transactionHash);
-                      }}
-                      onTransactionConfirmed={async (receipt) => {
-                        try {
-                            console.log("Transaction Confirmed");
-                    
-                            // תיקון: שימוש ב-Counter הקיים במקום ניחוש מהלוגים
-                            // (בהנחה ש-invoiceCounter מחזיק את המספר הנוכחי, והחדש הוא הוא או +1)
-                            // אם החוזה מעדכן את ה-Counter לאחר הרכישה, המספר של הקבלה הוא ה-Counter הנוכחי
-                            let receiptId = invoiceCounter; 
-                            
-                            // גיבוי: אם ה-Counter הוא 0 (לא נטען), ננסה לקרוא מהחוזה שוב
-                            if (!receiptId || receiptId === 0) {
-                                 const currentCount = await theStoreContract.call('receiptCounter');
-                                 receiptId = HexToInteger(currentCount._hex) - 1; // מינוס 1 כי הוא כבר התקדם
-                            }
-                    
-                            const productUrlDecoded = decodeUrlString(productUrl);
-                            const finalPrice = (HexToInteger(product?.price._hex) * (100 - HexToInteger(product?.discountPercentage._hex))) / 100;
-                    
-                            await fetch(`${API_URL}/register-order`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    receiptId: receiptId, // עכשיו זה מספר נורמלי (למשל 5)
-                                    walletAddress: address,
-                                    storeAddress: storeContractByURL,
-                                    productBarcode: productUrlDecoded,
-                                    productName: product?.name,
-                                    price: finalPrice / 1e6*amountOfProduct,
-                                    timestamp: Math.floor(Date.now() / 1000)
-                                })
-                            });
-                            
-                            console.log("Order registered manually with ID:", receiptId);
-                    
-                        } catch (err) {
-                            console.error("Failed to register order in DB:", err);
-                        }
-                        refreshPage();
-                    }}
-                      onError={(error) => {
-                        console.error("Transaction error", error);
-                        if (error.message && error.message.includes("Not authorized")) {
-                          alert("You are not registered in our database! Please register first.");
-                        } else if (error.message && error.message.includes("Signature expired")) {
-                          alert("Signature expired. Please try again.");
-                        } else {
-                          alert("Transaction failed: " + error.message);
-                        }
-                      }}
-                    >
-                      Purchase
-                    </TransactionButton>
-                  </div>
-                ) : null}
-
+            return tx;
+          }}
+          onTransactionSent={(result) => {
+            console.log("Transaction submitted", result.transactionHash);
+          }}
+          onTransactionConfirmed={async (receipt) => {
+             // ... הלוגיקה שלך לסיום רכישה ...
+             try {
+                  let receiptId = invoiceCounter; 
+                  if (!receiptId || receiptId === 0) {
+                       const currentCount = await theStoreContract.call('receiptCounter');
+                       receiptId = HexToInteger(currentCount._hex) - 1; 
+                  }
+          
+                  const productUrlDecoded = decodeUrlString(productUrl);
+                  
+                  // רישום ב-DB
+                  await fetch(`${API_URL}/register-order`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                          receiptId: receiptId,
+                          walletAddress: address,
+                          storeAddress: storeContractByURL,
+                          productBarcode: productUrlDecoded,
+                          productName: product?.name,
+                          price: totalRequiredAmount / 1e6, // המחיר הכולל שחושב למעלה
+                          timestamp: Math.floor(Date.now() / 1000)
+                      })
+                  });
+                  console.log("Order registered manually");
+              } catch (err) {
+                  console.error("Failed to register order in DB:", err);
+              }
+              refreshPage();
+          }}
+          onError={(error) => {
+             // ... טיפול בשגיאות ...
+             console.error("Transaction error", error);
+             alert("Transaction failed: " + error.message);
+          }}
+        >
+          Purchase
+        </TransactionButton>
+      </div>
+    ) : null
+  );
+})()}
                 
                     {/* Review by Invoice input */}
                     <div className="mt-[20px] rounded-2xl border border-white/10 bg-black/20 p-4">

@@ -455,80 +455,76 @@ const City = () => {
         "https://api.openai.com/v1/chat/completions",
         {
           model: "gpt-4o-mini",
+          temperature: 0.7,
+          max_tokens: 2000,
           messages: [
             {
               role: "user",
               content: `Rules:
-Hi. 1A. Always put less new from channel 13!
-1. Never repeat yourself if you know something already happened!
-2. Minutes should be random not X5!
-3. Every day bring atleast two mystirious headlines that like a riddle which built based on the date!
-4. Always some of the citizens hate the mayor and some are loving him!
-5. The News MUST Critisize the mayor!
-6. There are two channels of news, Channel 14 is supporting the mayor and channel 13 hates the mayor, display both!
-7. Channels numbers are always 13 and 14!
-8. Channel Number 8 is the KingsLanding Channel
-8. Never write news for day after or day before the date, Only the date you got here! never write more then 24 hours!
-9. Always add "If the election were today:" and add the Election survey and make random numbers for the election!
-10. Inclued all the names you get in the prompt in the survey! like ${cityStores
+  Hi. 1A. Always put less new from channel 13!
+  1. Never repeat yourself if you know something already happened!
+  2. Minutes should be random not X5!
+  3. Every day bring atleast two mystirious headlines that like a riddle which built based on the date!
+  4. Always some of the citizens hate the mayor and some are loving him!
+  5. The News MUST Critisize the mayor!
+  6. There are two channels of news, Channel 14 is supporting the mayor and channel 13 hates the mayor, display both!
+  7. Channels numbers are always 13 and 14!
+  8. Channel Number 8 is the KingsLanding Channel
+  8. Never write news for day after or day before the date, Only the date you got here! never write more then 24 hours!
+  9. Always add "If the election were today:" and add the Election survey and make random numbers for the election!
+  10. Inclued all the names you get in the prompt in the survey! like ${cityStores
                 .map((store) => store.contactInfo)
                 .join(" random %, ")} and always add a random % that dont know to who they want to vote, NEVER Pass the 100%!
-11. When Writing about the mayor, Write only his Last Name!
-12. Never write the rules itself!
-13. Never generate the same day twice!
-14. NEVER WRITE THE WORD 'RANDOM' or 'Random' or 'random'!
-15. NEVER USE THE EXAMPLE ITSELF! GENERATE HEADLINES FROM YOUR IMAGINATION!
-16. Include conflicts and interactions between ${cityName} and other cities. Here are the other cities and their mayors: ${otherCitiesInfo}. Create interesting storylines involving disputes, alliances, or competitions between these cities and their leaders.
-17. Generate 23 news headlines for the city of ${cityName}. The city has ${participantsCount + 1000000000} citizens, ${participantsCount} Humans and the others are creatures from all the Galaxy, including the following notable residents:
-
-${cityStores.map((store) => store.name).join(", ")} those are stores which will be shown in the news and the surveys! never write negative news about those stores!
-
-The mayor of the city is ${mayor} owns ${high}. Each headline represents events happening over a 24-hour period starting from ${dateOfGame}. Make the headlines engaging and varied, including the names of the citizens listed above as well as other imaginary names for people and places. Some citizens may have been involved in conflicts or passed away from old age, so feel free to incorporate these elements into the storyline.
-
-Include interactions, conflicts, or collaborations with other cities and their mayors. Create engaging storylines that involve multiple cities and their leaders.
-
-For each headline, include the time (in 24-hour format) and the date. Here's the format:
-
-[Cannel: Channel number]
-
-[Date: ${dateOfGame}]
-
-[Time] Headline
-
-Example:
-[Channel: 14]
-[Date: October 7th, 2077]
-make the hours randomized even the minutes.
-
-00:14 - Mayor ${mayor} Announces Plans for New Skybridge
-03:17 - Unexpected Meteor Shower Delights Night Owls at Celestial Park
-06:28 - ${cityStores[1]?.contactInfo || "Random Name"} Wins Intergalactic Cooking Competition
-08:12 - A red dressed woman was found dead in the parking lot of center of ${cityName}
-11:45 - ${cityName} and ${citiesAndMayors[0]?.city || "Neighboring City"} Sign Historic Trade Agreement
-13:27 - ${citiesAndMayors[0]?.city || "Neighboring City"} Attacked ${cityName}
-
-...
-
-Please generate 24 headlines following this format, covering a full 24-hour period starting from ${dateOfGame}. never generate more than 24 hours! Include at least one headline featuring the mayor's activities or decisions. Include at least one headline featuring each user's activities or decisions. Use creative elements fitting for the date ${dateOfGame}. Incorporate stories about conflicts, alliances, and significant events involving the listed citizens and other cities. All the people in the city can die except the users!`,
-            },
-          ],
-          temperature: 0.7,
-          max_tokens: 4000,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0,
+  11. When Writing about the mayor, Write only his Last Name!
+  12. Never write the rules itself!
+  13. Never generate the same day twice!
+  14. NEVER WRITE THE WORD 'RANDOM' or 'Random' or 'random'!
+  15. NEVER USE THE EXAMPLE ITSELF! GENERATE HEADLINES FROM YOUR IMAGINATION!
+  16. Include conflicts and interactions between ${cityName} and other cities. Here are the other cities and their mayors: ${otherCitiesInfo}. Create interesting storylines involving disputes, alliances, or competitions between these cities and their leaders.
+  17. Generate 23 news headlines for the city of ${cityName}. The city has ${
+                participantsCount + 1000000000
+              } citizens, ${participantsCount} Humans and the others are creatures from all the Galaxy, including the following notable residents:
+  
+  ${cityStores.map((store) => store.name).join(", ")} those are stores which will be shown in the news and the surveys! never write negative news about those stores!
+  
+  The mayor of the city is ${mayor} owns ${high}. Each headline represents events happening over a 24-hour period starting from ${dateOfGame}. Make the headlines engaging and varied, including the names of the citizens listed above as well as other imaginary names for people and places. Some citizens may have been involved in conflicts or passed away from old age, so feel free to incorporate these elements into the storyline.
+  
+  Include interactions, conflicts, or collaborations with other cities and their mayors. Create engaging storylines that involve multiple cities and their leaders.
+  
+  For each headline, include the time (in 24-hour format) and the date. Here's the format:
+  
+  [Channel: Channel number]
+  
+  [Date: ${dateOfGame}]
+  
+  [Time] Headline
+  
+  Example:
+  [Channel: 14]
+  [Date: October 7th, 2077]
+  make the hours randomized even the minutes.
+  
+  00:14 - Mayor ${mayor} Announces Plans for New Skybridge
+  03:17 - Unexpected Meteor Shower Delights Night Owls at Celestial Park
+  06:28 - ${cityStores[1]?.contactInfo || "Citizen"} Wins Intergalactic Cooking Competition
+  08:12 - A red dressed woman was found dead in the parking lot of center of ${cityName}
+  11:45 - ${cityName} and ${citiesAndMayors[0]?.city || "Neighboring City"} Sign Historic Trade Agreement
+  13:27 - ${citiesAndMayors[0]?.city || "Neighboring City"} Attacked ${cityName}
+  
+  Please generate 24 headlines following this format, covering a full 24-hour period starting from ${dateOfGame}. never generate more than 24 hours! Include at least one headline featuring the mayor's activities or decisions. Include at least one headline featuring each user's activities or decisions. Use creative elements fitting for the date ${dateOfGame}. Incorporate stories about conflicts, alliances, and significant events involving the listed citizens and other cities. All the people in the city can die except the users!`
+            }
+          ]
         },
         {
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
+            Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY?.trim()}`,
+            "Content-Type": "application/json"
+          }
         }
       );
-
+  
       const text = response?.data?.choices?.[0]?.message?.content || "";
       setStory(text);
-
       await updateDateOfGameAfterPurchase(num);
     } catch (error) {
       console.error("Error generating story:", error);
@@ -537,6 +533,11 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
       setIsLoading(false);
     }
   };
+
+  const gen = async (ticketsToBuy) => {
+    await fetchCityData();
+     await generateStory(ticketsToBuy);
+  }
 
   // --- Main Effects ---
 
@@ -554,6 +555,8 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
     lastLoadedCityRef.current = cityName;
 
     window.scrollTo(0, 0);
+
+    
 
     const loadCriticalData = async () => {
       setIsLoading(true);
@@ -800,6 +803,7 @@ Please generate 24 headlines following this format, covering a full 24-hour peri
                   INITIALIZE & DOWNLOAD NEWS
                 </TransactionButton>
               </>
+              
             ) : (
               <button
                 onClick={() => navigateToDeAlStore()}

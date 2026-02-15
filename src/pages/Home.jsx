@@ -19,13 +19,6 @@ const Home = () => {
     const navigate = useNavigate();
     useEffect(() => {
         window.scrollTo(0, 0);
-        
-        const fetchReward = async () => {
-            setIsLoading(true);
-            const data = await CrowdFunding.call('rewardPool');
-            setReward(data*2/1000);
-            setIsLoading(false);
-        }
     
         async function getDetailsOfStores() {
             setIsLoading(true);
@@ -64,7 +57,7 @@ const Home = () => {
         if(storeRegistery) {
             getDetailsOfStores();
         }
-    }, [storeRegistery, reward]);
+    }, [storeRegistery]);
 
 const getUniqueCities = () => {
     if(allStores) {
@@ -76,10 +69,6 @@ const getVotingDetails = async (urlPath) => {
     const storeVoting = await storeRegistery.call('getStoreVotingSystem',[urlPath]);
 }
 
-const enc = async (urlPath) => {
-    const data = await checkIfEncrypted(urlPath);
-    return data;
-}
 const [activeTab, setActiveTab] = useState('featured');
 
 function processDescription(description, maxLength = 180)
@@ -125,7 +114,7 @@ function processDescription(description, maxLength = 180)
       
           {/* Search */}
           <SearchEngine
-            searchEngineAddress={"0x3646F77A96A1eBb0e04eE494053e38599eE66FC4"}
+            searchEngineAddress={"0x57a3d1Fc26Cd93f05015cD350bC7626F1ee53B26"}
             listingContractAddress={import.meta.env.VITE_STORE_REGISTERY}
           />
         </div>

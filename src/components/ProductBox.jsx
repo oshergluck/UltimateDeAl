@@ -15,6 +15,24 @@ const ProductBox = ({ product, onClick, contract, type, paymentAddress, storeAdd
   const [imagesOfProduct, setImagesOfProduct] = useState([]);
   const [isAddedSuccess, setIsAddedSuccess] = useState(false);
 
+  // --- מחשבים את המחירים וההנחות כאן למעלה כדי לשמור על ה-JSX נקי ---
+  const rawPrice = productData ? HexToInteger(productData.price._hex) : 0;
+  const discount = productData && productData.discountPercentage ? HexToInteger(productData.discountPercentage._hex) : 0;
+  
+  // בדיקה אם זה השכרה או קנייה
+  const multiplier = type === "Rentals" ? 30 : 1;
+
+  // מחיר מקורי (לפני הנחה)
+  const originalPrice = (rawPrice * multiplier) / 1e6;
+
+  // מחיר סופי (אחרי הנחה)
+  // אם יש הנחה: מחיר מקורי * (100 פחות אחוז ההנחה) חלקי 100
+  // אם אין הנחה: נשאר המחיר המקורי
+  const finalPrice = discount > 0 
+    ? (rawPrice * multiplier * (100 - discount) / 100) / 1e6
+    : originalPrice;
+  // ------------------------------------------------------------------
+
   const settings = useMemo(() => ({
     dots: false,
     infinite: true, 
@@ -134,18 +152,21 @@ const ProductBox = ({ product, onClick, contract, type, paymentAddress, storeAdd
                 {processDescription(productData.name)}
             </div>
 
-            {/* 2. Price */}
+            {/* 2. Price Section (Updated) */}
             <div className="bg-gradient-to-r from-gray-800 to-black border border-cyan-500/30 text-white font-bold py-2 px-4 rounded-lg shadow-md flex items-center gap-2">
-                  <span className="text-3xl text-yellow-300 tracking-wide">
-                    {type == "Rentals" ? (<>
-                        {(HexToInteger(productData.price._hex) * 30 / 1e6).toFixed(2)}
-                    </>) :(
-                        <>
-                        {(HexToInteger(productData.price._hex) / 1e6).toFixed(2)}
-                        </>
+                  <div className="flex flex-col items-end leading-none">
+                    {/* אם יש הנחה - הצג מחיר מקורי מחוק */}
+                    {discount > 0 && (
+                        <span className="text-xs text-rose-400 line-through decoration-rose-500 opacity-90 mb-0.5">
+                            {originalPrice.toFixed(2)}
+                        </span>
                     )}
                     
-                  </span>
+                    {/* מחיר סופי (רגיל או אחרי הנחה) */}
+                    <span className="text-3xl text-yellow-300 tracking-wide">
+                        {finalPrice.toFixed(2)}
+                    </span>
+                  </div>
                   <img src={usdcoinusdclogo} className="h-[28px] w-[28px]" alt="USDC" />
             </div>
 
@@ -156,9 +177,9 @@ const ProductBox = ({ product, onClick, contract, type, paymentAddress, storeAdd
             </div>
 
             {/* 4. Discount Tag */}
-            {productData.discountPercentage && HexToInteger(productData.discountPercentage._hex) !== 0 && (
+            {discount !== 0 && (
                 <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-1 px-3 rounded-lg shadow-lg animate-pulse">
-                    <span className="text-lg">{HexToInteger(productData.discountPercentage._hex)}%</span>
+                    <span className="text-lg">{discount}%</span>
                     <span className="text-sm ml-1">OFF</span>
                 </div>
             )}
@@ -167,39 +188,7 @@ const ProductBox = ({ product, onClick, contract, type, paymentAddress, storeAdd
             {/* Flex container aligned to left (default), items in LTR order: [Button] [Input] or [Input] [Button] */}
             <div className="mt-auto pointer-events-auto flex items-center gap-2">
                 
-                {/* Add to Cart Button */}
-                <button 
-                    onClick={handleAddToCartClick}
-                    className={`
-                        h-[50px] w-[50px]
-                        text-black rounded-full border-2 border-black 
-                        shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center
-                        transition-all duration-300 transform hover:scale-105
-                        ${isAddedSuccess ? 'bg-green-500' : (showQuantityInput ? 'bg-green-400' : 'bg-[#FFDD00]')}
-                    `}
-                >
-                    {showQuantityInput ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    )}
-                </button>
-
-                 {/* Input Container - Slides out to the RIGHT now */}
-                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showQuantityInput ? 'w-[60px] opacity-100' : 'w-0 opacity-0'}`}>
-                    <input 
-                        type="number" 
-                        min="1"
-                        value={quantityToAdd}
-                        onChange={handleQuantityChange}
-                        onClick={handleInputClick}
-                        className="w-full h-[45px] rounded-lg bg-slate-900/90 text-white border border-[#FFDD00] text-center font-bold focus:outline-none shadow-xl backdrop-blur-sm"
-                    />
-                </div>
+                
             </div>
 
         </div>
